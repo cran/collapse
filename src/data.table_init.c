@@ -3,6 +3,42 @@
 #include <R_ext/Rdynload.h>
 #include <R_ext/Visibility.h>
 
+
+// global constants extern in data.table.h for gcc10 -fno-common; #4091
+// these are written to once here on initialization, but because of that write they can't be declared const
+SEXP char_integer64;
+SEXP char_ITime;
+SEXP char_IDate;
+SEXP char_Date;
+SEXP char_POSIXct;
+SEXP char_nanotime;
+SEXP char_lens;
+SEXP char_indices;
+SEXP char_allLen1;
+SEXP char_allGrp1;
+SEXP char_factor;
+SEXP char_ordered;
+SEXP char_datatable;
+SEXP char_dataframe;
+SEXP char_NULL;
+SEXP sym_sorted;
+SEXP sym_index;
+SEXP sym_BY;
+SEXP sym_starts;
+SEXP char_starts;
+SEXP sym_maxgrpn;
+SEXP sym_colClassesAs;
+SEXP sym_verbose;
+SEXP sym_inherits;
+SEXP sym_datatable_locked;
+double NA_INT64_D;
+long long NA_INT64_LL;
+Rcomplex NA_CPLX;
+size_t sizes[100];  // max appears to be FUNSXP = 99, see Rinternals.h
+size_t typeorder[100];
+SEXP SelfRefSymbol;
+
+// Note sure I need any of the sizes for the code I am using !!
 static void setSizes() {
   for (int i=0; i<100; ++i) { sizes[i]=0; typeorder[i]=0; }
   // only these types are currently allowed as column types :
@@ -16,8 +52,8 @@ static void setSizes() {
   if (sizeof(char *)>8) error("Pointers are %d bytes, greater than 8. We have not tested on any architecture greater than 64bit yet.", sizeof(char *));
   // One place we need the largest sizeof is the working memory malloc in reorder.c
 }
-
-SEXP attribute_visible collapse_init(SEXP mess) // void SEXP mess DllInfo *info
+// before it was SEXP  attribute_visible
+SEXP collapse_init(SEXP mess) // void SEXP mess DllInfo *info
 // relies on pkg/src/Makevars to mv data.table.so to datatable.so
 {
   // R_registerRoutines(info, NULL, callMethods, NULL, externalMethods);
@@ -122,8 +158,8 @@ SEXP attribute_visible collapse_init(SEXP mess) // void SEXP mess DllInfo *info
   SelfRefSymbol = install(".internal.selfref");
   sym_inherits = install("inherits");
   sym_datatable_locked = install(".data.table.locked");
-  initDTthreads();
-  avoid_openmp_hang_within_fork();
+  // initDTthreads();
+  // avoid_openmp_hang_within_fork();
   // int blabla = 1; // error("Reached Here!");
   // message("init completed!");
   // printf("init completed");
@@ -153,35 +189,35 @@ inline double LLtoD(long long x) {
   return u.d;
 }
 
-bool GetVerbose() {
+// bool GetVerbose() {
   // don't call repetitively; save first in that case
-  SEXP opt = GetOption(sym_verbose, R_NilValue);
-  return isLogical(opt) && LENGTH(opt)==1 && LOGICAL(opt)[0]==1;
-}
+//  SEXP opt = GetOption(sym_verbose, R_NilValue);
+//  return isLogical(opt) && LENGTH(opt)==1 && LOGICAL(opt)[0]==1;
+// }
 
 // # nocov start
-SEXP hasOpenMP() {
+// SEXP hasOpenMP() {
   // Just for use by onAttach (hence nocov) to avoid an RPRINTF from C level which isn't suppressable by CRAN
   // There is now a 'grep' in CRAN_Release.cmd to detect any use of RPRINTF in init.c, which is
   // why RPRINTF is capitalized in this comment to avoid that grep.
   // TODO: perhaps .Platform or .Machine in R itself could contain whether OpenMP is available.
-  #ifdef _OPENMP
-  return ScalarLogical(TRUE);
-  #else
-  return ScalarLogical(FALSE);
-  #endif
-}
+//  #ifdef _OPENMP
+//  return ScalarLogical(TRUE);
+//  #else
+//  return ScalarLogical(FALSE);
+//  #endif
+// }
 // # nocov end
 
 extern int *_Last_updated;  // assign.c
 
-SEXP initLastUpdated(SEXP var) {
-  if (!isInteger(var) || LENGTH(var)!=1) error(".Last.value in namespace is not a length 1 integer");
-  _Last_updated = INTEGER(var);
-  return R_NilValue;
-}
+// SEXP initLastUpdated(SEXP var) {
+//  if (!isInteger(var) || LENGTH(var)!=1) error(".Last.value in namespace is not a length 1 integer");
+//  _Last_updated = INTEGER(var);
+//  return R_NilValue;
+// }
 
-SEXP dllVersion() {
+// SEXP dllVersion() {
   // .onLoad calls this and checks the same as packageVersion() to ensure no R/C version mismatch, #3056
-  return(ScalarString(mkChar("1.12.7")));
-}
+//  return(ScalarString(mkChar("1.12.7")));
+// }

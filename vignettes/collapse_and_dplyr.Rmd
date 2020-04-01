@@ -62,7 +62,7 @@ FUN.grouped_df(x, [w = NULL,] TRA = NULL, [na.rm = TRUE,]
                use.g.names = FALSE, keep.group_vars = TRUE, [keep.w = TRUE,] ...)
 ```
 
-where `w` is a weight variable (available only to `fmean, fmode, fvar` and `fsd`), and `TRA` and can be used to transform `x` using the computed statistics and one of 8 available transformations (`"replace_fill", "replace", "-", "-+", "/", "%", "+", "*"`). These transformations perform grouped replacing or sweeping out of the statistics computed by the function (discussed in section 2). `na.rm` efficiently removes missing values and is `TRUE` by default. `use.g.names` generates new row-names from the unique combinations of groups (default: disabled), whereas `keep.group_vars` (default: enabled) will keep the grouping columns as is custom in the native `data %>% group_by(...) %>% summarize(...)` workflow in *dplyr*. Finally, `keep.w` regulates whether a weighting variable used is also aggregated and saved in a column. For `fmean, fvar and fsd` this will compute the sum of the weights in each group, whereas `fmode` will return the maximum weight (corresponding to the mode) in each group. 
+where `w` is a weight variable (available only to `fsum, fprod, fmean, fmode, fvar` and `fsd`), and `TRA` and can be used to transform `x` using the computed statistics and one of 10 available transformations (`"replace_fill", "replace", "-", "-+", "/", "%", "+", "*", "%%", "-%%"`). These transformations perform grouped replacing or sweeping out of the statistics computed by the function (discussed in section 2). `na.rm` efficiently removes missing values and is `TRUE` by default. `use.g.names` generates new row-names from the unique combinations of groups (default: disabled), whereas `keep.group_vars` (default: enabled) will keep the grouping columns as is custom in the native `data %>% group_by(...) %>% summarize(...)` workflow in *dplyr*. Finally, `keep.w` regulates whether a weighting variable used is also aggregated and saved in a column. For `fmean, fvar and fsd` this will compute the sum of the weights in each group, whereas `fmode` will return the maximum weight (corresponding to the mode) in each group. 
 
 With that in mind, let's consider some straightforward applications:
 
@@ -352,7 +352,7 @@ Fast aggregation's are just the tip of the iceberg compared to what *collapse* c
 ### 2.1 Replacing and Sweeping out Statistics 
 <!-- using Fast Statistical Functions -->
 
-All statistical (scalar-valued) functions in the collapse package (`fsum, fprod, fmean, fmedian, fmode, fvar, fsd, fmin, fmax, ffirst, flast, fNobs, fNdistinct`) have a `TRA` argument which can be used to efficiently transforms data by either (column-wise) replacing data values with supplied statistics or sweeping the statistics out of the data. Operations can be specified using either an integer or quoted operator / string. The 8 operations supported by `TRA` are:
+All statistical (scalar-valued) functions in the collapse package (`fsum, fprod, fmean, fmedian, fmode, fvar, fsd, fmin, fmax, ffirst, flast, fNobs, fNdistinct`) have a `TRA` argument which can be used to efficiently transforms data by either (column-wise) replacing data values with supplied statistics or sweeping the statistics out of the data. Operations can be specified using either an integer or quoted operator / string. The 10 operations supported by `TRA` are:
 
 * 1 - "replace_fill" : replace and overwrite missing values 
 
@@ -369,6 +369,10 @@ All statistical (scalar-valued) functions in the collapse package (`fsum, fprod,
 * 7 - "+" : add
 
 * 8 - "*" : multiply
+
+* 9 - "%%" : modulus
+
+* 10 - "-%%" : subtract modulus
 
 For functions supporting weights (`fmean, fmode, fvar` and `fsd`) the `TRA` argument is in the third position following the data and weight vector (in the *grouped_df* method), whereas functions not supporting weights have the argument in the second position. 
 
@@ -398,7 +402,7 @@ GGDC10S %>%
 # Computing sercentages of sectoral data by Variable and Country
 GGDC10S %>% 
   group_by(Variable,Country) %>%
-    select_at(6:16) %>% fsum("%")
+    select_at(6:16) %>% fsum(TRA = "%")
 
 ```
 
@@ -431,7 +435,7 @@ GGDC10S %>%
 
 ```
 
-It is also possible to center data points on the global mean, which is achieved by subtracting out group means and adding the overall mean of the data again: 
+It is also possible to center data points on the overall mean, which is achieved by subtracting out group means and adding the overall mean of the data again: 
 ```{r}
 # This group-centers data on the overall mean of the data
 GGDC10S %>% 
@@ -459,7 +463,7 @@ rm(GGDC10S)
 ```
 
 
-Certainly There are lots of other examples one could construct using the 8 operations and 13 functions listed above, the examples provided just outline the suggested programming basics. 
+Certainly There are lots of other examples one could construct using the 10 operations and 13 functions listed above, the examples provided just outline the suggested programming basics. 
 
 <!-- ***could add add_vars example again*** -->
 
@@ -525,20 +529,20 @@ GGDC10S %>% # Same as ... %>% fmean(TRA = "-")
   group_by(Variable,Country) %>% select_at(6:16) %>% fwithin %>% head(2)
 
 GGDC10S %>% # Same as ... %>% fmean(TRA = "-+")
-  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(add.global.mean = TRUE) %>% head(2)
+  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(mean = "overall.mean") %>% head(2)
 ```
 
-Apart from higher speed, there is one additional advantage of using `fwithin` in particular, which regards the joint use of weights and the `add.global.mean` option: `... %>% fmean(w = SUM, TRA = "-+")` will not properly group-center the data on the overall weighted mean. Instead, it will group-center data on a frequency weighted average of the weighted group-means, thus not taking into account different aggregated weights attached to those weighted group-means themselves. The reason for this shortcoming is simply that `TRA` was not designed to take a separate weight vector as input. `fwithin(w = SUM, add.global.mean = TRUE)` does a better job and properly centers data on the weighted overall mean after subtracting out weighted group means: 
+Apart from higher speed, there is one additional advantage of using `fwithin` in particular, which regards the joint use of weights and the `mean = "overall.mean"` option: `... %>% fmean(w = SUM, TRA = "-+")` will not properly group-center the data on the overall weighted mean. Instead, it will group-center data on a frequency weighted average of the weighted group-means, thus not taking into account different aggregated weights attached to those weighted group-means themselves. The reason for this shortcoming is simply that `TRA` was not designed to take a separate weight vector as input. `fwithin(w = SUM, mean = "overall.mean")` does a better job and properly centers data on the weighted overall mean after subtracting out weighted group means: 
 
 ```{r}
 GGDC10S %>% # This does not center data on a properly computed weighted overall mean
   group_by(Variable,Country) %>% select_at(6:16) %>% fmean(SUM, TRA = "-+") 
 
 GGDC10S %>% # This does a proper job by both subtracting weighted group-means and adding a weighted overall mean
-  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(SUM, add.global.mean = TRUE) 
+  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(SUM, mean = "overall.mean") 
 ```
 
-The sequential scaling and centering `... %>% fsd(TRA = "/") %>% fmean(TRA = "-")` shown in an earlier example is also not the best way of doing things. The function `fscale` does this much quicker in a single step:
+The sequential scaling and centering `... %>% fsd(TRA = "/") %>% fmean(TRA = "-")` shown in an earlier example is also not the best way of doing things. The function `fscale` does this much quicker in a single step, and also allows for more customized operations with its `mean` and `sd` arguments.
 
 ```{r}
 # This efficiently scales and centers (i.e. standardizes) the data 
@@ -623,12 +627,12 @@ system.time(fmean(data, TRA = "-"))
 system.time(fwithin(data))
 system.time(mutate_all(data, function(x) x - mean(x, na.rm = TRUE)))
 
-# Centering on global mean
-system.time(fwithin(data, add.global.mean = TRUE))
+# Centering on overall mean
+system.time(fwithin(data, mean = "overall.mean"))
 
 # Weighted Demeaning
 system.time(fwithin(data, SUM))
-system.time(fwithin(data, SUM, add.global.mean = TRUE))
+system.time(fwithin(data, SUM, mean = "overall.mean"))
 
 # Scaling
 system.time(fsd(data, TRA = "/"))

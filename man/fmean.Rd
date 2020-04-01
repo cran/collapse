@@ -32,7 +32,8 @@ fmean(x, ...)
 \item{w}{a numeric vector of (non-negative) weights, may contain missing values.}
 
 \item{TRA}{an integer or quoted operator indicating the transformation to perform:
-1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*". See \code{\link{TRA}}.}
+1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
+
 
 \item{na.rm}{logical. Skip missing values in \code{x}. Defaults to \code{TRUE} and implemented at very little computational cost. If \code{na.rm = FALSE} a \code{NA} is returned when encountered.}
 
@@ -59,7 +60,7 @@ This all seamlessly generalizes to grouped computations, which are performed in 
 When applied to data frame's with groups or \code{drop = FALSE}, \code{fmean} preserves all column attributes (such as variable labels) but does not distinguish between classed and unclassed object (thus applying \code{fmean} to a factor column will give a 'malformed factor' error). The attributes of the \code{data.frame} itself are also preserved.
 }
 \value{
-The mean of \code{x}, grouped by \code{g}, or (if \code{\link{TRA}} is used) \code{x} transformed by its mean, grouped by \code{g}.
+The (\code{w} weighted) mean of \code{x}, grouped by \code{g}, or (if \code{\link{TRA}} is used) \code{x} transformed by its mean, grouped by \code{g}.
 }
 \seealso{
 \code{\link{fmedian}}, \code{\link{fmode}}, \link[=A1-fast-statistical-functions]{Fast Statistical Functions}, \link[=collapse-documentation]{Collapse Overview}

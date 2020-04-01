@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2020-03-12" />
+<meta name="date" content="2020-03-31" />
 
 <title>collapse and dplyr</title>
 
@@ -302,7 +302,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore"><em>collapse</em> and <em>dplyr</em></h1>
 <h3 class="subtitle">Fast (weighted) Aggregations, Transformations and Time-Series/Panel Computations in a <em>dplyr</em> Workflow</h3>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2020-03-12</h4>
+<h4 class="date">2020-03-31</h4>
 
 
 <div id="TOC">
@@ -338,7 +338,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>A key feature of <em>collapse</em> is it’s broad set of <em>Fast Statistical Functions</em> (<code>fsum, fprod, fmean, fmedian, fmode, fvar, fsd, fmin, fmax, ffirst, flast, fNobs, fNdistinct</code>) which are able to dramatically speed-up column-wise, grouped and weighted computations on vectors, matrices or data.frame’s. The functions are S3 generic, with a default (vector), matrix and data.frame method, as well as a grouped_df method for grouped tibbles used by dplyr. The grouped tibble method has the following arguments:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">FUN.grouped_df</span>(x, [<span class="dt">w =</span> <span class="ot">NULL</span>,] <span class="dt">TRA =</span> <span class="ot">NULL</span>, [<span class="dt">na.rm =</span> <span class="ot">TRUE</span>,]</a>
 <a class="sourceLine" id="cb1-2" title="2">               <span class="dt">use.g.names =</span> <span class="ot">FALSE</span>, <span class="dt">keep.group_vars =</span> <span class="ot">TRUE</span>, [<span class="dt">keep.w =</span> <span class="ot">TRUE</span>,] ...)</a></code></pre></div>
-<p>where <code>w</code> is a weight variable (available only to <code>fmean, fmode, fvar</code> and <code>fsd</code>), and <code>TRA</code> and can be used to transform <code>x</code> using the computed statistics and one of 8 available transformations (<code>&quot;replace_fill&quot;, &quot;replace&quot;, &quot;-&quot;, &quot;-+&quot;, &quot;/&quot;, &quot;%&quot;, &quot;+&quot;, &quot;*&quot;</code>). These transformations perform grouped replacing or sweeping out of the statistics computed by the function (discussed in section 2). <code>na.rm</code> efficiently removes missing values and is <code>TRUE</code> by default. <code>use.g.names</code> generates new row-names from the unique combinations of groups (default: disabled), whereas <code>keep.group_vars</code> (default: enabled) will keep the grouping columns as is custom in the native <code>data %&gt;% group_by(...) %&gt;% summarize(...)</code> workflow in <em>dplyr</em>. Finally, <code>keep.w</code> regulates whether a weighting variable used is also aggregated and saved in a column. For <code>fmean, fvar and fsd</code> this will compute the sum of the weights in each group, whereas <code>fmode</code> will return the maximum weight (corresponding to the mode) in each group.</p>
+<p>where <code>w</code> is a weight variable (available only to <code>fsum, fprod, fmean, fmode, fvar</code> and <code>fsd</code>), and <code>TRA</code> and can be used to transform <code>x</code> using the computed statistics and one of 10 available transformations (<code>&quot;replace_fill&quot;, &quot;replace&quot;, &quot;-&quot;, &quot;-+&quot;, &quot;/&quot;, &quot;%&quot;, &quot;+&quot;, &quot;*&quot;, &quot;%%&quot;, &quot;-%%&quot;</code>). These transformations perform grouped replacing or sweeping out of the statistics computed by the function (discussed in section 2). <code>na.rm</code> efficiently removes missing values and is <code>TRUE</code> by default. <code>use.g.names</code> generates new row-names from the unique combinations of groups (default: disabled), whereas <code>keep.group_vars</code> (default: enabled) will keep the grouping columns as is custom in the native <code>data %&gt;% group_by(...) %&gt;% summarize(...)</code> workflow in <em>dplyr</em>. Finally, <code>keep.w</code> regulates whether a weighting variable used is also aggregated and saved in a column. For <code>fmean, fvar and fsd</code> this will compute the sum of the weights in each group, whereas <code>fmode</code> will return the maximum weight (corresponding to the mode) in each group.</p>
 <p>With that in mind, let’s consider some straightforward applications:</p>
 <div id="simple-aggregations" class="section level3">
 <h3>1.1 Simple Aggregations</h3>
@@ -752,22 +752,22 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb19-11" title="11"><span class="co"># Grouping: This is still a key bottleneck of dplyr compared to data.table and collapse</span></a>
 <a class="sourceLine" id="cb19-12" title="12"><span class="kw">system.time</span>(<span class="kw">group_by</span>(data,Variable,Country))</a>
 <a class="sourceLine" id="cb19-13" title="13"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-14" title="14"><span class="co">#    0.14    0.00    0.14</span></a>
+<a class="sourceLine" id="cb19-14" title="14"><span class="co">#    0.11    0.02    0.12</span></a>
 <a class="sourceLine" id="cb19-15" title="15"><span class="kw">system.time</span>(<span class="kw">GRP</span>(data, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">4</span>)))               </a>
 <a class="sourceLine" id="cb19-16" title="16"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-17" title="17"><span class="co">#    0.04    0.00    0.05</span></a>
+<a class="sourceLine" id="cb19-17" title="17"><span class="co">#    0.03    0.01    0.05</span></a>
 <a class="sourceLine" id="cb19-18" title="18"></a>
 <a class="sourceLine" id="cb19-19" title="19"><span class="kw">library</span>(microbenchmark)</a>
 <a class="sourceLine" id="cb19-20" title="20"></a>
 <a class="sourceLine" id="cb19-21" title="21"><span class="co"># Selection </span></a>
 <a class="sourceLine" id="cb19-22" title="22"><span class="kw">microbenchmark</span>(<span class="kw">select_at</span>(data, <span class="dv">6</span><span class="op">:</span><span class="dv">16</span>))</a>
 <a class="sourceLine" id="cb19-23" title="23"><span class="co"># Unit: milliseconds</span></a>
-<a class="sourceLine" id="cb19-24" title="24"><span class="co">#                   expr     min       lq     mean   median       uq      max neval</span></a>
-<a class="sourceLine" id="cb19-25" title="25"><span class="co">#  select_at(data, 6:16) 11.5846 11.74948 12.32206 11.99961 12.48735 15.25186   100</span></a>
+<a class="sourceLine" id="cb19-24" title="24"><span class="co">#                   expr      min       lq     mean   median       uq      max neval</span></a>
+<a class="sourceLine" id="cb19-25" title="25"><span class="co">#  select_at(data, 6:16) 12.40926 12.98827 13.98173 13.39547 13.85934 23.47309   100</span></a>
 <a class="sourceLine" id="cb19-26" title="26"><span class="kw">microbenchmark</span>(<span class="kw">get_vars</span>(data, <span class="dv">6</span><span class="op">:</span><span class="dv">16</span>))</a>
 <a class="sourceLine" id="cb19-27" title="27"><span class="co"># Unit: microseconds</span></a>
 <a class="sourceLine" id="cb19-28" title="28"><span class="co">#                  expr   min    lq    mean median    uq    max neval</span></a>
-<a class="sourceLine" id="cb19-29" title="29"><span class="co">#  get_vars(data, 6:16) 7.586 8.479 9.07241  8.479 8.925 44.178   100</span></a>
+<a class="sourceLine" id="cb19-29" title="29"><span class="co">#  get_vars(data, 6:16) 8.032 8.479 9.21528  8.479 8.925 49.534   100</span></a>
 <a class="sourceLine" id="cb19-30" title="30"></a>
 <a class="sourceLine" id="cb19-31" title="31">data &lt;-<span class="st"> </span>data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>)</a>
 <a class="sourceLine" id="cb19-32" title="32"></a>
@@ -775,15 +775,15 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb19-34" title="34"><span class="kw">microbenchmark</span>(<span class="kw">GRP</span>(data)) </a>
 <a class="sourceLine" id="cb19-35" title="35"><span class="co"># Unit: milliseconds</span></a>
 <a class="sourceLine" id="cb19-36" title="36"><span class="co">#       expr      min       lq     mean   median       uq      max neval</span></a>
-<a class="sourceLine" id="cb19-37" title="37"><span class="co">#  GRP(data) 2.947021 4.238463 4.817924 4.545704 4.588767 25.67264   100</span></a>
+<a class="sourceLine" id="cb19-37" title="37"><span class="co">#  GRP(data) 3.100976 4.533432 5.264525 4.693635 5.032115 28.24303   100</span></a>
 <a class="sourceLine" id="cb19-38" title="38"></a>
 <a class="sourceLine" id="cb19-39" title="39"><span class="co"># Sum </span></a>
 <a class="sourceLine" id="cb19-40" title="40"><span class="kw">system.time</span>(<span class="kw">fsum</span>(data))</a>
 <a class="sourceLine" id="cb19-41" title="41"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-42" title="42"><span class="co">#    0.04    0.00    0.04</span></a>
+<a class="sourceLine" id="cb19-42" title="42"><span class="co">#    0.04    0.00    0.05</span></a>
 <a class="sourceLine" id="cb19-43" title="43"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-44" title="44"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-45" title="45"><span class="co">#     0.1     0.0     0.1</span></a>
+<a class="sourceLine" id="cb19-45" title="45"><span class="co">#    0.10    0.00    0.11</span></a>
 <a class="sourceLine" id="cb19-46" title="46"></a>
 <a class="sourceLine" id="cb19-47" title="47"><span class="co"># Product</span></a>
 <a class="sourceLine" id="cb19-48" title="48"><span class="kw">system.time</span>(<span class="kw">fprod</span>(data))</a>
@@ -791,7 +791,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb19-50" title="50"><span class="co">#    0.05    0.00    0.04</span></a>
 <a class="sourceLine" id="cb19-51" title="51"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, prod, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-52" title="52"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-53" title="53"><span class="co">#    0.45    0.00    0.45</span></a>
+<a class="sourceLine" id="cb19-53" title="53"><span class="co">#     0.5     0.0     0.5</span></a>
 <a class="sourceLine" id="cb19-54" title="54"></a>
 <a class="sourceLine" id="cb19-55" title="55"><span class="co"># Mean</span></a>
 <a class="sourceLine" id="cb19-56" title="56"><span class="kw">system.time</span>(<span class="kw">fmean</span>(data))</a>
@@ -799,12 +799,12 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb19-58" title="58"><span class="co">#    0.05    0.00    0.04</span></a>
 <a class="sourceLine" id="cb19-59" title="59"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, mean, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-60" title="60"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-61" title="61"><span class="co">#    1.92    0.01    1.94</span></a>
+<a class="sourceLine" id="cb19-61" title="61"><span class="co">#    2.06    0.00    2.06</span></a>
 <a class="sourceLine" id="cb19-62" title="62"></a>
 <a class="sourceLine" id="cb19-63" title="63"><span class="co"># Weighted Mean</span></a>
 <a class="sourceLine" id="cb19-64" title="64"><span class="kw">system.time</span>(<span class="kw">fmean</span>(data, SUM)) <span class="co"># This cannot easily be performed in dplyr</span></a>
 <a class="sourceLine" id="cb19-65" title="65"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-66" title="66"><span class="co">#    0.07    0.00    0.06</span></a>
+<a class="sourceLine" id="cb19-66" title="66"><span class="co">#    0.05    0.00    0.05</span></a>
 <a class="sourceLine" id="cb19-67" title="67"></a>
 <a class="sourceLine" id="cb19-68" title="68"><span class="co"># Median</span></a>
 <a class="sourceLine" id="cb19-69" title="69"><span class="kw">system.time</span>(<span class="kw">fmedian</span>(data))</a>
@@ -812,54 +812,54 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb19-71" title="71"><span class="co">#    0.08    0.00    0.08</span></a>
 <a class="sourceLine" id="cb19-72" title="72"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-73" title="73"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-74" title="74"><span class="co">#    8.72    0.00    8.72</span></a>
+<a class="sourceLine" id="cb19-74" title="74"><span class="co">#    9.32    0.00    9.49</span></a>
 <a class="sourceLine" id="cb19-75" title="75"></a>
 <a class="sourceLine" id="cb19-76" title="76"><span class="co"># Standard-Deviation</span></a>
 <a class="sourceLine" id="cb19-77" title="77"><span class="kw">system.time</span>(<span class="kw">fsd</span>(data))</a>
 <a class="sourceLine" id="cb19-78" title="78"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-79" title="79"><span class="co">#    0.08    0.01    0.09</span></a>
+<a class="sourceLine" id="cb19-79" title="79"><span class="co">#    0.08    0.00    0.08</span></a>
 <a class="sourceLine" id="cb19-80" title="80"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, sd, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-81" title="81"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-82" title="82"><span class="co">#    3.18    0.00    3.17</span></a>
+<a class="sourceLine" id="cb19-82" title="82"><span class="co">#    3.23    0.00    3.23</span></a>
 <a class="sourceLine" id="cb19-83" title="83"></a>
 <a class="sourceLine" id="cb19-84" title="84"><span class="co"># Weighted Standard-Deviation</span></a>
 <a class="sourceLine" id="cb19-85" title="85"><span class="kw">system.time</span>(<span class="kw">fsd</span>(data, SUM))</a>
 <a class="sourceLine" id="cb19-86" title="86"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-87" title="87"><span class="co">#    0.08    0.00    0.07</span></a>
+<a class="sourceLine" id="cb19-87" title="87"><span class="co">#    0.08    0.00    0.08</span></a>
 <a class="sourceLine" id="cb19-88" title="88"></a>
 <a class="sourceLine" id="cb19-89" title="89"><span class="co"># Maximum</span></a>
 <a class="sourceLine" id="cb19-90" title="90"><span class="kw">system.time</span>(<span class="kw">fmax</span>(data))</a>
 <a class="sourceLine" id="cb19-91" title="91"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-92" title="92"><span class="co">#    0.03    0.00    0.03</span></a>
+<a class="sourceLine" id="cb19-92" title="92"><span class="co">#    0.02    0.00    0.01</span></a>
 <a class="sourceLine" id="cb19-93" title="93"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, max, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-94" title="94"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-95" title="95"><span class="co">#    0.04    0.00    0.05</span></a>
+<a class="sourceLine" id="cb19-95" title="95"><span class="co">#    0.08    0.00    0.08</span></a>
 <a class="sourceLine" id="cb19-96" title="96"></a>
 <a class="sourceLine" id="cb19-97" title="97"><span class="co"># First Value</span></a>
 <a class="sourceLine" id="cb19-98" title="98"><span class="kw">system.time</span>(<span class="kw">ffirst</span>(data, <span class="dt">na.rm =</span> <span class="ot">FALSE</span>))</a>
 <a class="sourceLine" id="cb19-99" title="99"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-100" title="100"><span class="co">#    0.03    0.00    0.03</span></a>
+<a class="sourceLine" id="cb19-100" title="100"><span class="co">#       0       0       0</span></a>
 <a class="sourceLine" id="cb19-101" title="101"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, first))</a>
 <a class="sourceLine" id="cb19-102" title="102"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-103" title="103"><span class="co">#    0.60    0.00    0.59</span></a>
+<a class="sourceLine" id="cb19-103" title="103"><span class="co">#    0.62    0.00    0.62</span></a>
 <a class="sourceLine" id="cb19-104" title="104"></a>
 <a class="sourceLine" id="cb19-105" title="105"><span class="co"># Distinct Values</span></a>
 <a class="sourceLine" id="cb19-106" title="106"><span class="kw">system.time</span>(<span class="kw">fNdistinct</span>(data))</a>
 <a class="sourceLine" id="cb19-107" title="107"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-108" title="108"><span class="co">#    0.25    0.08    0.33</span></a>
+<a class="sourceLine" id="cb19-108" title="108"><span class="co">#    0.27    0.06    0.32</span></a>
 <a class="sourceLine" id="cb19-109" title="109"><span class="kw">system.time</span>(<span class="kw">summarise_all</span>(data, n_distinct, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb19-110" title="110"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-111" title="111"><span class="co">#    2.33    0.00    2.33</span></a>
+<a class="sourceLine" id="cb19-111" title="111"><span class="co">#    2.45    0.00    2.45</span></a>
 <a class="sourceLine" id="cb19-112" title="112"></a>
 <a class="sourceLine" id="cb19-113" title="113"><span class="co"># Mode</span></a>
 <a class="sourceLine" id="cb19-114" title="114"><span class="kw">system.time</span>(<span class="kw">fmode</span>(data))</a>
 <a class="sourceLine" id="cb19-115" title="115"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-116" title="116"><span class="co">#    0.23    0.11    0.34</span></a>
+<a class="sourceLine" id="cb19-116" title="116"><span class="co">#    0.33    0.05    0.38</span></a>
 <a class="sourceLine" id="cb19-117" title="117"></a>
 <a class="sourceLine" id="cb19-118" title="118"><span class="co"># Weighted Mode</span></a>
 <a class="sourceLine" id="cb19-119" title="119"><span class="kw">system.time</span>(<span class="kw">fmode</span>(data, SUM))</a>
 <a class="sourceLine" id="cb19-120" title="120"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb19-121" title="121"><span class="co">#    0.36    0.11    0.47</span></a></code></pre></div>
+<a class="sourceLine" id="cb19-121" title="121"><span class="co">#    0.43    0.09    0.52</span></a></code></pre></div>
 <p>The benchmarks show that at this data size efficient primitives like <code>base::sum</code> or <code>base::max</code> can still deliver very decent performance with <code>summarize</code>. Less optimized base functions like <code>mean</code>, <code>median</code> and <code>sd</code> however take multiple seconds to compute, and here <code>collapse</code> fast functions really prove to be very useful complements to the <em>dplyr</em> system.</p>
 <p>Weighted statistics are also performed extremely fast by <em>collapse</em> functions. I would not know how to compute weighted statistics by groups in <em>dplyr</em>, as it would require the weighting variable to be split as well, which seems impossible in native <em>dplyr</em>.</p>
 <p>A further highlight of <em>collapse</em> is the extremely fast statistical mode function, which can also compute a weighted mode. Fast categorical aggregation has been an issue in R, and defining a mode function from base R and applying it to 17000 groups will probably let it run at least a minute. <code>fmode</code> reduces this time to half a second.</p>
@@ -873,7 +873,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="replacing-and-sweeping-out-statistics" class="section level3">
 <h3>2.1 Replacing and Sweeping out Statistics</h3>
 <!-- using Fast Statistical Functions -->
-<p>All statistical (scalar-valued) functions in the collapse package (<code>fsum, fprod, fmean, fmedian, fmode, fvar, fsd, fmin, fmax, ffirst, flast, fNobs, fNdistinct</code>) have a <code>TRA</code> argument which can be used to efficiently transforms data by either (column-wise) replacing data values with supplied statistics or sweeping the statistics out of the data. Operations can be specified using either an integer or quoted operator / string. The 8 operations supported by <code>TRA</code> are:</p>
+<p>All statistical (scalar-valued) functions in the collapse package (<code>fsum, fprod, fmean, fmedian, fmode, fvar, fsd, fmin, fmax, ffirst, flast, fNobs, fNdistinct</code>) have a <code>TRA</code> argument which can be used to efficiently transforms data by either (column-wise) replacing data values with supplied statistics or sweeping the statistics out of the data. Operations can be specified using either an integer or quoted operator / string. The 10 operations supported by <code>TRA</code> are:</p>
 <ul>
 <li><p>1 - “replace_fill” : replace and overwrite missing values</p></li>
 <li><p>2 - “replace” : replace but preserve missing values</p></li>
@@ -883,6 +883,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <li><p>6 - “%” : compute percentages (divide and multiply by 100)</p></li>
 <li><p>7 - “+” : add</p></li>
 <li><p>8 - &quot;*&quot; : multiply</p></li>
+<li><p>9 - “%%” : modulus</p></li>
+<li><p>10 - “-%%” : subtract modulus</p></li>
 </ul>
 <p>For functions supporting weights (<code>fmean, fmode, fvar</code> and <code>fsd</code>) the <code>TRA</code> argument is in the third position following the data and weight vector (in the <em>grouped_df</em> method), whereas functions not supporting weights have the argument in the second position.</p>
 <p>Simple transformations are again straightforward to specify:</p>
@@ -963,7 +965,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb21-41" title="41"><span class="co"># Computing sercentages of sectoral data by Variable and Country</span></a>
 <a class="sourceLine" id="cb21-42" title="42">GGDC10S <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb21-43" title="43"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb21-44" title="44"><span class="st">    </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fsum</span>(<span class="st">&quot;%&quot;</span>)</a>
+<a class="sourceLine" id="cb21-44" title="44"><span class="st">    </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fsum</span>(<span class="dt">TRA =</span> <span class="st">&quot;%&quot;</span>)</a>
 <a class="sourceLine" id="cb21-45" title="45"><span class="co"># # A tibble: 5,027 x 13</span></a>
 <a class="sourceLine" id="cb21-46" title="46"><span class="co"># # Groups:   Variable, Country [85]</span></a>
 <a class="sourceLine" id="cb21-47" title="47"><span class="co">#    Variable Country     AGR      MIN      MAN       PU      CON      WRT      TRA     FIRE      GOV</span></a>
@@ -1059,7 +1061,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb23-37" title="37"><span class="co">#  9 VA       BWA      41.1 1317. 13321. 2965.  529. 2747. 6547. 2158. 4432. 7556. 2615.</span></a>
 <a class="sourceLine" id="cb23-38" title="38"><span class="co"># 10 VA       BWA      51.2 1317. 13321. 2965.  529. 2747. 6547. 2158. 4432. 7556. 2615.</span></a>
 <a class="sourceLine" id="cb23-39" title="39"><span class="co"># # ... with 5,017 more rows</span></a></code></pre></div>
-<p>It is also possible to center data points on the global mean, which is achieved by subtracting out group means and adding the overall mean of the data again:</p>
+<p>It is also possible to center data points on the overall mean, which is achieved by subtracting out group means and adding the overall mean of the data again:</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1"><span class="co"># This group-centers data on the overall mean of the data</span></a>
 <a class="sourceLine" id="cb24-2" title="2">GGDC10S <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb24-3" title="3"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span></a>
@@ -1124,7 +1126,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb26-22" title="22"><span class="co"># #   demean_FIRE &lt;dbl&gt;, GOV &lt;dbl&gt;, demean_GOV &lt;dbl&gt;, OTH &lt;dbl&gt;, demean_OTH &lt;dbl&gt;, SUM &lt;dbl&gt;,</span></a>
 <a class="sourceLine" id="cb26-23" title="23"><span class="co"># #   demean_SUM &lt;dbl&gt;</span></a>
 <a class="sourceLine" id="cb26-24" title="24"><span class="kw">rm</span>(GGDC10S)</a></code></pre></div>
-<p>Certainly There are lots of other examples one could construct using the 8 operations and 13 functions listed above, the examples provided just outline the suggested programming basics.</p>
+<p>Certainly There are lots of other examples one could construct using the 10 operations and 13 functions listed above, the examples provided just outline the suggested programming basics.</p>
 <!-- ***could add add_vars example again*** -->
 </div>
 <div id="more-control-using-the-tra-function" class="section level3">
@@ -1265,14 +1267,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb30-26" title="26"><span class="co"># 2 VA       BWA        NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA</span></a>
 <a class="sourceLine" id="cb30-27" title="27"></a>
 <a class="sourceLine" id="cb30-28" title="28">GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Same as ... %&gt;% fmean(TRA = &quot;-+&quot;)</span></a>
-<a class="sourceLine" id="cb30-29" title="29"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fwithin</span>(<span class="dt">add.global.mean =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb30-29" title="29"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fwithin</span>(<span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">2</span>)</a>
 <a class="sourceLine" id="cb30-30" title="30"><span class="co"># # A tibble: 2 x 13</span></a>
 <a class="sourceLine" id="cb30-31" title="31"><span class="co"># # Groups:   Variable, Country [1]</span></a>
 <a class="sourceLine" id="cb30-32" title="32"><span class="co">#   Variable Country   AGR   MIN   MAN    PU   CON   WRT   TRA  FIRE   GOV   OTH   SUM</span></a>
 <a class="sourceLine" id="cb30-33" title="33"><span class="co">#   &lt;chr&gt;    &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
 <a class="sourceLine" id="cb30-34" title="34"><span class="co"># 1 VA       BWA        NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA</span></a>
 <a class="sourceLine" id="cb30-35" title="35"><span class="co"># 2 VA       BWA        NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA</span></a></code></pre></div>
-<p>Apart from higher speed, there is one additional advantage of using <code>fwithin</code> in particular, which regards the joint use of weights and the <code>add.global.mean</code> option: <code>... %&gt;% fmean(w = SUM, TRA = &quot;-+&quot;)</code> will not properly group-center the data on the overall weighted mean. Instead, it will group-center data on a frequency weighted average of the weighted group-means, thus not taking into account different aggregated weights attached to those weighted group-means themselves. The reason for this shortcoming is simply that <code>TRA</code> was not designed to take a separate weight vector as input. <code>fwithin(w = SUM, add.global.mean = TRUE)</code> does a better job and properly centers data on the weighted overall mean after subtracting out weighted group means:</p>
+<p>Apart from higher speed, there is one additional advantage of using <code>fwithin</code> in particular, which regards the joint use of weights and the <code>mean = &quot;overall.mean&quot;</code> option: <code>... %&gt;% fmean(w = SUM, TRA = &quot;-+&quot;)</code> will not properly group-center the data on the overall weighted mean. Instead, it will group-center data on a frequency weighted average of the weighted group-means, thus not taking into account different aggregated weights attached to those weighted group-means themselves. The reason for this shortcoming is simply that <code>TRA</code> was not designed to take a separate weight vector as input. <code>fwithin(w = SUM, mean = &quot;overall.mean&quot;)</code> does a better job and properly centers data on the weighted overall mean after subtracting out weighted group means:</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" title="1">GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># This does not center data on a properly computed weighted overall mean</span></a>
 <a class="sourceLine" id="cb31-2" title="2"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fmean</span>(SUM, <span class="dt">TRA =</span> <span class="st">&quot;-+&quot;</span>) </a>
 <a class="sourceLine" id="cb31-3" title="3"><span class="co"># # A tibble: 5,027 x 13</span></a>
@@ -1292,7 +1294,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb31-17" title="17"><span class="co"># # ... with 5,017 more rows, and 1 more variable: OTH &lt;dbl&gt;</span></a>
 <a class="sourceLine" id="cb31-18" title="18"></a>
 <a class="sourceLine" id="cb31-19" title="19">GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># This does a proper job by both subtracting weighted group-means and adding a weighted overall mean</span></a>
-<a class="sourceLine" id="cb31-20" title="20"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fwithin</span>(SUM, <span class="dt">add.global.mean =</span> <span class="ot">TRUE</span>) </a>
+<a class="sourceLine" id="cb31-20" title="20"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fwithin</span>(SUM, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>) </a>
 <a class="sourceLine" id="cb31-21" title="21"><span class="co"># # A tibble: 5,027 x 13</span></a>
 <a class="sourceLine" id="cb31-22" title="22"><span class="co"># # Groups:   Variable, Country [85]</span></a>
 <a class="sourceLine" id="cb31-23" title="23"><span class="co">#    Variable Country   SUM     AGR     MIN     MAN      PU     CON     WRT     TRA    FIRE     GOV</span></a>
@@ -1308,7 +1310,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb31-33" title="33"><span class="co">#  9 VA       BWA      41.1  4.29e8  3.70e8  7.38e8  2.73e7  2.83e8  4.33e8  1.97e8  1.55e8  2.10e8</span></a>
 <a class="sourceLine" id="cb31-34" title="34"><span class="co"># 10 VA       BWA      51.2  4.29e8  3.70e8  7.38e8  2.73e7  2.83e8  4.33e8  1.97e8  1.55e8  2.10e8</span></a>
 <a class="sourceLine" id="cb31-35" title="35"><span class="co"># # ... with 5,017 more rows, and 1 more variable: OTH &lt;dbl&gt;</span></a></code></pre></div>
-<p>The sequential scaling and centering <code>... %&gt;% fsd(TRA = &quot;/&quot;) %&gt;% fmean(TRA = &quot;-&quot;)</code> shown in an earlier example is also not the best way of doing things. The function <code>fscale</code> does this much quicker in a single step:</p>
+<p>The sequential scaling and centering <code>... %&gt;% fsd(TRA = &quot;/&quot;) %&gt;% fmean(TRA = &quot;-&quot;)</code> shown in an earlier example is also not the best way of doing things. The function <code>fscale</code> does this much quicker in a single step, and also allows for more customized operations with its <code>mean</code> and <code>sd</code> arguments.</p>
 <div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" title="1"><span class="co"># This efficiently scales and centers (i.e. standardizes) the data </span></a>
 <a class="sourceLine" id="cb32-2" title="2">GGDC10S <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb32-3" title="3"><span class="st">  </span><span class="kw">group_by</span>(Variable,Country) <span class="op">%&gt;%</span></a>
@@ -1505,120 +1507,120 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb38-19" title="19"><span class="co"># Grouped Sum (mutate does not have an option to preserve missing values as given by &quot;replace&quot;)</span></a>
 <a class="sourceLine" id="cb38-20" title="20"><span class="kw">system.time</span>(<span class="kw">fsum</span>(data, <span class="dt">TRA =</span> <span class="st">&quot;replace_fill&quot;</span>))</a>
 <a class="sourceLine" id="cb38-21" title="21"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-22" title="22"><span class="co">#    0.08    0.00    0.08</span></a>
+<a class="sourceLine" id="cb38-22" title="22"><span class="co">#    0.08    0.02    0.10</span></a>
 <a class="sourceLine" id="cb38-23" title="23"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb38-24" title="24"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-25" title="25"><span class="co">#    0.21    0.05    0.25</span></a>
+<a class="sourceLine" id="cb38-25" title="25"><span class="co">#    0.25    0.02    0.27</span></a>
 <a class="sourceLine" id="cb38-26" title="26"></a>
 <a class="sourceLine" id="cb38-27" title="27"><span class="co"># Dviding by grouped sum</span></a>
 <a class="sourceLine" id="cb38-28" title="28"><span class="kw">system.time</span>(<span class="kw">fsum</span>(data, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>))</a>
 <a class="sourceLine" id="cb38-29" title="29"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-30" title="30"><span class="co">#    0.13    0.02    0.14</span></a>
+<a class="sourceLine" id="cb38-30" title="30"><span class="co">#    0.11    0.03    0.14</span></a>
 <a class="sourceLine" id="cb38-31" title="31"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, <span class="cf">function</span>(x) x<span class="op">/</span><span class="kw">sum</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)))</a>
 <a class="sourceLine" id="cb38-32" title="32"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-33" title="33"><span class="co">#    0.86    0.05    0.91</span></a>
+<a class="sourceLine" id="cb38-33" title="33"><span class="co">#    1.02    0.02    1.05</span></a>
 <a class="sourceLine" id="cb38-34" title="34"></a>
 <a class="sourceLine" id="cb38-35" title="35"><span class="co"># Mean (between transformation)</span></a>
 <a class="sourceLine" id="cb38-36" title="36"><span class="kw">system.time</span>(<span class="kw">fmean</span>(data, <span class="dt">TRA =</span> <span class="st">&quot;replace_fill&quot;</span>))</a>
 <a class="sourceLine" id="cb38-37" title="37"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-38" title="38"><span class="co">#    0.05    0.05    0.09</span></a>
+<a class="sourceLine" id="cb38-38" title="38"><span class="co">#    0.03    0.05    0.09</span></a>
 <a class="sourceLine" id="cb38-39" title="39"><span class="kw">system.time</span>(<span class="kw">fbetween</span>(data, <span class="dt">fill =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb38-40" title="40"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-41" title="41"><span class="co">#    0.05    0.04    0.10</span></a>
+<a class="sourceLine" id="cb38-41" title="41"><span class="co">#    0.07    0.02    0.10</span></a>
 <a class="sourceLine" id="cb38-42" title="42"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, mean, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb38-43" title="43"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-44" title="44"><span class="co">#    2.75    0.03    2.78</span></a>
+<a class="sourceLine" id="cb38-44" title="44"><span class="co">#    2.84    0.03    2.87</span></a>
 <a class="sourceLine" id="cb38-45" title="45"></a>
 <a class="sourceLine" id="cb38-46" title="46"><span class="co"># De-Mean (within transformation)</span></a>
 <a class="sourceLine" id="cb38-47" title="47"><span class="kw">system.time</span>(<span class="kw">fmean</span>(data, <span class="dt">TRA =</span> <span class="st">&quot;-&quot;</span>))</a>
 <a class="sourceLine" id="cb38-48" title="48"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-49" title="49"><span class="co">#    0.08    0.01    0.10</span></a>
+<a class="sourceLine" id="cb38-49" title="49"><span class="co">#    0.05    0.05    0.09</span></a>
 <a class="sourceLine" id="cb38-50" title="50"><span class="kw">system.time</span>(<span class="kw">fwithin</span>(data))</a>
 <a class="sourceLine" id="cb38-51" title="51"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-52" title="52"><span class="co">#    0.06    0.03    0.10</span></a>
+<a class="sourceLine" id="cb38-52" title="52"><span class="co">#    0.09    0.00    0.09</span></a>
 <a class="sourceLine" id="cb38-53" title="53"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span><span class="kw">mean</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)))</a>
 <a class="sourceLine" id="cb38-54" title="54"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-55" title="55"><span class="co">#    2.31    0.08    2.39</span></a>
+<a class="sourceLine" id="cb38-55" title="55"><span class="co">#    2.40    0.06    2.45</span></a>
 <a class="sourceLine" id="cb38-56" title="56"></a>
-<a class="sourceLine" id="cb38-57" title="57"><span class="co"># Centering on global mean</span></a>
-<a class="sourceLine" id="cb38-58" title="58"><span class="kw">system.time</span>(<span class="kw">fwithin</span>(data, <span class="dt">add.global.mean =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb38-57" title="57"><span class="co"># Centering on overall mean</span></a>
+<a class="sourceLine" id="cb38-58" title="58"><span class="kw">system.time</span>(<span class="kw">fwithin</span>(data, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>))</a>
 <a class="sourceLine" id="cb38-59" title="59"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-60" title="60"><span class="co">#    0.08    0.00    0.08</span></a>
+<a class="sourceLine" id="cb38-60" title="60"><span class="co">#    0.08    0.01    0.09</span></a>
 <a class="sourceLine" id="cb38-61" title="61"></a>
 <a class="sourceLine" id="cb38-62" title="62"><span class="co"># Weighted Demeaning</span></a>
 <a class="sourceLine" id="cb38-63" title="63"><span class="kw">system.time</span>(<span class="kw">fwithin</span>(data, SUM))</a>
 <a class="sourceLine" id="cb38-64" title="64"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-65" title="65"><span class="co">#    0.08    0.00    0.08</span></a>
-<a class="sourceLine" id="cb38-66" title="66"><span class="kw">system.time</span>(<span class="kw">fwithin</span>(data, SUM, <span class="dt">add.global.mean =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb38-65" title="65"><span class="co">#    0.08    0.01    0.09</span></a>
+<a class="sourceLine" id="cb38-66" title="66"><span class="kw">system.time</span>(<span class="kw">fwithin</span>(data, SUM, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>))</a>
 <a class="sourceLine" id="cb38-67" title="67"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-68" title="68"><span class="co">#    0.06    0.01    0.08</span></a>
+<a class="sourceLine" id="cb38-68" title="68"><span class="co">#    0.08    0.02    0.09</span></a>
 <a class="sourceLine" id="cb38-69" title="69"></a>
 <a class="sourceLine" id="cb38-70" title="70"><span class="co"># Scaling</span></a>
 <a class="sourceLine" id="cb38-71" title="71"><span class="kw">system.time</span>(<span class="kw">fsd</span>(data, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>))</a>
 <a class="sourceLine" id="cb38-72" title="72"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-73" title="73"><span class="co">#    0.12    0.03    0.15</span></a>
+<a class="sourceLine" id="cb38-73" title="73"><span class="co">#    0.14    0.02    0.16</span></a>
 <a class="sourceLine" id="cb38-74" title="74"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, <span class="cf">function</span>(x) x<span class="op">/</span><span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)))</a>
 <a class="sourceLine" id="cb38-75" title="75"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-76" title="76"><span class="co">#    3.72    0.02    3.75</span></a>
+<a class="sourceLine" id="cb38-76" title="76"><span class="co">#    3.75    0.05    3.81</span></a>
 <a class="sourceLine" id="cb38-77" title="77"></a>
 <a class="sourceLine" id="cb38-78" title="78"><span class="co"># Standardizing</span></a>
 <a class="sourceLine" id="cb38-79" title="79"><span class="kw">system.time</span>(<span class="kw">fscale</span>(data))</a>
 <a class="sourceLine" id="cb38-80" title="80"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-81" title="81"><span class="co">#    0.10    0.02    0.12</span></a>
+<a class="sourceLine" id="cb38-81" title="81"><span class="co">#    0.11    0.00    0.11</span></a>
 <a class="sourceLine" id="cb38-82" title="82"><span class="co"># system.time(mutate_all(data, scale)) This takes 32 seconds to compute.. </span></a>
 <a class="sourceLine" id="cb38-83" title="83"></a>
 <a class="sourceLine" id="cb38-84" title="84"><span class="co"># Weighted Scaling and standardizing</span></a>
 <a class="sourceLine" id="cb38-85" title="85"><span class="kw">system.time</span>(<span class="kw">fsd</span>(data, SUM, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>))</a>
 <a class="sourceLine" id="cb38-86" title="86"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-87" title="87"><span class="co">#    0.12    0.02    0.14</span></a>
+<a class="sourceLine" id="cb38-87" title="87"><span class="co">#    0.14    0.02    0.15</span></a>
 <a class="sourceLine" id="cb38-88" title="88"><span class="kw">system.time</span>(<span class="kw">fscale</span>(data, SUM))</a>
 <a class="sourceLine" id="cb38-89" title="89"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-90" title="90"><span class="co">#    0.07    0.03    0.11</span></a>
+<a class="sourceLine" id="cb38-90" title="90"><span class="co">#    0.12    0.00    0.12</span></a>
 <a class="sourceLine" id="cb38-91" title="91"></a>
 <a class="sourceLine" id="cb38-92" title="92"><span class="co"># Lags and Leads</span></a>
 <a class="sourceLine" id="cb38-93" title="93"><span class="kw">system.time</span>(<span class="kw">flag</span>(data))</a>
 <a class="sourceLine" id="cb38-94" title="94"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-95" title="95"><span class="co">#    0.01    0.04    0.04</span></a>
+<a class="sourceLine" id="cb38-95" title="95"><span class="co">#    0.01    0.03    0.05</span></a>
 <a class="sourceLine" id="cb38-96" title="96"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, lag))</a>
 <a class="sourceLine" id="cb38-97" title="97"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-98" title="98"><span class="co">#    0.18    0.01    0.19</span></a>
+<a class="sourceLine" id="cb38-98" title="98"><span class="co">#    0.17    0.04    0.21</span></a>
 <a class="sourceLine" id="cb38-99" title="99"><span class="kw">system.time</span>(<span class="kw">flag</span>(data, <span class="dv">-1</span>))</a>
 <a class="sourceLine" id="cb38-100" title="100"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-101" title="101"><span class="co">#    0.02    0.03    0.04</span></a>
+<a class="sourceLine" id="cb38-101" title="101"><span class="co">#    0.01    0.03    0.04</span></a>
 <a class="sourceLine" id="cb38-102" title="102"><span class="kw">system.time</span>(<span class="kw">mutate_all</span>(data, lead))</a>
 <a class="sourceLine" id="cb38-103" title="103"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-104" title="104"><span class="co">#    0.17    0.01    0.19</span></a>
+<a class="sourceLine" id="cb38-104" title="104"><span class="co">#    0.18    0.03    0.20</span></a>
 <a class="sourceLine" id="cb38-105" title="105"><span class="kw">system.time</span>(<span class="kw">flag</span>(data, <span class="dv">-1</span><span class="op">:</span><span class="dv">1</span>))</a>
 <a class="sourceLine" id="cb38-106" title="106"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-107" title="107"><span class="co">#    0.07    0.04    0.10</span></a>
+<a class="sourceLine" id="cb38-107" title="107"><span class="co">#    0.08    0.01    0.10</span></a>
 <a class="sourceLine" id="cb38-108" title="108"></a>
 <a class="sourceLine" id="cb38-109" title="109"><span class="co"># Differences</span></a>
 <a class="sourceLine" id="cb38-110" title="110"><span class="kw">system.time</span>(<span class="kw">fdiff</span>(data))</a>
 <a class="sourceLine" id="cb38-111" title="111"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-112" title="112"><span class="co">#    0.04    0.02    0.06</span></a>
+<a class="sourceLine" id="cb38-112" title="112"><span class="co">#    0.03    0.03    0.07</span></a>
 <a class="sourceLine" id="cb38-113" title="113"><span class="kw">system.time</span>(<span class="kw">fdiff</span>(data,<span class="dv">1</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>))</a>
 <a class="sourceLine" id="cb38-114" title="114"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-115" title="115"><span class="co">#    0.11    0.04    0.16</span></a>
+<a class="sourceLine" id="cb38-115" title="115"><span class="co">#    0.11    0.06    0.17</span></a>
 <a class="sourceLine" id="cb38-116" title="116"><span class="kw">system.time</span>(<span class="kw">fdiff</span>(data, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">10</span>)))</a>
 <a class="sourceLine" id="cb38-117" title="117"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-118" title="118"><span class="co">#    0.04    0.06    0.11</span></a>
+<a class="sourceLine" id="cb38-118" title="118"><span class="co">#    0.05    0.06    0.11</span></a>
 <a class="sourceLine" id="cb38-119" title="119"><span class="kw">system.time</span>(<span class="kw">fdiff</span>(data, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">10</span>), <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>))</a>
 <a class="sourceLine" id="cb38-120" title="120"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-121" title="121"><span class="co">#    0.38    0.08    0.46</span></a>
+<a class="sourceLine" id="cb38-121" title="121"><span class="co">#    0.36    0.16    0.51</span></a>
 <a class="sourceLine" id="cb38-122" title="122"></a>
 <a class="sourceLine" id="cb38-123" title="123"><span class="co"># Growth Rates</span></a>
 <a class="sourceLine" id="cb38-124" title="124"><span class="kw">system.time</span>(<span class="kw">fgrowth</span>(data))</a>
 <a class="sourceLine" id="cb38-125" title="125"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-126" title="126"><span class="co">#    0.06    0.03    0.09</span></a>
+<a class="sourceLine" id="cb38-126" title="126"><span class="co">#    0.10    0.00    0.09</span></a>
 <a class="sourceLine" id="cb38-127" title="127"><span class="kw">system.time</span>(<span class="kw">fgrowth</span>(data,<span class="dv">1</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>))</a>
 <a class="sourceLine" id="cb38-128" title="128"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-129" title="129"><span class="co">#    0.17    0.05    0.22</span></a>
+<a class="sourceLine" id="cb38-129" title="129"><span class="co">#    0.16    0.06    0.22</span></a>
 <a class="sourceLine" id="cb38-130" title="130"><span class="kw">system.time</span>(<span class="kw">fgrowth</span>(data, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">10</span>)))</a>
 <a class="sourceLine" id="cb38-131" title="131"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-132" title="132"><span class="co">#    0.12    0.04    0.17</span></a>
+<a class="sourceLine" id="cb38-132" title="132"><span class="co">#    0.18    0.02    0.19</span></a>
 <a class="sourceLine" id="cb38-133" title="133"><span class="kw">system.time</span>(<span class="kw">fgrowth</span>(data, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">10</span>), <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>))</a>
 <a class="sourceLine" id="cb38-134" title="134"><span class="co">#    user  system elapsed </span></a>
-<a class="sourceLine" id="cb38-135" title="135"><span class="co">#    0.36    0.20    0.57</span></a></code></pre></div>
+<a class="sourceLine" id="cb38-135" title="135"><span class="co">#    0.41    0.19    0.59</span></a></code></pre></div>
 <p>Again the benchmarks show stunning performance gains using <em>collapse</em> functions.</p>
 </div>
 </div>

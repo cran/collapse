@@ -399,7 +399,7 @@ head(TRA(miris, fmean(miris, f), "replace", f), 3)
 head(TRA(miris, fsum(miris, f), "%", f), 3)         
 
 ## --------------------------------------------------------------------------------------------------
-# Grouped centering on the overall mean [same as fmean(m, f, TRA = "-+") or fwithin(m, f, add.global.mean = TRUE)]
+# Grouped centering on the overall mean [same as fmean(m, f, TRA = "-+") or fwithin(m, f, mean = "overall.mean")]
 head(TRA(miris, fmean(miris, f), "-+", f), 3)      
 head(TRA(TRA(miris, fmean(miris, f), "-", f), fmean(miris), "+"), 3) # Same thing done manually!
 
@@ -415,6 +415,12 @@ head(STD(mtcars),2)
 
 # See that is works
 qsu(STD(mtcars))                   
+
+# We can also scale and center to a different mean and standard deviation:
+t(qsu(fscale(mtcars, mean = 5, sd = 3))[,c("Mean","SD")])     
+
+# Or not center at all. In that case scaling is mean-preserving, in contrast to fsd(mtcars, TRA = "/")
+t(qsu(fscale(mtcars, mean = FALSE, sd = 3))[,c("Mean","SD")])                   
 
 ## --------------------------------------------------------------------------------------------------
 head(GGDC10S)
@@ -451,18 +457,18 @@ head(add_vars(get_vars(wlddev, "iso3c"),     # Same thing done manually using fw
 # This replaces missing values with the group-mean: Same as fmean(x, g, TRA = "replace_fill")
 head(B(wlddev, ~ iso3c, cols = 9:12, fill = TRUE))
 
-# This adds back the global mean after subtracting out group means: Same as fmean(x, g, TRA = "-+")
-head(W(wlddev, ~ iso3c, cols = 9:12, add.global.mean = TRUE))
+# This adds back the overall mean after subtracting out group means: Same as fmean(x, g, TRA = "-+")
+head(W(wlddev, ~ iso3c, cols = 9:12, mean = "overall.mean"))
 # Note: This is not just slightly faster than fmean(x, g, TRA = "-+"), but if weights are used, fmean(x, g, w, "-+")
 # gives a wrong result: It subtracts weighted group means but then centers on the frequency-weighted average of those group means,
-# whereas fwithin(x, g, w, add.global.mean = TRUE) will also center on the properly weighted overall mean. 
+# whereas fwithin(x, g, w, mean = "overall.mean") will also center on the properly weighted overall mean. 
 
-# Visual demonstration of centering on the global mean vs. simple centering
+# Visual demonstration of centering on the overall mean vs. simple centering
 oldpar <- par(mfrow = c(1,3)) 
 plot(iris[1:2], col = iris$Species, main = "Raw Data")                       # Raw data
 plot(W(iris, ~ Species)[2:3], col = iris$Species, main = "Simple Centering") # Simple centering
-plot(W(iris, ~ Species, add.global.mean = TRUE)[2:3], col = iris$Species,    # Centering on overall mean: Preserves level of data
-     main = "add.global.mean") 
+plot(W(iris, ~ Species, mean = "overall.mean")[2:3], col = iris$Species,    # Centering on overall mean: Preserves level of data
+     main = "Added Overall Mean") 
 par(oldpar)
 
 ## --------------------------------------------------------------------------------------------------
@@ -479,7 +485,7 @@ coef(lm(W(PCGDP,iso3c) ~ W(LIFEEX,iso3c), data))
 coef(lm(W.PCGDP ~ W.LIFEEX, W(data, PCGDP + LIFEEX ~ iso3c)))     
 
 # Adding the overall mean back to the data only changes the intercept
-coef(lm(W.PCGDP ~ W.LIFEEX, W(data, PCGDP + LIFEEX  ~ iso3c, add.global.mean = TRUE)))
+coef(lm(W.PCGDP ~ W.LIFEEX, W(data, PCGDP + LIFEEX  ~ iso3c, mean = "overall.mean")))
 
 # Procedure suggested by Mundlak (1978) - controlling for group averages instead of demeaning
 coef(lm(PCGDP ~ LIFEEX + B(LIFEEX,iso3c), data))
@@ -538,8 +544,8 @@ system.time(W(testdat, ~ g1 + g2, ~ w))
 
 # Centering on the overall mean
 # Can't easily be done in dplyr or data.table.
-system.time(W(testdat, ~ g1 + g2, add.global.mean = TRUE))      # Ordinary 
-system.time(W(testdat, ~ g1 + g2, ~ w, add.global.mean = TRUE)) # Weighted
+system.time(W(testdat, ~ g1 + g2, mean = "overall.mean"))      # Ordinary 
+system.time(W(testdat, ~ g1 + g2, ~ w, mean = "overall.mean")) # Weighted
 
 # Centering on both grouping variables simultaneously
 # Can't be done in dplyr or data.table at all!
@@ -549,7 +555,7 @@ system.time(HDW(testdat, ~ qF(g1) + qF(g2), w = w, variable.wise = TRUE)) # Weig
 # Proportions
 system.time(testdat %>% group_by(g1,g2) %>% mutate_all(function(x) x/sum(x, na.rm = TRUE)))
 system.time(testdat[, lapply(.SD, function(x) x/sum(x, na.rm = TRUE)), keyby = c("g1","g2")])
-system.time(fsum(get_vars(testdat, -ind), get_vars(testdat, ind), "/"))
+system.time(fsum(get_vars(testdat, -ind), get_vars(testdat, ind), TRA = "/"))
 
 # Scaling
 system.time(testdat %>% group_by(g1,g2) %>% mutate_all(function(x) x/sd(x, na.rm = TRUE)))
@@ -566,8 +572,8 @@ system.time(STD(testdat, ~ g1 + g2, ~ w))  # Weighted standardizing: Also diffic
 # Replacing data with any ststistic, here the sum:
 system.time(testdat %>% group_by(g1,g2) %>% mutate_all(sum, na.rm = TRUE))
 system.time(testdat[, setdiff(names(testdat), c("g1","g2")) := lapply(.SD, sum, na.rm = TRUE), keyby = c("g1","g2")])
-system.time(fsum(get_vars(testdat, -ind), get_vars(testdat, ind), "replace_fill")) # dplyr and data.table also fill missing values. 
-system.time(fsum(get_vars(testdat, -ind), get_vars(testdat, ind), "replace")) # This preserves missing values, and is not easily implemented in dplyr or data.table
+system.time(fsum(get_vars(testdat, -ind), get_vars(testdat, ind), TRA = "replace_fill")) # dplyr and data.table also fill missing values. 
+system.time(fsum(get_vars(testdat, -ind), get_vars(testdat, ind), TRA = "replace")) # This preserves missing values, and is not easily implemented in dplyr or data.table
 
 ## --------------------------------------------------------------------------------------------------
 mts <- psmat(wlddev, PCGDP ~ iso3c, ~ year)   

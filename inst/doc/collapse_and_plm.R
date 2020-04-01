@@ -79,7 +79,7 @@ head(fbetween(PCGDP, fill = TRUE), 30)
 head(fwithin(LIFEEX))                          
 
 # This adds the overall average Life-Expectancy (across countries) to the country-demeaned series
-head(fwithin(LIFEEX, add.global.mean = TRUE))  
+head(fwithin(LIFEEX, mean = "overall.mean"))  
 
 ## -------------------------------------------------------------------------------------------------
 head(fbetween(num_vars(pwlddev)), 3)
@@ -88,13 +88,13 @@ head(fbetween(num_vars(pwlddev), fill = TRUE), 3)
 
 head(fwithin(num_vars(pwlddev)), 3)
 
-head(fwithin(num_vars(pwlddev), add.global.mean = TRUE), 3)
+head(fwithin(num_vars(pwlddev), mean = "overall.mean"), 3)
 
 ## -------------------------------------------------------------------------------------------------
 identical(fbetween(PCGDP), B(PCGDP))
 identical(fbetween(PCGDP, fill = TRUE), B(PCGDP, fill = TRUE))
 identical(fwithin(PCGDP), W(PCGDP))
-identical(fwithin(PCGDP, add.global.mean = TRUE), W(PCGDP, add.global.mean = TRUE))
+identical(fwithin(PCGDP, mean = "overall.mean"), W(PCGDP, mean = "overall.mean"))
 
 ## -------------------------------------------------------------------------------------------------
 head(B(pwlddev), 3)
@@ -109,7 +109,7 @@ head(B(pwlddev, w = ~ ODA), 3)
 head(W(pwlddev, w = ~ ODA, cols = c("PCGDP","LIFEEX","GINI")), 3)
 
 # This centers values on the ODA-weighted group mean and also adds the overall ODA-weighted mean of the data
-head(W(pwlddev, w = ~ ODA, cols = c("PCGDP","LIFEEX","GINI"), add.global.mean = TRUE), 3)
+head(W(pwlddev, w = ~ ODA, cols = c("PCGDP","LIFEEX","GINI"), mean = "overall.mean"), 3)
 
 ## -------------------------------------------------------------------------------------------------
 # This simultaneously averages Life-Expectancy across countries and years 
@@ -169,7 +169,24 @@ head(STD(pwlddev, cols = 9:12))
 head(STD(pwlddev, cols = 9:12, effect = "year"))
 
 ## -------------------------------------------------------------------------------------------------
-head(fsd(get_vars(pwlddev, 9:12), pwlddev$iso3c, TRA = "/"))
+# This will scale the data such that mean mean within each country is 5 and the standard deviation is 3
+qsu(fscale(pwlddev$PCGDP, mean = 5, sd = 3))
+
+## -------------------------------------------------------------------------------------------------
+# Scaling without centering: Mean preserving with fscale / STD
+qsu(fscale(pwlddev$PCGDP, mean = FALSE, sd = 3))
+
+# Scaling without centering can also be done using fsd, but this does not preserve the mean
+qsu(fsd(pwlddev$PCGDP, index(pwlddev, 1), TRA = "/"))
+
+# Again, the *Fast Statistical Functions* in *collapse* do not have methods for *pseries* or *pdata.frame*'s (yet). 
+
+## -------------------------------------------------------------------------------------------------
+fmean(pwlddev$PCGDP)  # Overall mean
+fsd(W(pwlddev$PCGDP)) # Within sd
+
+# Scaling and centerin such that the mean of each country is the overall mean, and the sd of each country is the within sd
+qsu(fscale(pwlddev$PCGDP, mean = "overall.mean", sd = "within.sd"))
 
 ## -------------------------------------------------------------------------------------------------
 # A panel-lag
@@ -447,12 +464,13 @@ phtest(PCGDP ~ LIFEEX, data = pwlddev)
 HT_est <- function(y, X1, Z2, X2 = NULL, Z1 = NULL, time.FE = FALSE) {
   
   # Create matrix of independent variables
-  X <- do.call(cbind, c(X1, X2, Z1, Z2)) 
+  X <- cbind(Intercept = 1, do.call(cbind, c(X1, X2, Z1, Z2)))
   
   # Create instrument matrix: if time.FE, higher-order demean X1 and X2, else normal demeaning
-  IVS <- do.call(cbind, c(if(time.FE) fHDwithin(X1, na.rm = FALSE) else fwithin(X1, na.rm = FALSE), 
+  IVS <- cbind(Intercept = 1, do.call(cbind, 
+               c(if(time.FE) fHDwithin(X1, na.rm = FALSE) else fwithin(X1, na.rm = FALSE), 
                  if(is.null(X2)) X2 else if(time.FE) fHDwithin(X2, na.rm = FALSE) else fwithin(X2, na.rm = FALSE),
-                 Z1, fbetween(X1, na.rm = FALSE)))
+                 Z1, fbetween(X1, na.rm = FALSE))))
   
   if(length(IVS) == length(X)) { # The IV estimator case
     return(drop(solve(crossprod(IVS, X), crossprod(IVS, y))))

@@ -225,7 +225,7 @@ GGDC10S %>%
 # Computing sercentages of sectoral data by Variable and Country
 GGDC10S %>% 
   group_by(Variable,Country) %>%
-    select_at(6:16) %>% fsum("%")
+    select_at(6:16) %>% fsum(TRA = "%")
 
 
 ## -------------------------------------------------------------------------------------------------
@@ -311,14 +311,14 @@ GGDC10S %>% # Same as ... %>% fmean(TRA = "-")
   group_by(Variable,Country) %>% select_at(6:16) %>% fwithin %>% head(2)
 
 GGDC10S %>% # Same as ... %>% fmean(TRA = "-+")
-  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(add.global.mean = TRUE) %>% head(2)
+  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(mean = "overall.mean") %>% head(2)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% # This does not center data on a properly computed weighted overall mean
   group_by(Variable,Country) %>% select_at(6:16) %>% fmean(SUM, TRA = "-+") 
 
 GGDC10S %>% # This does a proper job by both subtracting weighted group-means and adding a weighted overall mean
-  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(SUM, add.global.mean = TRUE) 
+  group_by(Variable,Country) %>% select_at(6:16) %>% fwithin(SUM, mean = "overall.mean") 
 
 ## -------------------------------------------------------------------------------------------------
 # This efficiently scales and centers (i.e. standardizes) the data 
@@ -380,12 +380,12 @@ system.time(fmean(data, TRA = "-"))
 system.time(fwithin(data))
 system.time(mutate_all(data, function(x) x - mean(x, na.rm = TRUE)))
 
-# Centering on global mean
-system.time(fwithin(data, add.global.mean = TRUE))
+# Centering on overall mean
+system.time(fwithin(data, mean = "overall.mean"))
 
 # Weighted Demeaning
 system.time(fwithin(data, SUM))
-system.time(fwithin(data, SUM, add.global.mean = TRUE))
+system.time(fwithin(data, SUM, mean = "overall.mean"))
 
 # Scaling
 system.time(fsd(data, TRA = "/"))
