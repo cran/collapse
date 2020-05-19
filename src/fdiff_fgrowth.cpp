@@ -2,52 +2,29 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// For major comments and changes see fdiff.cpp code !!
-// inline double do_diff(double y, double x) { // slower than fdiffCpp !!!!!!!!!!!
-//   return y-x;
-// }
+// new setup: ret = 1L - differences, ret = 2L - log differences, ret = 3L - exact growth rates, ret = 4L - log-difference growth
+// also: if rho != 1, quasi-differencing and log differencing with rho... i.e. for cochrane-orcutt regression
 
-inline double do_growth(double y, double x) {
-  return (y-x)*(100/x);
-}
-
-inline double do_logdiff(double y, double x) {
-  return (log(y)-log(x))*100;
-}
-
-
-// [[Rcpp::export]]
-NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
+template <typename F>
+NumericVector fdiffgrowthCppImpl(const NumericVector& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
                          double fill = NA_REAL, int ng = 0, const IntegerVector& g = 0,
                          const SEXP& gs = R_NilValue, const SEXP& t = R_NilValue,
-                         bool logdiff = false, bool names = true) {
+                         std::string stub = "", bool names = true, F FUN = [](double y, double x) { return y-x; }) {
 
-  int l = x.size(), ns = n.size(), ds = diff.size(), zeros = 0, pos = INT_MIN;
+  int l = x.size(), ns = n.size(), ds = diff.size(), zeros = 0, pos = INT_MAX;
   IntegerVector absn = no_init_vector(ns);
   for(int i = ns; i--; ) {
-    if(n[i] == pos) stop("duplicated values in n detected"); // because one might mistakenly pass a factor to the n-slot !!
+    if(n[i] == pos) stop("duplicated values in n detected"); // because one might mistakenly pass a factor to the n-slot
     pos = n[i];
     if(pos == 0) ++zeros;
-    if(pos < 0) absn[i] = -pos;
-    else absn[i] = pos;
+    if(pos < 0) {
+      if(pos == NA_INTEGER) stop("NA in n");
+      absn[i] = -pos;
+    } else absn[i] = pos;
   }
   pos = 0;
-  auto FUN = logdiff ? do_logdiff : do_growth;
-  // double (*FUN)(double, double); // https://stackoverflow.com/questions/5582869/how-do-i-store-a-function-to-a-variable
-  std::string stub, stub2; // String -> error !!
-  if(names) {
-    if(logdiff) {
-      //    FUN = do_logdiff;
-      stub = "Dlog";
-      stub2 = "FDlog";
-    } else {
-      //    FUN = do_growth;
-      stub = "G";
-      stub2 = "FG";
-    }
-  } // else {
-  // FUN = logdiff ? do_logdiff : do_growth;
-  // }
+  std::string stub2 = names ? "F" + stub : "";
+
   int ncol = (ns-zeros)*ds+zeros;
   if(ncol == 1) names = false;
   NumericMatrix out = no_init_matrix(l, ncol);
@@ -142,7 +119,7 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
       LogicalVector ocheck(l, true);
       IntegerVector omap = no_init_vector(l); // int omap[l];
       for(int i = 0; i != l; ++i) {
-        if(ord[i] > l) stop("t needs to be a factor or integer vector of time-periods between 1 and length(x)");
+        if(ord[i] > l || ord[i] < 1) stop("t needs to be a factor or integer vector of time-periods between 1 and length(x)");
         if(ocheck[ord[i]-1]) {
           ocheck[ord[i]-1] = false;
           omap[ord[i]-1] = i;
@@ -234,7 +211,7 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
   } else {
     if(l != g.size()) stop("length(x) must match length(g)");
     int ags = l/ng, ngp = ng+1, maxdiff = max(diff);
-    IntegerVector gsv = no_init_vector(ng); // NULL; gives compiler warning
+    IntegerVector gsv = no_init_vector(ng);
     if(Rf_isNull(t)) {
       if(maxdiff != 1) {
         if(Rf_isNull(gs)) {
@@ -249,7 +226,7 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
       // int seen[ngp], memsize = sizeof(int)*(ngp);
       for(int p = 0; p != ns; ++p) {
         int np = n[p];
-        if(absn[p]*maxdiff > ags) stop("abs(n * diff) exceeds average group size: %i", ags);
+        if(absn[p]*maxdiff > ags) warning("abs(n * diff) exceeds average group-size (%i). This could also be a result of unused factor levels. See #25.", ags);
         if(np>0) { // Positive lagged and iterated differences
           int d1 = diff[0];
           bool L1 = np == 1;
@@ -285,8 +262,8 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
               int dq = diff[q], L_dq = diff[q-1];
               if(dq <= L_dq) stop("differences must be passed in ascending order");
               for(int k = L_dq; k != dq; ++k) {
-                int start = np*(k+1); // Right ?? -> seems so!!
-                std::vector<int> seen(ngp); // memset(seen, 0, memsize); // Needed, because it loops from the beginning !!
+                int start = np*(k+1); // Right ? -> seems so
+                std::vector<int> seen(ngp); // memset(seen, 0, memsize); // Needed, because it loops from the beginning
                 for(int i = l; i--; ) {
                   if(seen[g[i]] == gsv[g[i]-1]-start) outtemp[i] = fill;
                   else {
@@ -381,8 +358,13 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
       }
       IntegerVector omap(l), cgs = no_init_vector(ngp);
       // int cgs[ngp], seen[ngp], memsize = sizeof(int)*(ngp);
-      cgs[1] = 0;
-      for(int i = 2; i != ngp; ++i) cgs[i] = cgs[i-1] + gsv[i-2];
+      cgs[0] = cgs[1] = 0;
+      for(int i = 1; i != ng; ++i) {
+        cgs[i+1] = cgs[i] + gsv[i-1]; // or get "starts from forderv"
+        if(min[i] == NA_INTEGER) stop("Timevar contains missing values"); // Fastest here ?
+      }
+      if(min[ng] == NA_INTEGER) stop("Timevar contains missing values"); // Fastest here ?
+
       for(int i = 0; i != l; ++i) {
         ord2[i] = ord[i] - min[g[i]];
         if(ord2[i] >= gsv[g[i]-1]) stop("Gaps in timevar within one or more groups");
@@ -391,7 +373,7 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
       }
       for(int p = 0; p != ns; ++p) {
         int np = n[p];
-        if(absn[p]*maxdiff > ags) stop("abs(n * diff) exceeds average group size: %i", ags);
+        if(absn[p]*maxdiff > ags) warning("abs(n * diff) exceeds average group-size (%i). This could also be a result of unused factor levels. See #25.", ags);
         if(np>0) { // Positive lagged and iterated differences
           int d1 = diff[0];
           bool L1 = np == 1;
@@ -526,6 +508,32 @@ NumericVector fgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, con
 }
 
 
+// [[Rcpp::export]]
+NumericVector fdiffgrowthCpp(const NumericVector& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
+                         double fill = NA_REAL, int ng = 0, const IntegerVector& g = 0,
+                         const SEXP& gs = R_NilValue, const SEXP& t = R_NilValue,
+                         int ret = 1, double rho = 1, bool names = true) {
+
+  std::string stub;
+  switch (ret)
+  {       // [rho] or [&rho] ?  // https://stackoverflow.com/questions/30217956/error-variable-cannot-be-implicitly-captured-because-no-default-capture-mode-h
+  case 1:
+    if(names) stub = (rho == 1) ? "D" : "QD"; // QD for quasi-differences !
+    return fdiffgrowthCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return y-rho*x; }); // return y-x; same efficiency as return y-rho*x; when rho = 1 -> smart compiler !, and reduced file size !!
+  case 2:
+    if(rho == 1) goto fastld;
+    if(names) stub = "QDlog";
+    return fdiffgrowthCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return std::log(y)-rho*std::log(x); }); // log(y*(1/(rho*x))) gives log(y) - log(rho*x), but we want log(y) - rho*log(x)
+  case 3:
+    if(names) stub = "G";
+    return fdiffgrowthCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return (y-x)*(rho/x); }); // same speed as fixing 100 ! Faster using (y/x-1)*rho or (x*(1/x)-1)*rho ?
+  case 4:
+    fastld:
+    if(names) stub = "Dlog";
+    return fdiffgrowthCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return rho*std::log(y*(1/x)); });
+  default: stop("Unknown return option!");
+  }
+}
 
 inline SEXP coln_check(SEXP x) {
   if(Rf_isNull(x)) return NA_STRING;
@@ -533,33 +541,26 @@ inline SEXP coln_check(SEXP x) {
 }
 
 
-// [[Rcpp::export]]
-NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
+template <typename F>
+NumericMatrix fdiffgrowthmCppImpl(const NumericMatrix& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
                           double fill = NA_REAL, int ng = 0, const IntegerVector& g = 0,
                           const SEXP& gs = R_NilValue, const SEXP& t = R_NilValue,
-                          bool logdiff = false, bool names = true) {
+                          std::string stub = "", bool names = true, F FUN = [](double y, double x) { return y-x; }) {
 
-  int l = x.nrow(), col = x.ncol(), ns = n.size(), ds = diff.size(), zeros = 0, pos = INT_MIN;
+  int l = x.nrow(), col = x.ncol(), ns = n.size(), ds = diff.size(), zeros = 0, pos = INT_MAX;
   IntegerVector absn = no_init_vector(ns);
   for(int i = ns; i--; ) {
-    if(n[i] == pos) stop("duplicated values in n detected"); // because one might mistakenly pass a factor to the n-slot !!
+    if(n[i] == pos) stop("duplicated values in n detected"); // because one might mistakenly pass a factor to the n-slot
     pos = n[i];
     if(pos == 0) ++zeros;
-    if(pos < 0) absn[i] = -pos;
-    else absn[i] = pos;
+    if(pos < 0) {
+      if(pos == NA_INTEGER) stop("NA in n");
+      absn[i] = -pos;
+    } else absn[i] = pos;
   }
   pos = 0;
-  auto FUN = logdiff ? do_logdiff : do_growth;
-  std::string stub, stub2;
-  if(names) {
-    if(logdiff) {
-      stub = "Dlog";
-      stub2 = "FDlog";
-    } else {
-      stub = "G";
-      stub2 = "FG";
-    }
-  }
+  std::string stub2 = names ? "F" + stub : "";
+
   int ncol = ((ns-zeros)*ds+zeros)*col;
   NumericMatrix out = no_init_matrix(l, ncol);
   CharacterVector colnam = names ? no_init_vector(ncol) : no_init_vector(1);
@@ -659,7 +660,7 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
       LogicalVector ocheck(l, true);
       IntegerVector omap = no_init_vector(l); // int omap[l];
       for(int i = 0; i != l; ++i) {
-        if(ord[i] > l) stop("t needs to be a factor or integer vector of time-periods between 1 and nrow(x)");
+        if(ord[i] > l || ord[i] < 1) stop("t needs to be a factor or integer vector of time-periods between 1 and nrow(x)");
         if(ocheck[ord[i]-1]) {
           ocheck[ord[i]-1] = false;
           omap[ord[i]-1] = i;
@@ -754,7 +755,7 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
   } else { // With groups
     if(l != g.size()) stop("nrow(x) must match length(g)");
     int ags = l/ng, ngp = ng+1, maxdiff = max(diff);
-    IntegerVector gsv = no_init_vector(ng); // NULL; gives compiler warning
+    IntegerVector gsv = no_init_vector(ng);
     if(Rf_isNull(t)) { // Ordered data
       if(maxdiff != 1) {
         if(Rf_isNull(gs)) {
@@ -771,7 +772,7 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
         NumericMatrix::ConstColumn column = x( _ , j);
         for(int p = 0; p != ns; ++p) {
           int np = n[p];
-          if(absn[p]*maxdiff > ags) stop("abs(n * diff) exceeds average group size: %i", ags);
+          if(absn[p]*maxdiff > ags) warning("abs(n * diff) exceeds average group-size (%i). This could also be a result of unused factor levels. See #25.", ags);
           if(np>0) { // Positive lagged and iterated differences
             int d1 = diff[0];
             bool L1 = np == 1;
@@ -904,8 +905,13 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
       }
       IntegerVector omap(l), cgs = no_init_vector(ngp), index = no_init_vector(l);
       // int cgs[ngp], seen[ngp], index[l], memsize = sizeof(int)*(ngp);
-      cgs[1] = 0;
-      for(int i = 2; i != ngp; ++i) cgs[i] = cgs[i-1] + gsv[i-2];
+      cgs[0] = cgs[1] = 0;
+      for(int i = 1; i != ng; ++i) {
+        cgs[i+1] = cgs[i] + gsv[i-1]; // or get "starts from forderv"
+        if(min[i] == NA_INTEGER) stop("Timevar contains missing values"); // Fastest here ?
+      }
+      if(min[ng] == NA_INTEGER) stop("Timevar contains missing values"); // Fastest here ?
+
       for(int i = 0; i != l; ++i) {
         ord2[i] = ord[i] - min[g[i]];
         if(ord2[i] >= gsv[g[i]-1]) stop("Gaps in timevar within one or more groups");
@@ -917,7 +923,7 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
         NumericMatrix::ConstColumn column = x( _ , j);
         for(int p = 0; p != ns; ++p) {
           int np = n[p];
-          if(absn[p]*maxdiff > ags) stop("abs(n * diff) exceeds average group size: %i", ags);
+          if(absn[p]*maxdiff > ags) warning("abs(n * diff) exceeds average group-size (%i). This could also be a result of unused factor levels. See #25.", ags);
           if(np>0) { // Positive lagged and iterated differences
             int d1 = diff[0];
             bool L1 = np == 1;
@@ -1042,7 +1048,7 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
   DUPLICATE_ATTRIB(out, x);
   if(ncol != col) out.attr("dim") = Dimension(l, ncol);
   if(names) {
-    out.attr("dimnames") = List::create(rownames(x), colnam); //colnames(out) = colnam; also deletes rownames !!
+    out.attr("dimnames") = List::create(rownames(x), colnam); // colnames(out) = colnam; also deletes rownames !
   } else if(ncol != col) {
     out.attr("dimnames") = R_NilValue;
   }
@@ -1050,35 +1056,53 @@ NumericMatrix fgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, co
   return out;
 }
 
-
-
 // [[Rcpp::export]]
-List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
+NumericMatrix fdiffgrowthmCpp(const NumericMatrix& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
+                              double fill = NA_REAL, int ng = 0, const IntegerVector& g = 0,
+                              const SEXP& gs = R_NilValue, const SEXP& t = R_NilValue,
+                              int ret = 1, double rho = 1, bool names = true) {
+  std::string stub;
+  switch (ret)
+  {       // [rho] or [&rho] ?  // https://stackoverflow.com/questions/30217956/error-variable-cannot-be-implicitly-captured-because-no-default-capture-mode-h
+  case 1:
+    if(names) stub = (rho == 1) ? "D" : "QD"; // QD for quasi-differences !
+    return fdiffgrowthmCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return y-rho*x; }); // return y-x; same efficiency as return y-rho*x; when rho = 1 -> smart compiler !, and reduced file size !!
+  case 2:
+    if(rho == 1) goto fastld;
+    if(names) stub = "QDlog";
+    return fdiffgrowthmCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return std::log(y)-rho*std::log(x); }); // log(y*(1/(rho*x))) gives log(y) - log(rho*x), but we want log(y) - rho*log(x)
+  case 3:
+    if(names) stub = "G";
+    return fdiffgrowthmCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return (y-x)*(rho/x); }); // same speed as fixing 100 !
+  case 4:
+    fastld:
+    if(names) stub = "Dlog";
+    return fdiffgrowthmCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return rho*std::log(y*(1/x)); });
+  default: stop("Unknown return option!");
+  }
+}
+
+
+template <typename F>
+List fdiffgrowthlCppImpl(const List& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
                  double fill = NA_REAL, int ng = 0, const IntegerVector& g = 0,
                  const SEXP& gs = R_NilValue, const SEXP& t = R_NilValue,
-                 bool logdiff = false, bool names = true) {
+                 std::string stub = "", bool names = true, F FUN = [](double y, double x) { return y-x; }) { // const needed for #if response...
 
-  int l = x.size(), ns = n.size(), ds = diff.size(), zeros = 0, pos = INT_MIN;
+  int l = x.size(), ns = n.size(), ds = diff.size(), zeros = 0, pos = INT_MAX;
   IntegerVector absn = no_init_vector(ns);
   for(int i = ns; i--; ) {
-    if(n[i] == pos) stop("duplicated values in n detected"); // because one might mistakenly pass a factor to the n-slot !!
+    if(n[i] == pos) stop("duplicated values in n detected"); // because one might mistakenly pass a factor to the n-slot
     pos = n[i];
     if(pos == 0) ++zeros;
-    if(pos < 0) absn[i] = -pos;
-    else absn[i] = pos;
+    if(pos < 0) {
+      if(pos == NA_INTEGER) stop("NA in n");
+      absn[i] = -pos;
+    } else absn[i] = pos;
   }
   pos = 0;
-  auto FUN = logdiff ? do_logdiff : do_growth;
-  std::string stub, stub2;
-  if(names) {
-    if(logdiff) {
-      stub = "Dlog";
-      stub2 = "FDlog";
-    } else {
-      stub = "G";
-      stub2 = "FG";
-    }
-  }
+  std::string stub2 = names ? "F" + stub : "";
+
   int ncol = ((ns-zeros)*ds+zeros)*l;
   List out(ncol);
   CharacterVector nam = names ? no_init_vector(ncol) : no_init_vector(1);
@@ -1178,7 +1202,7 @@ List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector&
       IntegerVector omap = no_init_vector(os);
       LogicalVector ocheck(os, true);
       for(int i = 0; i != os; ++i) {
-        if(ord[i] > os) stop("t needs to be a factor or integer vector of time-periods between 1 and nrow(x)");
+        if(ord[i] > os || ord[i] < 1) stop("t needs to be a factor or integer vector of time-periods between 1 and nrow(x)");
         if(ocheck[ord[i]-1]) {
           ocheck[ord[i]-1] = false;
           omap[ord[i]-1] = i;
@@ -1272,7 +1296,7 @@ List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector&
     }
   } else { // With groups
     int gss = g.size(), ags = gss/ng, ngp = ng+1, maxdiff = max(diff);
-    IntegerVector gsv = no_init_vector(ng); // NULL; gives compiler warning
+    IntegerVector gsv = no_init_vector(ng);
     if(Rf_isNull(t)) { // Ordered data
       if(maxdiff != 1) {
         if(Rf_isNull(gs)) {
@@ -1290,7 +1314,7 @@ List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector&
         if(gss != column.size()) stop("nrow(x) must match length(g)");
         for(int p = 0; p != ns; ++p) {
           int np = n[p];
-          if(absn[p]*maxdiff > ags) stop("abs(n * diff) exceeds average group size: %i", ags);
+          if(absn[p]*maxdiff > ags) warning("abs(n * diff) exceeds average group-size (%i). This could also be a result of unused factor levels. See #25.", ags);
           if(np>0) { // Positive lagged and iterated differences
             int d1 = diff[0];
             bool L1 = np == 1;
@@ -1422,12 +1446,17 @@ List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector&
       }
       IntegerVector omap(gss), cgs = no_init_vector(ngp), index = no_init_vector(gss);
       // int cgs[ngp], seen[ngp], index[gss], memsize = sizeof(int)*(ngp);
-      cgs[1] = 0;
-      for(int i = 2; i != ngp; ++i) cgs[i] = cgs[i-1] + gsv[i-2];
+      cgs[0] = cgs[1] = 0;
+      for(int i = 1; i != ng; ++i) {
+        cgs[i+1] = cgs[i] + gsv[i-1]; // or get "starts from forderv"
+        if(min[i] == NA_INTEGER) stop("Timevar contains missing values"); // Fastest here ?
+      }
+      if(min[ng] == NA_INTEGER) stop("Timevar contains missing values"); // Fastest here ?
+
       for(int i = 0; i != gss; ++i) {
         ord2[i] = ord[i] - min[g[i]];
         if(ord2[i] >= gsv[g[i]-1]) stop("Gaps in timevar within one or more groups");
-        index[i] = cgs[g[i]]+ord2[i]; // index ??
+        index[i] = cgs[g[i]]+ord2[i]; // index ?
         if(omap[index[i]] == 0) omap[index[i]] = i;
         else stop("Repeated values of timevar within one or more groups");
       }
@@ -1436,7 +1465,7 @@ List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector&
         if(gss != column.size()) stop("nrow(x) must match length(g)");
         for(int p = 0; p != ns; ++p) {
           int np = n[p];
-          if(absn[p]*maxdiff > ags) stop("abs(n * diff) exceeds average group size: %i", ags);
+          if(absn[p]*maxdiff > ags) warning("abs(n * diff) exceeds average group-size (%i). This could also be a result of unused factor levels. See #25.", ags);
           if(np>0) { // Positive lagged and iterated differences
             int d1 = diff[0];
             bool L1 = np == 1;
@@ -1550,10 +1579,62 @@ List fgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector&
     }
   }
   DUPLICATE_ATTRIB(out, x);
-  if(names) { // best way to code this ??
+  if(names) { // best way to code this ?
     out.attr("names") = nam;
   } else if(ncol != l) {
     out.attr("names") = R_NilValue;
   }
   return out;
 }
+
+// [[Rcpp::export]]
+List fdiffgrowthlCpp(const List& x, const IntegerVector& n = 1, const IntegerVector& diff = 1,
+                     double fill = NA_REAL, int ng = 0, const IntegerVector& g = 0,
+                     const SEXP& gs = R_NilValue, const SEXP& t = R_NilValue,
+                     int ret = 1, double rho = 1, bool names = true) {
+
+  std::string stub;
+  switch (ret)
+  {       // [rho] or [&rho] ?  // https://stackoverflow.com/questions/30217956/error-variable-cannot-be-implicitly-captured-because-no-default-capture-mode-h
+  case 1:
+    if(names) stub = (rho == 1) ? "D" : "QD"; // QD for quasi-differences !
+    return fdiffgrowthlCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return y-rho*x; }); // return y-x; same efficiency as return y-rho*x; when rho = 1 -> smart compiler !, and reduced file size !!
+  case 2:
+    if(rho == 1) goto fastld;
+    if(names) stub = "QDlog";
+    return fdiffgrowthlCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return std::log(y)-rho*std::log(x); }); // log(y*(1/(rho*x))) gives log(y) - log(rho*x), but we want log(y) - rho*log(x)
+  case 3:
+    if(names) stub = "G";
+    return fdiffgrowthlCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return (y-x)*(rho/x); }); // same speed as fixing 100 !
+  case 4:
+    fastld:
+    if(names) stub = "Dlog";
+    return fdiffgrowthlCppImpl(x, n, diff, fill, ng, g, gs, t, stub, names, [rho](double y, double x) { return rho*std::log(y*(1/x)); });
+  default: stop("Unknown return option!");
+  }
+}
+
+// Old attempts without template ....
+// #define FUN(y, x) (ret == 1 && rho1) ? ((y)-(x)) :
+// (ret == 1) ? ((y)-rho*(x)) :
+//   (ret == 2 && rho1) ? (log((y)*(1/(x)))) :
+//   (ret == 2) ? (log((y)*(1/(rho*(x))))) :
+//   (ret == 3) ? (((y)-(x))*(100/(x))) : (log((y)*(1/(x)))*100)
+
+// #define rho1 (rho == 1)
+// #define retm (ret)
+//
+// #if retm == 1 && rho1
+// #define FUN(y, x) ((y)-(x))
+// #elif retm == 1
+// #define FUN(y, x) ((y)-rho*(x))
+// #elif retm == 2 && rho1
+// #define FUN(y, x) (log((y)*(1/(x))))
+// #elif retm == 2
+// #define FUN(y, x) (log((y)*(1/(rho*(x)))))
+// #elif retm == 3
+// #define FUN(y, x) (((y)-(x))*(100/(x)))
+// #elif retm == 4
+// #define FUN(y, x) (log((y)*(1/(x)))*100)
+// #endif
+
