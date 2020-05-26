@@ -102,11 +102,10 @@ fNdistinct(GGDC10S)
 # The countries included:
 cat(funique(GGDC10S$Country, ordered = TRUE))
 
-# use descr(GGDC10S) for a more detailed description of each variable
 
 ## --------------------------------------------------------------------------------------------------
-# Converting data to percentages of overall VA / EMP
-pGGDC10S <- sweep(GGDC10S[6:15], 1, GGDC10S$SUM, "/") * 100
+# Converting data to percentages of overall VA / EMP, dapply keeps the attributes, see section 4.1
+pGGDC10S <- dapply(GGDC10S[6:15], `*`, 100 / GGDC10S$SUM) 
 # Summarizing the sectoral data by variable, overall, between and within countries
 su <- qsu(pGGDC10S, by = GGDC10S$Variable, pid = GGDC10S[c("Variable","Country")], higher = TRUE) 
 
@@ -121,11 +120,11 @@ library(data.table)
 library(ggplot2)
 
 plotGGDC <- function(ctry) {
-dat <- fsubset(GGDC10S, Country == ctry)
-dat <- add_vars(fselect(dat, Variable, Year), 
-       replace_outliers(sweep(get_vars(dat, 6:15), 1, dat$SUM, "/"), 0, NA, "min"))
-dat$Variable <- recode_char(dat$Variable,"VA"="Value Added Share","EMP"="Employment Share")
-dat <- melt(qDT(dat), 1:2, variable.name = "Sector")
+dat <- fsubset(GGDC10S, Country == ctry, Variable, Year, AGR:SUM)
+fselect(dat, AGR:OTH) <- replace_outliers(dapply(fselect(dat, AGR:OTH), `*`, 1 / dat$SUM), 0, NA, "min")
+dat$SUM <- NULL
+dat$Variable <- recode_char(dat$Variable, VA = "Value Added Share", EMP = "Employment Share")
+dat <- melt(qDT(dat), 1:2, variable.name = "Sector", na.rm = TRUE)
 
 ggplot(aes(x = Year, y = value, fill = Sector), data = dat) +
   geom_area(position = "fill", alpha = 0.9) + labs(x = NULL, y = NULL) +
@@ -138,8 +137,9 @@ ggplot(aes(x = Year, y = value, fill = Sector), data = dat) +
         strip.background = element_rect(colour = "grey20", fill = "grey20"),
         strip.text = element_text(face = "bold"))
 }
-# Plotting the structural transformation of Tannzania
-plotGGDC("TZA")
+
+# Plotting the structural transformation of Botswana
+plotGGDC("BWA")
 
 
 ## --------------------------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ N_distinct
 head(qDF(N_distinct, "variable"))
 
 ## --------------------------------------------------------------------------------------------------
-# This converts the matrix to a list of 1860 row-vectors or length 4.
+# This converts the matrix to a list of 1860 row-vectors of length 4.
 microbenchmark(mrtl(EuStockMarkets))
 
 ## --------------------------------------------------------------------------------------------------
@@ -355,7 +355,7 @@ weights <- abs(rnorm(fnrow(mtcars))) # fnrow is a bit faster for data.frame's
 fmean(mtcars, w = weights) # Weighted mean
 fsd(mtcars, w = weights) # Frequency-weighted standard deviation
 fsum(mtcars, w = weights) # Total
-fmode(mtcars, w = weights) # Weighted statistical mode (i.e. the row with the largest weight)
+fmode(mtcars, w = weights) # Weighted statistical mode (i.e. the value with the largest sum of weights)
 
 ## --------------------------------------------------------------------------------------------------
 fmean(mtcars, mtcars$cyl)
@@ -364,10 +364,10 @@ fmean(mtcars, fselect(mtcars, cyl, vs, am))
 
 # Getting column indices 
 ind <- fselect(mtcars, cyl, vs, am, return = "indices")
-fmean(gv(mtcars, -ind), gv(mtcars, ind))  # gv is shortcut for get_vars
+fmean(get_vars(mtcars, -ind), get_vars(mtcars, ind))  
 
 ## --------------------------------------------------------------------------------------------------
-# This creates a (ordered) factor
+# This creates a factor
 f <- qF(mtcars$cyl, na.exclude = FALSE)
 # The 'na.included' attribute skips a missing value check on this factor
 str(f)
@@ -465,7 +465,8 @@ head(collap(wlddev, ~ iso3c + decade))
 #         return = c("wide","list","long","long_dupl"), give.names = "auto") # , ...
 
 ## --------------------------------------------------------------------------------------------------
-head(collap(wlddev, ~ iso3c + decade, cols = 9:12))
+# Same as collap(wlddev, ~ iso3c + decade, cols = 9:12)
+head(collap(wlddev, PCGDP + LIFEEX + GINI + ODA ~ iso3c + decade))
 
 ## --------------------------------------------------------------------------------------------------
 head(collap(wlddev, ~ iso3c + decade, list(fmean, fmedian, fsd), cols = 9:12))
@@ -587,7 +588,7 @@ STD_GGDC10S <- STD(GGDC10S, ~ Variable + Country, cols = 6:16)
 head(STD_GGDC10S)
 
 # Correlating Standardized Value-Added across countries
-pwcor(num_vars(filter(STD_GGDC10S, Variable == "VA")))
+pwcor(fsubset(STD_GGDC10S, Variable == "VA", STD.AGR:STD.SUM))
 
 ## --------------------------------------------------------------------------------------------------
 ## Simple centering and averaging
@@ -629,7 +630,7 @@ par(oldpar)
 
 ## --------------------------------------------------------------------------------------------------
 # When using operators in formulas, we need to remove missing values beforehand to obtain the same results as a Fixed-Effects package
-data <- na.omit(get_vars(wlddev, c("iso3c","year","PCGDP","LIFEEX")))
+data <- na_omit(get_vars(wlddev, c("iso3c","year","PCGDP","LIFEEX")))
 
 # classical lm() -> iso3c is a factor, creates a matrix of 200+ country dummies.
 coef(lm(PCGDP ~ LIFEEX + iso3c, data))[1:2]
@@ -647,7 +648,7 @@ coef(lm(W.PCGDP ~ W.LIFEEX, W(data, PCGDP + LIFEEX  ~ iso3c, mean = "overall.mea
 coef(lm(PCGDP ~ LIFEEX + B(LIFEEX,iso3c), data))
 
 ## --------------------------------------------------------------------------------------------------
-data$year <- qF(data$year) # the country code (iso3c) is already a factor
+data$year <- qF(data$year, na.exclude = FALSE) # the country code (iso3c) is already a factor
 
 # classical lm() -> creates a matrix of 196 country dummies and 56 year dummies
 coef(lm(PCGDP ~ LIFEEX + iso3c + year, data))[1:2]
@@ -686,16 +687,16 @@ mts <- psmat(wlddev, PCGDP ~ iso3c, ~ year)
 str(mts)
 plot(mts, main = vlabels(wlddev)[9], xlab = "Year")
 
-## ---- fig.height=7---------------------------------------------------------------------------------
+## --------------------------------------------------------------------------------------------------
 # Get panel-series array
 psar <- psmat(wlddev, ~ iso3c, ~ year, cols = 9:12)
 str(psar)
-plot(psar, legend = TRUE)
+plot(psar)
 
+## ---- fig.height=7---------------------------------------------------------------------------------
 # Plot array of Panel-Series aggregated by region:
-plot(psmat(collap(wlddev, ~region+year, cols = 9:12),
-           ~region, ~year), legend = TRUE,
-     labs = vlabels(wlddev)[9:12])
+plot(psmat(collap(wlddev, ~region + year, cols = 9:12),
+           ~region, ~year), legend = TRUE, labs = vlabels(wlddev)[9:12])
 
 ## --------------------------------------------------------------------------------------------------
 # This gives list of ps-matrices
@@ -805,11 +806,6 @@ D(y, -2:2, 1:2, g, t)
 L(D(y, 0:2, 1:2, g, t), 0:1, g, t)
 
 ## --------------------------------------------------------------------------------------------------
-tryCatch(D(y, 3, 2, g, t), error = function(e) e)
-
-## --------------------------------------------------------------------------------------------------
-head(G(wlddev, 0:1, 1, PCGDP + LIFEEX ~ iso3c, ~year))
-
 head(G(GGDC10S, 1, 1, ~ Variable + Country, ~ Year, cols = 6:10))
 
 ## --------------------------------------------------------------------------------------------------
@@ -822,9 +818,6 @@ moddat <- HDW(L(G(wlddev, c(0, 10), 1, ~iso3c, ~year, 9:10), c(0, 10), ~iso3c, ~
 summary(lm(HDW.L10G1.PCGDP ~. , moddat))
 
 ## --------------------------------------------------------------------------------------------------
-microbenchmark(HDW(L(G(wlddev, c(0, 10), 1, ~iso3c, ~year, 9:10), c(0, 10), ~iso3c, ~year), ~iso3c + qF(year)))
-
-## --------------------------------------------------------------------------------------------------
 pwlddev <- plm::pdata.frame(wlddev, index = c("iso3c", "year"))
 moddat <- HDW(L(G(pwlddev, c(0, 10), 1, 9:10), c(0, 10)))[-c(1,5)]
 summary(lm(HDW.L10G1.PCGDP ~. , moddat))
@@ -833,8 +826,8 @@ summary(lm(HDW.L10G1.PCGDP ~. , moddat))
 library(vars)
 # The 6 most important non-government sectors (see section 1)
 sec <- c("AGR","MAN","WRT","CON","TRA","FIRE")
-# This creates a data.table containing the value added of the 6 most important non-government sectors
-data <- qDT(GGDC10S)[Variable == "VA"] %>% get_vars(c("Country","Year", sec)) %>% na.omit
+# This creates a data.frame containing the value added of the 6 most important non-government sectors
+data <- na_omit(fsubset(GGDC10S, Variable == "VA", c("Country","Year", sec)), cols = sec)
 # Let's look at the log VA in agriculture across countries:
 AGRmat <- log(psmat(data, AGR ~ Country, ~ Year, transpose = TRUE))   # Converting to panel-series matrix
 plot(AGRmat)
@@ -854,7 +847,7 @@ plot(AGRmat)
 # Taking logs
 get_vars(data, 3:8) <- dapply(get_vars(data, 3:8), log)
 # Iteratively projecting out country FE and cubic trends from complete cases (still very slow)
-get_vars(data, 3:8) <- HDW(data, ~ qF(Country)*poly(Year, 3), fill = TRUE)
+get_vars(data, 3:8) <- HDW(data, ~ qF(Country)*poly(Year, 3), fill = TRUE, eps = 1e-05)
 # Scaling
 get_vars(data, 3:8) <- STD(data, ~ Country, cols = 3:8, keep.by = FALSE)
 
@@ -865,7 +858,7 @@ plot(psmat(data, ~Country, ~Year))
 # This adds one lag of all series to the data
 add_vars(data) <- L(data, 1, ~ Country, ~ Year, keep.ids = FALSE)
 # This removes missing values from all but the first row and drops identifier columns (vars is made for time-series without gaps)
-data <- rbind(data[1, -(1:2)], na.omit(data[-1, -(1:2)]))
+data <- rbind(ss(data, 1, -(1:2)), na_omit(ss(data, -1, -(1:2))))
 head(data)
 
 ## --------------------------------------------------------------------------------------------------
@@ -874,14 +867,14 @@ nam <- names(data)[1:6]
 
 pVAR <- list(varresult = setNames(lapply(seq_len(6), function(i)    # list of 6 lm's each regressing
                lm(as.formula(paste0(nam[i], "~ -1 + . ")),          # the sector on all lags of
-               get_vars(data, c(i, 7:length(data)))[-1])), nam),    # itself and other sectors, removing the missing first row
-             datamat = data[-1],                                    # The full data containing levels and lags of the sectors, removing the missing first row
+               get_vars(data, c(i, 7:fncol(data))))), nam),         # itself and other sectors, removing the missing first row
+             datamat = ss(data, -1),                                # The full data containing levels and lags of the sectors, removing the missing first row
              y = do.call(cbind, get_vars(data, 1:6)),               # Only the levels data as matrix
              type = "none",                                         # No constant or tend term: We harmonized the data already
              p = 1,                                                 # The lag-order
              K = 6,                                                 # The number of variables
-             obs = nrow(data)-1,                                    # The number of non-missing obs
-             totobs = nrow(data),                                   # The total number of obs
+             obs = fnrow(data)-1,                                   # The number of non-missing obs
+             totobs = fnrow(data),                                  # The total number of obs
              restrictions = NULL,
              call = quote(VAR(y = data)))
 
@@ -892,12 +885,12 @@ serial.test(pVAR)
 
 ## --------------------------------------------------------------------------------------------------
 # This computes the pairwise correlations between standardized sectoral growth rates across countries
-corr <- filter(GGDC10S, Variable == "VA") %>%   # Subset rows: Only VA
-           group_by(Country) %>%                # Group by country
-                get_vars(sec) %>%               # Select the 6 sectors
-                   fgrowth %>%                  # Compute Sectoral growth rates (a time-variable can be passsed, but not necessary here as the data is ordered)
-                      fscale %>%                # Scale and center (i.e. standardize)
-                         pwcor                  # Compute Pairwise correlations
+corr <- fsubset(GGDC10S, Variable == "VA") %>%   # Subset rows: Only VA
+           fgroup_by(Country) %>%                # Group by country
+                get_vars(sec) %>%                # Select the 6 sectors
+                   fgrowth %>%                   # Compute Sectoral growth rates (a time-variable can be passsed, but not necessary here as the data is ordered)
+                      fscale %>%                 # Scale and center (i.e. standardize)
+                         pwcor                   # Compute Pairwise correlations
 
 corr
 

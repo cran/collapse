@@ -47,8 +47,6 @@ str(index(pwlddev))
 # This shows the individual and time dimensions
 pdim(pwlddev)
 
-# This shows which variables vary across which dimensions
-pvar(pwlddev)
 
 ## -------------------------------------------------------------------------------------------------
 # Panel-Series of GDP per Capita and Life-Expectancy at Birth
@@ -179,7 +177,6 @@ qsu(fscale(pwlddev$PCGDP, mean = FALSE, sd = 3))
 # Scaling without centering can also be done using fsd, but this does not preserve the mean
 qsu(fsd(pwlddev$PCGDP, index(pwlddev, 1), TRA = "/"))
 
-# Again, the *Fast Statistical Functions* in *collapse* do not have methods for *pseries* or *pdata.frame*'s (yet). 
 
 ## -------------------------------------------------------------------------------------------------
 fmean(pwlddev$PCGDP)  # Overall mean
@@ -207,8 +204,7 @@ all_identical(L(LIFEEX, -1:3), F(LIFEEX, 1:-3), flag(LIFEEX, -1:3))
 
 # The native plm implementation also returns a matrix of lags but with different column names
 head(plm::lag(LIFEEX, -1:3), 4)
-# Just the meaning is a bit ambiguous...
-head(plm::lead(LIFEEX, 1:-3), 4)
+
 
 ## -------------------------------------------------------------------------------------------------
 # This lags the entire data
@@ -242,23 +238,38 @@ identical(G(LIFEEX), fgrowth(LIFEEX))
 identical(fdiff(LIFEEX), diff(LIFEEX)) # Same as plm::diff.pseries (which does not compute iterated panel-differences)
 
 ## -------------------------------------------------------------------------------------------------
-# Panel log-difference (growth rate) of Life Expectancy
-head(fgrowth(LIFEEX, logdiff = TRUE))
+# Panel log-difference of Life Expectancy
+head(Dlog(LIFEEX))
 
-# Panel log-difference (growth rate) of log-difference (growth rate) of Life Expectancy
-head(fgrowth(LIFEEX, diff = 2, logdiff = TRUE))
-
-identical(G(LIFEEX, logdiff = TRUE), fgrowth(LIFEEX, logdiff = TRUE))
+# Panel log-difference growth rate (in percentage terms) of Life Expectancy
+head(G(LIFEEX, logdiff = TRUE))
 
 ## -------------------------------------------------------------------------------------------------
 # first and second forward-difference and first and second difference of lags 1-3 of Life-Expectancy
 head(D(LIFEEX, -1:3, 1:2))
 
+# Same with Log-differences 
+head(Dlog(LIFEEX, -1:3, 1:2))
+
 # Same with (exact) growth rates
 head(G(LIFEEX, -1:3, 1:2))
 
-# Same with Log-differences (growth rates)
-head(G(LIFEEX, -1:3, 1:2, logdiff = TRUE))
+## -------------------------------------------------------------------------------------------------
+# Regression of GDP on Life Expectance with country and time FE
+mod <- lm(PCGDP ~ LIFEEX, data = fHDwithin(fselect(pwlddev, PCGDP, LIFEEX), fill = FALSE))
+mod
+
+# Computing autocorrelation of residuals
+r <- residuals(mod)
+r <- pwcor(r, L(r, 1, substr(names(r), 1, 3)))  # Need this to compute a panel-lag
+r
+
+# Running the regression again quasi-differencing the transformed data
+modCO <- lm(PCGDP ~ LIFEEX, data = fdiff(fHDwithin(fselect(pwlddev, PCGDP, LIFEEX), variable.wise = FALSE), rho = r, stubs = FALSE))
+modCO
+
+# In this case rho is almost 1, so we might as well just difference the untransformed data and go with that
+# We also need to bootstrap this for proper standard errors. 
 
 ## -------------------------------------------------------------------------------------------------
 # Sequence of differneces (same as above), adding one extra lag of the whole sequence
@@ -278,10 +289,10 @@ str(psmat(LIFEEX))
 str(psmat(LIFEEX, transpose = TRUE))
 
 # Same as plm::as.matrix.pseries, apart from attributes
-identical(`attributes<-`(psmat(LIFEEX), NULL),        
-          `attributes<-`(as.matrix(LIFEEX), NULL)) 
-identical(`attributes<-`(psmat(LIFEEX, transpose = TRUE), NULL), 
-          `attributes<-`(as.matrix(LIFEEX, idbyrow = FALSE), NULL)) 
+identical(unattrib(psmat(LIFEEX)),        
+          unattrib(as.matrix(LIFEEX))) 
+identical(unattrib(psmat(LIFEEX, transpose = TRUE)), 
+          unattrib(as.matrix(LIFEEX, idbyrow = FALSE))) 
 
 ## -------------------------------------------------------------------------------------------------
 psar <- psmat(pwlddev, cols = 9:12)
@@ -314,83 +325,104 @@ data <- pdata.frame(data, index = c("iso3c", "year"))
 pdim(data)
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
+library(microbenchmark)
 # Creating the extended panel-series for Life Expectancy (l for large)
 LIFEEX_l <- data$LIFEEX
 str(LIFEEX_l)
 
 # Between Transformations
-system.time(Between(LIFEEX_l, na.rm = TRUE))
-system.time(fbetween(LIFEEX_l))
+microbenchmark(Between(LIFEEX_l, na.rm = TRUE), times = 10)
+microbenchmark(fbetween(LIFEEX_l), times = 10)
 
 # Within Transformations
-system.time(Within(LIFEEX_l, na.rm = TRUE))
-system.time(fwithin(LIFEEX_l))
+microbenchmark(Within(LIFEEX_l, na.rm = TRUE), times = 10)
+microbenchmark(fwithin(LIFEEX_l), times = 10)
 
 # Higher-Dimenional Between and Within Transformations
-system.time(fHDbetween(LIFEEX_l))
-system.time(fHDwithin(LIFEEX_l))
+microbenchmark(fHDbetween(LIFEEX_l), times = 10)
+microbenchmark(fHDwithin(LIFEEX_l), times = 10)
 
 # Single Lag
-system.time(plm::lag(LIFEEX_l))
-system.time(flag(LIFEEX_l))
+microbenchmark(plm::lag(LIFEEX_l), times = 10)
+microbenchmark(flag(LIFEEX_l), times = 10)
 
 # Sequence of Lags / Leads
-system.time(plm::lag(LIFEEX_l, -1:3))
-system.time(flag(LIFEEX_l, -1:3))
+microbenchmark(plm::lag(LIFEEX_l, -1:3), times = 10)
+microbenchmark(flag(LIFEEX_l, -1:3), times = 10)
 
 # Single difference
-system.time(diff(LIFEEX_l))
-system.time(fdiff(LIFEEX_l))
+microbenchmark(diff(LIFEEX_l), times = 10)
+microbenchmark(fdiff(LIFEEX_l), times = 10)
 
 # Iterated Difference
-system.time(fdiff(LIFEEX_l, diff = 2))
+microbenchmark(fdiff(LIFEEX_l, diff = 2), times = 10)
 
 # Sequence of Lagged / Leaded and iterated differences
-system.time(fdiff(LIFEEX_l, -1:3, 1:2))
+microbenchmark(fdiff(LIFEEX_l, -1:3, 1:2), times = 10)
 
 # Single Growth Rate
-system.time(fgrowth(LIFEEX_l))
+microbenchmark(fgrowth(LIFEEX_l), times = 10)
 
 # Single Log-Difference
-system.time(fgrowth(LIFEEX_l, logdiff = TRUE))
+microbenchmark(fdiff(LIFEEX_l, logdiff = TRUE), times = 10)
 
 # Panel-Series to Matrix Conversion
 # system.time(as.matrix(LIFEEX_l))  This takes about 3 minutes to compute
-system.time(psmat(LIFEEX_l))
+microbenchmark(psmat(LIFEEX_l), times = 10)
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
-system.time(L(data, cols = 3:6))
+microbenchmark(L(data, cols = 3:6), times = 10)
 library(data.table)
 setDT(data)
 # 'Improper' panel-lag
-system.time(data[, shift(.SD), by = iso3c, .SDcols = 3:6])
+microbenchmark(data[, shift(.SD), by = iso3c, .SDcols = 3:6], times = 10)
 
 # This does what L is actually doing (without sorting the data)
-system.time(data[order(year), shift(.SD), by = iso3c, .SDcols = 3:6]) 
+microbenchmark(data[order(year), shift(.SD), by = iso3c, .SDcols = 3:6], times = 10) 
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
 x <- rnorm(1e7)                                     # 10 million obs
 g <- qF(rep(1:1e6, each = 10), na.exclude = FALSE)  # 1 million individuals
 t <- qF(rep(1:10, 1e6), na.exclude = FALSE)         # 10 time-periods per individual
 
-system.time(fbetween(x, g))
-system.time(fwithin(x, g))
-system.time(flag(x, 1, g, t))
-system.time(flag(x, -1:1, g, t))
-system.time(fdiff(x, 1, 1, g, t))
-system.time(fdiff(x, 1, 2, g, t))
-system.time(fdiff(x, -1:1, 1:2, g, t))
+microbenchmark(fbetween(x, g), times = 10)
+microbenchmark(fwithin(x, g), times = 10)
+microbenchmark(flag(x, 1, g, t), times = 10)
+microbenchmark(flag(x, -1:1, g, t), times = 10)
+microbenchmark(fdiff(x, 1, 1, g, t), times = 10)
+microbenchmark(fdiff(x, 1, 2, g, t), times = 10)
+microbenchmark(fdiff(x, -1:1, 1:2, g, t), times = 10)
+
+## -------------------------------------------------------------------------------------------------
+# This checks for any variation within "iso3c", the first index variable: TRUE means data vary within country i.e. over time. 
+varying(pwlddev)
+
+## -------------------------------------------------------------------------------------------------
+# This checks any variation within time variable, i.e. cross-sectional variation. 
+varying(pwlddev, effect = "year")
+
+## -------------------------------------------------------------------------------------------------
+# This checks cross-sectional variation within each year for the 4 indicators. 
+head(varying(pwlddev, effect = "year", cols = 9:12, any_group = FALSE))
+
+## -------------------------------------------------------------------------------------------------
+head(varying(pwlddev$GINI, any_group = FALSE), 20)
+
+## -------------------------------------------------------------------------------------------------
+head(fNdistinct(pwlddev$GINI, index(pwlddev, "iso3c")), 20)
+
+head(round(fsd(pwlddev$GINI, index(pwlddev, "iso3c")), 2), 20)
 
 ## -------------------------------------------------------------------------------------------------
 qsu(pwlddev, cols = 9:12, higher = TRUE)
 
 ## -------------------------------------------------------------------------------------------------
-qsu(pwlddev, ~ income, w = rep(1, nrow(pwlddev)), cols = 9:12, higher = TRUE)
+qsu(pwlddev, ~ income, cols = 9:12, higher = TRUE)
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
 qsu(LIFEEX_l)
 
-system.time(qsu(LIFEEX_l))
+microbenchmark(qsu(LIFEEX_l))
 
 ## -------------------------------------------------------------------------------------------------
 # Overall pairwise correlations with pairwise observation count and significance testing (* = significant at 5% level)
@@ -419,7 +451,7 @@ min(pwNobs(suffsamp))
 # We can use the pairwise-correlations of the annual growth rates to hierarchically cluster the economies:
 plot(hclust(as.dist(1-pwcor(G(suffsamp)))))
 
-# Finally we could do PCA on the Growth Rates:
+# Finally we could do PCA on the growth rates:
 eig <- eigen(pwcor(G(suffsamp)))
 plot(seq_col(suffsamp), eig$values/sum(eig$values)*100, xlab = "Number of Principal Components", ylab = "% Variance Explained", main = "Screeplot")
 
@@ -482,18 +514,18 @@ HT_est <- function(y, X1, Z2, X2 = NULL, Z1 = NULL, time.FE = FALSE) {
 
 ## ---- warning=FALSE-------------------------------------------------------------------------------
 dat <- get_vars(wlddev, c("iso3c","year","OECD","PCGDP","LIFEEX","GINI","ODA"))
-get_vars(dat, 4:7) <- log(get_vars(dat, 4:7))       # Taking logs of the data
-dat$OECD <- as.numeric(dat$OECD)                    # Creating OECD dummy
-dat <- pdata.frame(droplevels(na.omit(dat)),        # Creating Panel-data.frame, after removing missing values
-                   index = c("iso3c", "year"))      # and dropping unused factor levels
+get_vars(dat, 4:7) <- lapply(get_vars(dat, 4:7), log) # Taking logs of the data
+dat$OECD <- as.numeric(dat$OECD)                      # Creating OECD dummy
+dat <- pdata.frame(droplevels(na_omit(dat)),          # Creating Panel-data.frame, after removing missing values
+                   index = c("iso3c", "year"))        # and dropping unused factor levels
 pdim(dat)
-pvar(dat)
+varying(dat)
 
 ## -------------------------------------------------------------------------------------------------
-# This tests each oth the covariates is correlated with with alpha_i
-phtest(LIFEEX ~ PCGDP, dat)  # Likely correlated !
-phtest(LIFEEX ~ ODA, dat)    # Likely correlated !
-phtest(LIFEEX ~ GINI, dat)   # Likely not correlated !!
+# This tests whether each of the covariates is correlated with alpha_i
+phtest(LIFEEX ~ PCGDP, dat)  # Likely correlated 
+phtest(LIFEEX ~ ODA, dat)    # Likely correlated 
+phtest(LIFEEX ~ GINI, dat)   # Likely not correlated !
 phtest(LIFEEX ~ PCGDP + ODA + GINI, dat)  # Fixed Effects is the appropriate model for this regression
 
 ## -------------------------------------------------------------------------------------------------
@@ -519,12 +551,12 @@ HT_est(y = dat$LIFEEX,
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
 dat <- get_vars(data, c("iso3c","year","OECD","PCGDP","LIFEEX","GINI","ODA"))
-get_vars(dat, 4:7) <- log(get_vars(dat, 4:7))       # Taking logs of the data
-dat$OECD <- as.numeric(dat$OECD)                    # Creating OECD dummy
-dat <- pdata.frame(droplevels(na.omit(dat)),        # Creating Panel-data.frame, after removing missing values
-                   index = c("iso3c", "year"))      # and dropping unused factor levels
+get_vars(dat, 4:7) <- lapply(get_vars(dat, 4:7), log) # Taking logs of the data
+dat$OECD <- as.numeric(dat$OECD)                      # Creating OECD dummy
+dat <- pdata.frame(droplevels(na_omit(dat)),          # Creating Panel-data.frame, after removing missing values
+                   index = c("iso3c", "year"))        # and dropping unused factor levels
 pdim(dat)
-pvar(dat)
+varying(dat)
 
 library(microbenchmark)
 microbenchmark(HT_est = HT_est(y = dat$LIFEEX,     # The estimator as before

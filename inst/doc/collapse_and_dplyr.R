@@ -47,22 +47,22 @@ GGDC10S %>% fmode(drop = FALSE)         # Keep data structure intact
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% 
-  group_by(Variable,Country) %>%
+  group_by(Variable, Country) %>%
   select_at(6:16) %>% fmean
 
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% group_by(Variable,Country) %>% attr("groups")
+GGDC10S %>% group_by(Variable, Country) %>% attr("groups")
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% group_by(Variable,Country) %>% GRP %>% str
+GGDC10S %>% group_by(Variable, Country) %>% GRP %>% str
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% fgroup_by(Variable,Country) %>% get_vars(6:16) %>% fmedian
+GGDC10S %>% fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fmedian
 
-microbenchmark(collapse = GGDC10S %>% fgroup_by(Variable,Country) %>% get_vars(6:16) %>% fmedian,
-               hybrid = GGDC10S %>% group_by(Variable,Country) %>% select_at(6:16) %>% fmedian,
-               dplyr = GGDC10S %>% group_by(Variable,Country) %>% select_at(6:16) %>% summarise_all(median, na.rm = TRUE))
+microbenchmark(collapse = GGDC10S %>% fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fmedian,
+               hybrid = GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% fmedian,
+               dplyr = GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% summarise_all(median, na.rm = TRUE))
 
 ## -------------------------------------------------------------------------------------------------
 class(group_by(GGDC10S, Variable, Country))
@@ -98,7 +98,7 @@ GGDC10S %>% filter(Variable == "VA" & Year > 1990) %>% select(Country, Year, AGR
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
   get_vars(6:16) %>% {
     cbind(fmedian(.),
           add_stub(fmean(., keep.group_vars = FALSE), "mean_"))
@@ -106,7 +106,7 @@ GGDC10S %>%
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>% {
+  fgroup_by(Variable, Country) %>% {
    add_vars(ffirst(get_vars(., "Reg", regex = TRUE)),        # Regular expression matching column names
             add_stub(fmean(num_vars(.), keep.group_vars = FALSE), "mean_"), # num_vars selects all numeric variables
             add_stub(fmedian(fselect(., PU:TRA), keep.group_vars = FALSE), "median_"), 
@@ -125,38 +125,38 @@ GGDC10S %>%
 
 ## -------------------------------------------------------------------------------------------------
 # This aggregates numeric colums using the mean (fmean) and categorical columns with the mode (fmode)
-GGDC10S %>% fgroup_by(Variable,Country) %>% collapg
+GGDC10S %>% fgroup_by(Variable, Country) %>% collapg
 
 ## -------------------------------------------------------------------------------------------------
 # This aggregates numeric colums using the median and categorical columns using the first value
-GGDC10S %>% fgroup_by(Variable,Country) %>% collapg(fmedian, flast)
+GGDC10S %>% fgroup_by(Variable, Country) %>% collapg(fmedian, flast)
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% fgroup_by(Variable,Country) %>%
+GGDC10S %>% fgroup_by(Variable, Country) %>%
   collapg(list(fmean, fmedian), list(first, fmode, flast)) %>% head(3)
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% fgroup_by(Variable,Country) %>%
+GGDC10S %>% fgroup_by(Variable, Country) %>%
   collapg(list(fmean, fmedian), cols = is.numeric, return = "long")
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% fgroup_by(Variable,Country) %>%
+GGDC10S %>% fgroup_by(Variable, Country) %>%
   collapg(custom = list(fmean = 6:8, fmedian = 10:12))
 
 ## -------------------------------------------------------------------------------------------------
 # This computes a frequency-weighted grouped standard-deviation, taking the total EMP / VA as weight
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
   fselect(AGR:SUM) %>% fsd(SUM)
 
 # This computes a weighted grouped mode, taking the total EMP / VA as weight
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
   fselect(AGR:SUM) %>% fmode(SUM)
 
 ## -------------------------------------------------------------------------------------------------
 # This aggregates numeric colums using the weighted mean and categorical columns using the weighted mode
-GGDC10S %>% group_by(Variable,Country) %>% collapg(w = SUM, wFUN = list(fsum, fmax))
+GGDC10S %>% group_by(Variable, Country) %>% collapg(w = SUM)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% fsubset(Variable == "VA", Country, Year, AGR, SUM) %>%
@@ -180,53 +180,53 @@ GGDC10S %>% char_vars %>% fmode(TRA = "replace") %>% head
 ## -------------------------------------------------------------------------------------------------
 # Demeaning sectoral data by Variable and Country (within transformation)
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fmean(TRA = "-") %>% head(3)
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fmean(TRA = "-") %>% head(3)
 
 # Scaling sectoral data by Variable and Country
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fsd(TRA = "/") %>% head(3)
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fsd(TRA = "/") %>% head(3)
 
 # Normalizing Data by expressing them in percentages of the median value within each country and sector (i.e. the median is 100%)
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>%  
-   fgroup_by(Variable,Country) %>% fmedian(TRA = "%") %>% head(3)
+  fselect(Variable, Country, AGR:SUM) %>%  
+   fgroup_by(Variable, Country) %>% fmedian(TRA = "%") %>% head(3)
 
 
 ## -------------------------------------------------------------------------------------------------
 # Weighted demeaning (within transformation), weighted by SUM
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fmean(SUM, "-") %>% head(3)
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fmean(SUM, "-") %>% head(3)
 
 # Weighted scaling, weighted by SUM
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fsd(SUM, "/") %>% head(3)
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fsd(SUM, "/") %>% head(3)
 
 ## -------------------------------------------------------------------------------------------------
 # This conducts a weighted between transformation (replacing with weighted mean)
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fmean(SUM, "replace")
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fmean(SUM, "replace")
 
 # This also replaces missing values in each group
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fmean(SUM, "replace_fill")
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fmean(SUM, "replace_fill")
 
 
 ## -------------------------------------------------------------------------------------------------
 # This scales and then subtracts the median
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-   fgroup_by(Variable,Country) %>% fsd(TRA = "/") %>% fmedian(TRA = "-")
+  fselect(Variable, Country, AGR:SUM) %>% 
+   fgroup_by(Variable, Country) %>% fsd(TRA = "/") %>% fmedian(TRA = "-")
 
 ## -------------------------------------------------------------------------------------------------
 # This adds a groupwise observation count next to each column
 add_vars(GGDC10S, seq(7,27,2)) <- GGDC10S %>%
-    fgroup_by(Variable,Country) %>% fselect(AGR:SUM) %>%
+    fgroup_by(Variable, Country) %>% fselect(AGR:SUM) %>%
     fNobs("replace_fill") %>% add_stub("N_")
 
 head(GGDC10S)
@@ -235,23 +235,23 @@ rm(GGDC10S)
 ## -------------------------------------------------------------------------------------------------
 # This divides by the product
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
     get_vars(6:16) %>% fprod(TRA = "/") 
 
 # Same thing
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
     get_vars(6:16) %>% TRA(fprod(., keep.group_vars = FALSE), "/") # [same as TRA(.,fprod(., keep.group_vars = FALSE),"/")]
 
 ## -------------------------------------------------------------------------------------------------
 # This only demeans Agriculture (AGR) and Mining (MIN)
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
     get_vars(6:16) %>% TRA(fmean(fselect(., AGR, MIN), keep.group_vars = FALSE), "-")
 
 ## -------------------------------------------------------------------------------------------------
 # Get grouped tibble
-gGGDC <- GGDC10S %>% fgroup_by(Variable,Country)
+gGGDC <- GGDC10S %>% fgroup_by(Variable, Country)
 
 # Get aggregated data
 gsumGGDC <- gGGDC %>% fselect(AGR:SUM) %>% fsum
@@ -262,34 +262,34 @@ head(TRA(gGGDC, gsumGGDC, "/"))
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% # Same as ... %>% fmean(TRA = "replace")
-  fgroup_by(Variable,Country) %>% get_vars(6:16) %>% fbetween %>% head(2)
+  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fbetween %>% head(2)
 
 GGDC10S %>% # Same as ... %>% fmean(TRA = "replace_fill")
-  fgroup_by(Variable,Country) %>% get_vars(6:16) %>% fbetween(fill = TRUE) %>% head(2)
+  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fbetween(fill = TRUE) %>% head(2)
 
 GGDC10S %>% # Same as ... %>% fmean(TRA = "-")
-  fgroup_by(Variable,Country) %>% get_vars(6:16) %>% fwithin %>% head(2)
+  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fwithin %>% head(2)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% 
-  fgroup_by(Variable,Country) %>% 
+  fgroup_by(Variable, Country) %>% 
     fselect(Country, Variable, AGR:SUM) %>% fwithin(mean = "overall.mean")
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% 
-  fgroup_by(Variable,Country) %>% 
+  fgroup_by(Variable, Country) %>% 
     fselect(Country, Variable, AGR:SUM) %>% fwithin(SUM, mean = "overall.mean")
 
 ## -------------------------------------------------------------------------------------------------
 # This efficiently scales and centers (i.e. standardizes) the data
 GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
     fselect(Country, Variable, AGR:SUM) %>% fscale
 
 ## -------------------------------------------------------------------------------------------------
 # Saving grouped tibble
 gGGDC <- GGDC10S %>%
-  fgroup_by(Variable,Country) %>%
+  fgroup_by(Variable, Country) %>%
     fselect(Country, Variable, AGR:SUM)
 
 # Original means
@@ -315,44 +315,44 @@ fsd(fscale(gGGDC, mean = FALSE, sd = "within.sd"))
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>%
   fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% flag(-1:1, Year)
+    fgroup_by(Variable, Country) %>% flag(-1:1, Year)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>%
-  fselect(Variable,Country,AGR:SUM) %>% 
-    fgroup_by(Variable,Country) %>% flag
-
-## -------------------------------------------------------------------------------------------------
-GGDC10S %>%
-  fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% fdiff(c(1, 10), 1:2, Year)
+  fselect(Variable, Country,AGR:SUM) %>% 
+    fgroup_by(Variable, Country) %>% flag
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>%
   fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% fdiff(c(1, 10), 1, Year, logdiff = TRUE)
+    fgroup_by(Variable, Country) %>% fdiff(c(1, 10), 1:2, Year)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>%
   fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% fdiff(t = Year, rho = 0.95)
+    fgroup_by(Variable, Country) %>% fdiff(c(1, 10), 1, Year, logdiff = TRUE)
+
+## -------------------------------------------------------------------------------------------------
+GGDC10S %>%
+  fselect(-Region, -Regioncode) %>% 
+    fgroup_by(Variable, Country) %>% fdiff(t = Year, rho = 0.95)
 
 ## -------------------------------------------------------------------------------------------------
 # Exact growth rates, computed as: (x - lag(x)) / lag(x) * 100
 GGDC10S %>%
   fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% fgrowth(c(1, 10), 1, Year)
+    fgroup_by(Variable, Country) %>% fgrowth(c(1, 10), 1, Year)
 
 # Log-difference growth rates, computed as: log(x / lag(x)) * 100
 GGDC10S %>%
   fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% fgrowth(c(1, 10), 1, Year, logdiff = TRUE)
+    fgroup_by(Variable, Country) %>% fgrowth(c(1, 10), 1, Year, logdiff = TRUE)
 
 ## -------------------------------------------------------------------------------------------------
 # This computes the 1 and 10-year growth rates, for the current period and lagged by one period
 GGDC10S %>%
   fselect(-Region, -Regioncode) %>% 
-    fgroup_by(Variable,Country) %>% fgrowth(c(1, 10), 1, Year) %>% flag(0:1, Year)
+    fgroup_by(Variable, Country) %>% fgrowth(c(1, 10), 1, Year) %>% flag(0:1, Year)
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
 # This shows the groups in GGDC10S
@@ -607,24 +607,24 @@ gc()
 
 ## ---- eval=NCRAN, warning=FALSE, message=FALSE----------------------------------------------------
 # Centering on overall mean
-system.time(fwithin(cgdata, mean = "overall.mean"))
+microbenchmark(fwithin(cgdata, mean = "overall.mean"), times = 10)
 
 # Weighted Centering
-system.time(fwithin(cgdata, SUM))
-system.time(fwithin(cgdata, SUM, mean = "overall.mean"))
+microbenchmark(fwithin(cgdata, SUM), times = 10)
+microbenchmark(fwithin(cgdata, SUM, mean = "overall.mean"), times = 10)
 
 # Weighted Scaling and Standardizing
-system.time(fsd(cgdata, SUM, TRA = "/"))
-system.time(fscale(cgdata, SUM))
+microbenchmark(fsd(cgdata, SUM, TRA = "/"), times = 10)
+microbenchmark(fscale(cgdata, SUM), times = 10)
 
 # Sequence of lags and leads
-system.time(flag(cgdata, -1:1))
+microbenchmark(flag(cgdata, -1:1), times = 10)
 
 # Iterated difference
-system.time(fdiff(cgdata, 1, 2))
+microbenchmark(fdiff(cgdata, 1, 2), times = 10)
 
 # Growth Rate
-system.time(fgrowth(cgdata,1))
+microbenchmark(fgrowth(cgdata,1), times = 10)
 
 ## ---- echo=FALSE--------------------------------------------------------------
 options(oldopts)
