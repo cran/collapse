@@ -36,7 +36,7 @@ fNdistinct(wlddev) # This counts the number of distinct values
 ## -------------------------------------------------------------------------------------------------
 library(plm)
 
-# This creates a panel-data frame
+# This creates a panel data frame
 pwlddev <- pdata.frame(wlddev, index = c("iso3c", "year"))
 
 str(pwlddev, give.attr = FALSE)
@@ -49,7 +49,7 @@ pdim(pwlddev)
 
 
 ## -------------------------------------------------------------------------------------------------
-# Panel-Series of GDP per Capita and Life-Expectancy at Birth
+# Panel Series of GDP per Capita and Life-Expectancy at Birth
 PCGDP <- pwlddev$PCGDP
 LIFEEX <- pwlddev$LIFEEX
 str(LIFEEX)
@@ -282,10 +282,10 @@ head(D(pwlddev, -1:3, 1:2, cols = 9:10), 3)
 head(L(D(pwlddev, -1:3, 1:2, cols = 9:10), 0:1), 3)
 
 ## -------------------------------------------------------------------------------------------------
-# Converting the panel-series to array, individual rows (default)
+# Converting the panel series to array, individual rows (default)
 str(psmat(LIFEEX))
 
-# Converting the panel-series to array, individual columns
+# Converting the panel series to array, individual columns
 str(psmat(LIFEEX, transpose = TRUE))
 
 # Same as plm::as.matrix.pseries, apart from attributes
@@ -326,7 +326,7 @@ pdim(data)
 
 ## ---- eval=NCRAN----------------------------------------------------------------------------------
 library(microbenchmark)
-# Creating the extended panel-series for Life Expectancy (l for large)
+# Creating the extended panel series for Life Expectancy (l for large)
 LIFEEX_l <- data$LIFEEX
 str(LIFEEX_l)
 
@@ -364,9 +364,9 @@ microbenchmark(fdiff(LIFEEX_l, -1:3, 1:2), times = 10)
 microbenchmark(fgrowth(LIFEEX_l), times = 10)
 
 # Single Log-Difference
-microbenchmark(fdiff(LIFEEX_l, logdiff = TRUE), times = 10)
+microbenchmark(fdiff(LIFEEX_l, log = TRUE), times = 10)
 
-# Panel-Series to Matrix Conversion
+# Panel Series to Matrix Conversion
 # system.time(as.matrix(LIFEEX_l))  This takes about 3 minutes to compute
 microbenchmark(psmat(LIFEEX_l), times = 10)
 
@@ -516,7 +516,7 @@ HT_est <- function(y, X1, Z2, X2 = NULL, Z1 = NULL, time.FE = FALSE) {
 dat <- get_vars(wlddev, c("iso3c","year","OECD","PCGDP","LIFEEX","GINI","ODA"))
 get_vars(dat, 4:7) <- lapply(get_vars(dat, 4:7), log) # Taking logs of the data
 dat$OECD <- as.numeric(dat$OECD)                      # Creating OECD dummy
-dat <- pdata.frame(droplevels(na_omit(dat)),          # Creating Panel-data.frame, after removing missing values
+dat <- pdata.frame(droplevels(na_omit(dat)),          # Creating Panel data.frame, after removing missing values
                    index = c("iso3c", "year"))        # and dropping unused factor levels
 pdim(dat)
 varying(dat)
@@ -553,7 +553,7 @@ HT_est(y = dat$LIFEEX,
 dat <- get_vars(data, c("iso3c","year","OECD","PCGDP","LIFEEX","GINI","ODA"))
 get_vars(dat, 4:7) <- lapply(get_vars(dat, 4:7), log) # Taking logs of the data
 dat$OECD <- as.numeric(dat$OECD)                      # Creating OECD dummy
-dat <- pdata.frame(droplevels(na_omit(dat)),          # Creating Panel-data.frame, after removing missing values
+dat <- pdata.frame(droplevels(na_omit(dat)),          # Creating Panel data.frame, after removing missing values
                    index = c("iso3c", "year"))        # and dropping unused factor levels
 pdim(dat)
 varying(dat)
