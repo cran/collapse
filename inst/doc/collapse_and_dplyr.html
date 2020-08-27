@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2020-08-10" />
+<meta name="date" content="2020-08-27" />
 
 <title>collapse and dplyr</title>
 
@@ -320,7 +320,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore"><em>collapse</em> and <em>dplyr</em></h1>
 <h3 class="subtitle">Fast (Weighted) Aggregations and Transformations in a Piped Workflow</h3>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2020-08-10</h4>
+<h4 class="date">2020-08-27</h4>
 
 
 <div id="TOC">
@@ -536,10 +536,10 @@ pre[class] {
 <span id="cb7-18"><a href="#cb7-18"></a>               <span class="dt">hybrid =</span> GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span>fmedian,</span>
 <span id="cb7-19"><a href="#cb7-19"></a>               <span class="dt">dplyr =</span> GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">summarise_all</span>(median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</span>
 <span id="cb7-20"><a href="#cb7-20"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb7-21"><a href="#cb7-21"></a><span class="co">#      expr       min        lq      mean    median       uq       max neval cld</span></span>
-<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#  collapse   951.402  1040.651  1077.659  1063.633  1098.44  1583.736   100 a  </span></span>
-<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#    hybrid 12479.333 12904.385 13453.944 13053.209 13310.02 30889.306   100  b </span></span>
-<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#     dplyr 61130.660 62987.945 65933.509 64212.227 68608.67 86756.913   100   c</span></span></code></pre></div>
+<span id="cb7-21"><a href="#cb7-21"></a><span class="co">#      expr       min       lq      mean    median       uq       max neval cld</span></span>
+<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#  collapse   945.152  1038.64  1087.736  1062.961  1123.65  1395.861   100 a  </span></span>
+<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#    hybrid 12194.148 12581.71 13352.293 12830.273 13593.58 30239.488   100  b </span></span>
+<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#     dplyr 59320.071 61269.95 64786.978 63674.774 67513.17 87006.580   100   c</span></span></code></pre></div>
 <p>Benchmarks on the different components of this code and with larger data are provided under ‘Benchmarks’. Note that a grouped tibble created with <code>fgroup_by</code> can no longer be used for grouped computations with <em>dplyr</em> verbs like <code>mutate</code> or <code>summarize</code>. To avoid errors with these functions and <code>print.grouped_df</code>, <code>[.grouped_df</code> etc., the classes assigned after <code>fgroup_by</code> are reshuffled, so that the data.frame is treated by the <em>dplyr</em> ecosystem like a normal tibble:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">class</span>(<span class="kw">group_by</span>(GGDC10S, Variable, Country))</span>
 <span id="cb8-2"><a href="#cb8-2"></a><span class="co"># [1] &quot;grouped_df&quot; &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</span></span>
@@ -1502,7 +1502,7 @@ pre[class] {
 <span id="cb49-43"><a href="#cb49-43"></a></span>
 <span id="cb49-44"><a href="#cb49-44"></a><span class="kw">gc</span>()</span>
 <span id="cb49-45"><a href="#cb49-45"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb49-46"><a href="#cb49-46"></a><span class="co"># Ncells  1924737 102.8    3670808 196.1  3670808 196.1</span></span>
+<span id="cb49-46"><a href="#cb49-46"></a><span class="co"># Ncells  1924737 102.8    3670734 196.1  3670734 196.1</span></span>
 <span id="cb49-47"><a href="#cb49-47"></a><span class="co"># Vcells 19870476 151.6   28315229 216.1 23044570 175.9</span></span></code></pre></div>
 </div>
 <div id="selecting-subsetting-ordering-and-grouping" class="section level3">
@@ -1512,34 +1512,34 @@ pre[class] {
 <span id="cb50-3"><a href="#cb50-3"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">select</span>(GGDC10S, Country, Variable, AGR<span class="op">:</span>SUM),</span>
 <span id="cb50-4"><a href="#cb50-4"></a>               <span class="dt">collapse =</span> <span class="kw">fselect</span>(GGDC10S, Country, Variable, AGR<span class="op">:</span>SUM))</span>
 <span id="cb50-5"><a href="#cb50-5"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb50-6"><a href="#cb50-6"></a><span class="co">#      expr      min       lq       mean    median      uq      max neval cld</span></span>
-<span id="cb50-7"><a href="#cb50-7"></a><span class="co">#     dplyr 2870.716 2972.014 3256.32305 3092.9470 3338.16 5255.466   100   b</span></span>
-<span id="cb50-8"><a href="#cb50-8"></a><span class="co">#  collapse   10.710   15.619   25.91388   28.3365   35.70   52.657   100  a</span></span>
+<span id="cb50-6"><a href="#cb50-6"></a><span class="co">#      expr      min       lq       mean    median       uq      max neval cld</span></span>
+<span id="cb50-7"><a href="#cb50-7"></a><span class="co">#     dplyr 2798.415 2980.931 3159.70634 3127.3000 3306.245 3923.851   100   b</span></span>
+<span id="cb50-8"><a href="#cb50-8"></a><span class="co">#  collapse   10.710   17.404   26.15927   28.7835   34.808   56.673   100  a</span></span>
 <span id="cb50-9"><a href="#cb50-9"></a></span>
 <span id="cb50-10"><a href="#cb50-10"></a><span class="co"># Large</span></span>
 <span id="cb50-11"><a href="#cb50-11"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">select</span>(data, Country, Variable, AGR<span class="op">:</span>SUM),</span>
 <span id="cb50-12"><a href="#cb50-12"></a>               <span class="dt">collapse =</span> <span class="kw">fselect</span>(data, Country, Variable, AGR<span class="op">:</span>SUM))</span>
 <span id="cb50-13"><a href="#cb50-13"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb50-14"><a href="#cb50-14"></a><span class="co">#      expr      min       lq       mean   median       uq       max neval cld</span></span>
-<span id="cb50-15"><a href="#cb50-15"></a><span class="co">#     dplyr 2876.963 2955.056 3936.09299 3228.606 3843.537 16119.827   100   b</span></span>
-<span id="cb50-16"><a href="#cb50-16"></a><span class="co">#  collapse   12.495   16.289   30.96981   30.568   37.262   157.526   100  a</span></span>
+<span id="cb50-14"><a href="#cb50-14"></a><span class="co">#      expr      min       lq      mean   median       uq      max neval cld</span></span>
+<span id="cb50-15"><a href="#cb50-15"></a><span class="co">#     dplyr 2771.641 2826.752 3038.0593 2936.976 3174.825 3767.664   100   b</span></span>
+<span id="cb50-16"><a href="#cb50-16"></a><span class="co">#  collapse   11.156   15.619   25.7219   29.006   34.361   56.228   100  a</span></span>
 <span id="cb50-17"><a href="#cb50-17"></a></span>
 <span id="cb50-18"><a href="#cb50-18"></a><span class="co">## Subsetting columns </span></span>
 <span id="cb50-19"><a href="#cb50-19"></a><span class="co"># Small</span></span>
 <span id="cb50-20"><a href="#cb50-20"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">filter</span>(GGDC10S, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>),</span>
 <span id="cb50-21"><a href="#cb50-21"></a>               <span class="dt">collapse =</span> <span class="kw">fsubset</span>(GGDC10S, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>))</span>
 <span id="cb50-22"><a href="#cb50-22"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb50-23"><a href="#cb50-23"></a><span class="co">#      expr      min       lq      mean   median        uq      max neval cld</span></span>
-<span id="cb50-24"><a href="#cb50-24"></a><span class="co">#     dplyr 1391.848 1517.245 1636.7854 1639.517 1740.5915 2040.693   100   b</span></span>
-<span id="cb50-25"><a href="#cb50-25"></a><span class="co">#  collapse  156.187  179.392  236.7172  209.068  300.5485  410.549   100  a</span></span>
+<span id="cb50-23"><a href="#cb50-23"></a><span class="co">#      expr      min       lq      mean    median        uq      max neval cld</span></span>
+<span id="cb50-24"><a href="#cb50-24"></a><span class="co">#     dplyr 1373.102 1637.505 1797.1978 1716.0440 1888.2945 2913.547   100   b</span></span>
+<span id="cb50-25"><a href="#cb50-25"></a><span class="co">#  collapse  157.972  209.513  266.3651  229.8175  317.0585  497.566   100  a</span></span>
 <span id="cb50-26"><a href="#cb50-26"></a></span>
 <span id="cb50-27"><a href="#cb50-27"></a><span class="co"># Large</span></span>
 <span id="cb50-28"><a href="#cb50-28"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">filter</span>(data, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>),</span>
 <span id="cb50-29"><a href="#cb50-29"></a>               <span class="dt">collapse =</span> <span class="kw">fsubset</span>(data, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>))</span>
 <span id="cb50-30"><a href="#cb50-30"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb50-31"><a href="#cb50-31"></a><span class="co">#      expr       min       lq      mean   median        uq       max neval cld</span></span>
-<span id="cb50-32"><a href="#cb50-32"></a><span class="co">#     dplyr 17.285427 17.58263 22.874174 17.80040 19.010177 162.70168   100   b</span></span>
-<span id="cb50-33"><a href="#cb50-33"></a><span class="co">#  collapse  7.843259  7.99186  9.319463  8.15965  8.729285  22.59489   100  a</span></span>
+<span id="cb50-31"><a href="#cb50-31"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
+<span id="cb50-32"><a href="#cb50-32"></a><span class="co">#     dplyr 16.846720 17.146822 22.628601 17.511629 19.158280 171.76675   100   b</span></span>
+<span id="cb50-33"><a href="#cb50-33"></a><span class="co">#  collapse  7.695085  7.825166  9.181815  7.993847  8.666342  23.32132   100  a</span></span>
 <span id="cb50-34"><a href="#cb50-34"></a></span>
 <span id="cb50-35"><a href="#cb50-35"></a><span class="co">## Ordering rows</span></span>
 <span id="cb50-36"><a href="#cb50-36"></a><span class="co"># Small</span></span>
@@ -1547,16 +1547,16 @@ pre[class] {
 <span id="cb50-38"><a href="#cb50-38"></a>               <span class="dt">collapse =</span> <span class="kw">roworder</span>(GGDC10S, <span class="op">-</span>Country, Variable, Year))</span>
 <span id="cb50-39"><a href="#cb50-39"></a><span class="co"># Unit: microseconds</span></span>
 <span id="cb50-40"><a href="#cb50-40"></a><span class="co">#      expr      min       lq      mean    median        uq       max neval cld</span></span>
-<span id="cb50-41"><a href="#cb50-41"></a><span class="co">#     dplyr 8016.405 8314.275 8853.2448 8634.6820 9144.2965 13702.053   100   b</span></span>
-<span id="cb50-42"><a href="#cb50-42"></a><span class="co">#  collapse  560.935  620.732  738.6885  676.2895  854.5655  1126.331   100  a</span></span>
+<span id="cb50-41"><a href="#cb50-41"></a><span class="co">#     dplyr 7784.781 8136.646 8736.6524 8491.4130 8959.9725 14771.671   100   b</span></span>
+<span id="cb50-42"><a href="#cb50-42"></a><span class="co">#  collapse  559.147  624.523  786.6669  697.4845  876.4295  2740.403   100  a</span></span>
 <span id="cb50-43"><a href="#cb50-43"></a></span>
 <span id="cb50-44"><a href="#cb50-44"></a><span class="co"># Large</span></span>
 <span id="cb50-45"><a href="#cb50-45"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">arrange</span>(data, <span class="kw">desc</span>(Country), Variable, Year),</span>
 <span id="cb50-46"><a href="#cb50-46"></a>               <span class="dt">collapse =</span> <span class="kw">roworder</span>(data, <span class="op">-</span>Country, Variable, Year), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb50-47"><a href="#cb50-47"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb50-48"><a href="#cb50-48"></a><span class="co">#      expr       min        lq     mean   median        uq       max neval cld</span></span>
-<span id="cb50-49"><a href="#cb50-49"></a><span class="co">#     dplyr 2624.3281 2624.3281 2630.602 2630.602 2636.8762 2636.8762     2   b</span></span>
-<span id="cb50-50"><a href="#cb50-50"></a><span class="co">#  collapse  352.3581  352.3581  352.436  352.436  352.5138  352.5138     2  a</span></span>
+<span id="cb50-48"><a href="#cb50-48"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
+<span id="cb50-49"><a href="#cb50-49"></a><span class="co">#     dplyr 2601.7312 2601.7312 2632.6191 2632.6191 2663.5069 2663.5069     2   b</span></span>
+<span id="cb50-50"><a href="#cb50-50"></a><span class="co">#  collapse  344.6215  344.6215  346.6969  346.6969  348.7724  348.7724     2  a</span></span>
 <span id="cb50-51"><a href="#cb50-51"></a></span>
 <span id="cb50-52"><a href="#cb50-52"></a></span>
 <span id="cb50-53"><a href="#cb50-53"></a><span class="co">## Grouping </span></span>
@@ -1564,34 +1564,34 @@ pre[class] {
 <span id="cb50-55"><a href="#cb50-55"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">group_by</span>(GGDC10S, Country, Variable),</span>
 <span id="cb50-56"><a href="#cb50-56"></a>               <span class="dt">collapse =</span> <span class="kw">fgroup_by</span>(GGDC10S, Country, Variable))</span>
 <span id="cb50-57"><a href="#cb50-57"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb50-58"><a href="#cb50-58"></a><span class="co">#      expr      min        lq      mean    median        uq      max neval cld</span></span>
-<span id="cb50-59"><a href="#cb50-59"></a><span class="co">#     dplyr 2815.381 2932.7440 3125.0412 3029.1335 3165.6850 6017.658   100   b</span></span>
-<span id="cb50-60"><a href="#cb50-60"></a><span class="co">#  collapse  344.950  365.0315  398.0806  393.8145  420.3665  556.025   100  a</span></span>
+<span id="cb50-58"><a href="#cb50-58"></a><span class="co">#      expr      min        lq      mean   median       uq      max neval cld</span></span>
+<span id="cb50-59"><a href="#cb50-59"></a><span class="co">#     dplyr 2763.162 2898.8215 3088.2130 2994.988 3264.074 3832.817   100   b</span></span>
+<span id="cb50-60"><a href="#cb50-60"></a><span class="co">#  collapse  348.519  367.4845  402.0911  396.044  414.564  785.395   100  a</span></span>
 <span id="cb50-61"><a href="#cb50-61"></a></span>
 <span id="cb50-62"><a href="#cb50-62"></a><span class="co"># Large</span></span>
 <span id="cb50-63"><a href="#cb50-63"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">group_by</span>(data, Country, Variable),</span>
 <span id="cb50-64"><a href="#cb50-64"></a>               <span class="dt">collapse =</span> <span class="kw">fgroup_by</span>(data, Country, Variable), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb50-65"><a href="#cb50-65"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb50-66"><a href="#cb50-66"></a><span class="co">#      expr      min       lq     mean   median       uq      max neval cld</span></span>
-<span id="cb50-67"><a href="#cb50-67"></a><span class="co">#     dplyr 76.98854 77.86363 79.36365 78.47254 80.22339 84.42437    10   a</span></span>
-<span id="cb50-68"><a href="#cb50-68"></a><span class="co">#  collapse 68.85923 69.65222 73.78564 70.66989 73.98127 97.93231    10   a</span></span>
+<span id="cb50-67"><a href="#cb50-67"></a><span class="co">#     dplyr 76.63803 77.36809 78.87136 78.39401 80.88586 81.68731    10   b</span></span>
+<span id="cb50-68"><a href="#cb50-68"></a><span class="co">#  collapse 68.31864 68.74615 72.99447 71.08538 71.57669 96.47059    10  a</span></span>
 <span id="cb50-69"><a href="#cb50-69"></a></span>
 <span id="cb50-70"><a href="#cb50-70"></a><span class="co">## Computing a new column </span></span>
 <span id="cb50-71"><a href="#cb50-71"></a><span class="co"># Small</span></span>
 <span id="cb50-72"><a href="#cb50-72"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate</span>(GGDC10S, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>),</span>
 <span id="cb50-73"><a href="#cb50-73"></a>               <span class="dt">collapse =</span> <span class="kw">ftransform</span>(GGDC10S, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>))</span>
 <span id="cb50-74"><a href="#cb50-74"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb50-75"><a href="#cb50-75"></a><span class="co">#      expr      min       lq       mean    median       uq      max neval cld</span></span>
-<span id="cb50-76"><a href="#cb50-76"></a><span class="co">#     dplyr 2559.234 2714.082 2895.94190 2830.5535 2976.253 5752.587   100   b</span></span>
-<span id="cb50-77"><a href="#cb50-77"></a><span class="co">#  collapse   21.420   26.329   38.25717   36.3695   47.972   74.970   100  a</span></span>
+<span id="cb50-75"><a href="#cb50-75"></a><span class="co">#      expr      min       lq      mean    median       uq      max neval cld</span></span>
+<span id="cb50-76"><a href="#cb50-76"></a><span class="co">#     dplyr 2479.349 2586.226 2717.8860 2659.4095 2825.860 3310.261   100   b</span></span>
+<span id="cb50-77"><a href="#cb50-77"></a><span class="co">#  collapse   21.866   26.775   36.8424   33.2455   45.964   70.061   100  a</span></span>
 <span id="cb50-78"><a href="#cb50-78"></a></span>
 <span id="cb50-79"><a href="#cb50-79"></a><span class="co"># Large</span></span>
 <span id="cb50-80"><a href="#cb50-80"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate</span>(data, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>),</span>
 <span id="cb50-81"><a href="#cb50-81"></a>               <span class="dt">collapse =</span> <span class="kw">ftransform</span>(data, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>))</span>
 <span id="cb50-82"><a href="#cb50-82"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb50-83"><a href="#cb50-83"></a><span class="co">#      expr      min       lq     mean   median       uq      max neval cld</span></span>
-<span id="cb50-84"><a href="#cb50-84"></a><span class="co">#     dplyr 6.601351 6.861738 8.838916 7.002752 7.323604 38.02794   100   b</span></span>
-<span id="cb50-85"><a href="#cb50-85"></a><span class="co">#  collapse 1.671646 3.786863 4.484108 3.852908 4.028730 34.36424   100  a</span></span>
+<span id="cb50-84"><a href="#cb50-84"></a><span class="co">#     dplyr 6.479508 6.751273 8.913357 7.048919 7.416626 37.09250   100   b</span></span>
+<span id="cb50-85"><a href="#cb50-85"></a><span class="co">#  collapse 1.751520 3.723040 4.420390 4.000828 4.069104 30.74999   100  a</span></span>
 <span id="cb50-86"><a href="#cb50-86"></a></span>
 <span id="cb50-87"><a href="#cb50-87"></a><span class="co">## All combined with pipes </span></span>
 <span id="cb50-88"><a href="#cb50-88"></a><span class="co"># Small</span></span>
@@ -1605,9 +1605,9 @@ pre[class] {
 <span id="cb50-96"><a href="#cb50-96"></a><span class="st">                       </span><span class="kw">ftransform</span>(<span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>) <span class="op">%&gt;%</span></span>
 <span id="cb50-97"><a href="#cb50-97"></a><span class="st">                       </span><span class="kw">fgroup_by</span>(Country))</span>
 <span id="cb50-98"><a href="#cb50-98"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb50-99"><a href="#cb50-99"></a><span class="co">#      expr       min         lq       mean    median        uq       max neval cld</span></span>
-<span id="cb50-100"><a href="#cb50-100"></a><span class="co">#     dplyr 15074.268 15588.3445 16353.2504 15807.006 16531.044 20729.572   100   b</span></span>
-<span id="cb50-101"><a href="#cb50-101"></a><span class="co">#  collapse   696.147   770.6715   846.6269   822.882   875.316  1628.806   100  a</span></span>
+<span id="cb50-99"><a href="#cb50-99"></a><span class="co">#      expr       min        lq      mean     median        uq       max neval cld</span></span>
+<span id="cb50-100"><a href="#cb50-100"></a><span class="co">#     dplyr 14700.718 15442.380 16238.182 16080.2905 16786.254 21672.882   100   b</span></span>
+<span id="cb50-101"><a href="#cb50-101"></a><span class="co">#  collapse   698.377   779.148   841.774   813.2855   898.742  1129.898   100  a</span></span>
 <span id="cb50-102"><a href="#cb50-102"></a></span>
 <span id="cb50-103"><a href="#cb50-103"></a><span class="co"># Large</span></span>
 <span id="cb50-104"><a href="#cb50-104"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">filter</span>(data, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
@@ -1620,14 +1620,14 @@ pre[class] {
 <span id="cb50-111"><a href="#cb50-111"></a><span class="st">                       </span><span class="kw">ftransform</span>(<span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>) <span class="op">%&gt;%</span></span>
 <span id="cb50-112"><a href="#cb50-112"></a><span class="st">                       </span><span class="kw">fgroup_by</span>(Country), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb50-113"><a href="#cb50-113"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb50-114"><a href="#cb50-114"></a><span class="co">#      expr      min       lq      mean    median        uq       max neval cld</span></span>
-<span id="cb50-115"><a href="#cb50-115"></a><span class="co">#     dplyr 26.40540 30.28286 33.102028 30.563099 31.016040 54.216935    10   b</span></span>
-<span id="cb50-116"><a href="#cb50-116"></a><span class="co">#  collapse  7.82541  8.54744  8.711124  8.669935  9.344886  9.379246    10  a</span></span>
+<span id="cb50-114"><a href="#cb50-114"></a><span class="co">#      expr       min        lq      mean    median        uq      max neval cld</span></span>
+<span id="cb50-115"><a href="#cb50-115"></a><span class="co">#     dplyr 29.952104 30.812915 35.031735 32.106808 32.820580 53.31448    10   b</span></span>
+<span id="cb50-116"><a href="#cb50-116"></a><span class="co">#  collapse  7.094883  8.230582  8.733189  8.909993  9.348877 10.03476    10  a</span></span>
 <span id="cb50-117"><a href="#cb50-117"></a></span>
 <span id="cb50-118"><a href="#cb50-118"></a><span class="kw">gc</span>()</span>
 <span id="cb50-119"><a href="#cb50-119"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb50-120"><a href="#cb50-120"></a><span class="co"># Ncells  1930366 103.1    3670808 196.1  3670808 196.1</span></span>
-<span id="cb50-121"><a href="#cb50-121"></a><span class="co"># Vcells 21386683 163.2   44612944 340.4 44612944 340.4</span></span></code></pre></div>
+<span id="cb50-120"><a href="#cb50-120"></a><span class="co"># Ncells  1930366 103.1    3670734 196.1  3670734 196.1</span></span>
+<span id="cb50-121"><a href="#cb50-121"></a><span class="co"># Vcells 21386676 163.2   44612936 340.4 44612936 340.4</span></span></code></pre></div>
 </div>
 <div id="aggregation" class="section level3">
 <h3>3.1 Aggregation</h3>
@@ -1639,22 +1639,22 @@ pre[class] {
 <span id="cb51-6"><a href="#cb51-6"></a><span class="kw">rm</span>(data, GGDC10S) </span>
 <span id="cb51-7"><a href="#cb51-7"></a><span class="kw">gc</span>()</span>
 <span id="cb51-8"><a href="#cb51-8"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb51-9"><a href="#cb51-9"></a><span class="co"># Ncells  1947353 104.0    3670808 196.1  3670808 196.1</span></span>
-<span id="cb51-10"><a href="#cb51-10"></a><span class="co"># Vcells 20487215 156.4   44612944 340.4 44612944 340.4</span></span>
+<span id="cb51-9"><a href="#cb51-9"></a><span class="co"># Ncells  1947353 104.0    3670734 196.1  3670734 196.1</span></span>
+<span id="cb51-10"><a href="#cb51-10"></a><span class="co"># Vcells 20487216 156.4   44612936 340.4 44612936 340.4</span></span>
 <span id="cb51-11"><a href="#cb51-11"></a></span>
 <span id="cb51-12"><a href="#cb51-12"></a><span class="co">## Conversion of Grouping object: This time would be required extra in all hybrid calls </span></span>
 <span id="cb51-13"><a href="#cb51-13"></a><span class="co">## i.e. when calling collapse functions on data grouped with dplyr::group_by</span></span>
 <span id="cb51-14"><a href="#cb51-14"></a><span class="co"># Small</span></span>
 <span id="cb51-15"><a href="#cb51-15"></a><span class="kw">microbenchmark</span>(<span class="kw">GRP</span>(gGGDC10S))</span>
 <span id="cb51-16"><a href="#cb51-16"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-17"><a href="#cb51-17"></a><span class="co">#           expr     min      lq     mean  median      uq     max neval</span></span>
-<span id="cb51-18"><a href="#cb51-18"></a><span class="co">#  GRP(gGGDC10S) 167.789 170.913 183.3949 173.145 184.747 319.068   100</span></span>
+<span id="cb51-17"><a href="#cb51-17"></a><span class="co">#           expr     min       lq     mean median      uq     max neval</span></span>
+<span id="cb51-18"><a href="#cb51-18"></a><span class="co">#  GRP(gGGDC10S) 167.342 190.1015 204.8187 195.68 214.868 553.793   100</span></span>
 <span id="cb51-19"><a href="#cb51-19"></a></span>
 <span id="cb51-20"><a href="#cb51-20"></a><span class="co"># Large</span></span>
 <span id="cb51-21"><a href="#cb51-21"></a><span class="kw">microbenchmark</span>(<span class="kw">GRP</span>(gdata))</span>
 <span id="cb51-22"><a href="#cb51-22"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb51-23"><a href="#cb51-23"></a><span class="co">#        expr      min       lq    mean   median       uq      max neval</span></span>
-<span id="cb51-24"><a href="#cb51-24"></a><span class="co">#  GRP(gdata) 31.63543 33.88609 35.2379 35.16303 36.35696 45.27903   100</span></span>
+<span id="cb51-23"><a href="#cb51-23"></a><span class="co">#        expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb51-24"><a href="#cb51-24"></a><span class="co">#  GRP(gdata) 30.90529 33.20525 34.67392 34.65956 35.94654 46.42175   100</span></span>
 <span id="cb51-25"><a href="#cb51-25"></a></span>
 <span id="cb51-26"><a href="#cb51-26"></a></span>
 <span id="cb51-27"><a href="#cb51-27"></a><span class="co">## Sum </span></span>
@@ -1662,124 +1662,124 @@ pre[class] {
 <span id="cb51-29"><a href="#cb51-29"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-30"><a href="#cb51-30"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgGGDC10S))</span>
 <span id="cb51-31"><a href="#cb51-31"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-32"><a href="#cb51-32"></a><span class="co">#      expr      min        lq     mean   median        uq       max neval cld</span></span>
-<span id="cb51-33"><a href="#cb51-33"></a><span class="co">#     dplyr 8779.488 8972.4915 9427.508 9135.149 9403.7900 17995.408   100   b</span></span>
-<span id="cb51-34"><a href="#cb51-34"></a><span class="co">#  collapse  236.065  253.2465  287.103  290.285  298.7635   457.405   100  a</span></span>
+<span id="cb51-32"><a href="#cb51-32"></a><span class="co">#      expr      min        lq       mean   median         uq       max neval cld</span></span>
+<span id="cb51-33"><a href="#cb51-33"></a><span class="co">#     dplyr 8585.348 9057.2545 10219.6699 9580.255 10114.4135 19238.159   100   b</span></span>
+<span id="cb51-34"><a href="#cb51-34"></a><span class="co">#  collapse  238.296  276.6735   296.1522  294.746   316.6125   490.426   100  a</span></span>
 <span id="cb51-35"><a href="#cb51-35"></a></span>
 <span id="cb51-36"><a href="#cb51-36"></a><span class="co"># Large</span></span>
 <span id="cb51-37"><a href="#cb51-37"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-38"><a href="#cb51-38"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb51-39"><a href="#cb51-39"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb51-40"><a href="#cb51-40"></a><span class="co">#      expr       min        lq      mean    median        uq      max neval cld</span></span>
-<span id="cb51-41"><a href="#cb51-41"></a><span class="co">#     dplyr 575.36174 611.83941 652.75467 624.42250 668.15862 821.7501    10   b</span></span>
-<span id="cb51-42"><a href="#cb51-42"></a><span class="co">#  collapse  41.38551  41.68048  43.66972  42.33067  43.96527  53.4244    10  a</span></span>
+<span id="cb51-40"><a href="#cb51-40"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
+<span id="cb51-41"><a href="#cb51-41"></a><span class="co">#     dplyr 579.45496 584.42393 613.59644 598.77769 624.97484 738.12035    10   b</span></span>
+<span id="cb51-42"><a href="#cb51-42"></a><span class="co">#  collapse  40.33181  40.54601  42.07606  42.07909  42.54966  47.16876    10  a</span></span>
 <span id="cb51-43"><a href="#cb51-43"></a></span>
 <span id="cb51-44"><a href="#cb51-44"></a><span class="co">## Mean</span></span>
 <span id="cb51-45"><a href="#cb51-45"></a><span class="co"># Small</span></span>
 <span id="cb51-46"><a href="#cb51-46"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, mean.default, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-47"><a href="#cb51-47"></a>               <span class="dt">collapse =</span> <span class="kw">fmean</span>(cgGGDC10S))</span>
 <span id="cb51-48"><a href="#cb51-48"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-49"><a href="#cb51-49"></a><span class="co">#      expr       min         lq       mean     median        uq       max neval cld</span></span>
-<span id="cb51-50"><a href="#cb51-50"></a><span class="co">#     dplyr 11702.861 12166.5140 14498.4641 12532.6605 14010.634 39821.412   100   b</span></span>
-<span id="cb51-51"><a href="#cb51-51"></a><span class="co">#  collapse   255.254   279.5745   337.5201   310.5885   342.942   925.073   100  a</span></span>
+<span id="cb51-49"><a href="#cb51-49"></a><span class="co">#      expr       min        lq       mean    median         uq       max neval cld</span></span>
+<span id="cb51-50"><a href="#cb51-50"></a><span class="co">#     dplyr 11492.648 11748.793 13004.0464 12048.226 12505.1825 31512.631   100   b</span></span>
+<span id="cb51-51"><a href="#cb51-51"></a><span class="co">#  collapse   253.469   264.179   296.0227   307.688   312.5965   420.812   100  a</span></span>
 <span id="cb51-52"><a href="#cb51-52"></a></span>
 <span id="cb51-53"><a href="#cb51-53"></a><span class="co"># Large</span></span>
 <span id="cb51-54"><a href="#cb51-54"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, mean.default, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-55"><a href="#cb51-55"></a>               <span class="dt">collapse =</span> <span class="kw">fmean</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb51-56"><a href="#cb51-56"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb51-57"><a href="#cb51-57"></a><span class="co">#      expr        min         lq       mean     median         uq       max neval cld</span></span>
-<span id="cb51-58"><a href="#cb51-58"></a><span class="co">#     dplyr 1404.19027 1613.04830 1742.45990 1746.40424 1825.87258 2292.6884    10   b</span></span>
-<span id="cb51-59"><a href="#cb51-59"></a><span class="co">#  collapse   44.78726   45.38256   46.16867   45.53406   47.08187   48.8807    10  a</span></span>
+<span id="cb51-57"><a href="#cb51-57"></a><span class="co">#      expr        min         lq       mean     median        uq        max neval cld</span></span>
+<span id="cb51-58"><a href="#cb51-58"></a><span class="co">#     dplyr 1312.46756 1506.54399 1606.47536 1664.64309 1705.4015 1779.43256    10   b</span></span>
+<span id="cb51-59"><a href="#cb51-59"></a><span class="co">#  collapse   43.48589   43.93347   45.26195   45.17917   45.9871   49.31209    10  a</span></span>
 <span id="cb51-60"><a href="#cb51-60"></a></span>
 <span id="cb51-61"><a href="#cb51-61"></a><span class="co">## Median</span></span>
 <span id="cb51-62"><a href="#cb51-62"></a><span class="co"># Small</span></span>
 <span id="cb51-63"><a href="#cb51-63"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-64"><a href="#cb51-64"></a>               <span class="dt">collapse =</span> <span class="kw">fmedian</span>(cgGGDC10S))</span>
 <span id="cb51-65"><a href="#cb51-65"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-66"><a href="#cb51-66"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb51-67"><a href="#cb51-67"></a><span class="co">#     dplyr 52493.078 53377.319 60410.285 55748.236 61885.042 209724.20   100   b</span></span>
-<span id="cb51-68"><a href="#cb51-68"></a><span class="co">#  collapse   484.626   523.896   576.138   567.851   607.344    999.15   100  a</span></span>
+<span id="cb51-66"><a href="#cb51-66"></a><span class="co">#      expr      min         lq       mean     median        uq        max neval cld</span></span>
+<span id="cb51-67"><a href="#cb51-67"></a><span class="co">#     dplyr 50473.67 52100.6860 57787.6456 54558.1685 59640.700 212904.930   100   b</span></span>
+<span id="cb51-68"><a href="#cb51-68"></a><span class="co">#  collapse   489.98   515.6385   568.5235   560.7095   598.641    849.655   100  a</span></span>
 <span id="cb51-69"><a href="#cb51-69"></a></span>
 <span id="cb51-70"><a href="#cb51-70"></a><span class="co"># Large</span></span>
 <span id="cb51-71"><a href="#cb51-71"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-72"><a href="#cb51-72"></a>               <span class="dt">collapse =</span> <span class="kw">fmedian</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb51-73"><a href="#cb51-73"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb51-74"><a href="#cb51-74"></a><span class="co">#      expr        min         lq        mean      median          uq         max neval cld</span></span>
-<span id="cb51-75"><a href="#cb51-75"></a><span class="co">#     dplyr 9999.83444 9999.83444 10260.10786 10260.10786 10520.38127 10520.38127     2   b</span></span>
-<span id="cb51-76"><a href="#cb51-76"></a><span class="co">#  collapse   90.76154   90.76154    94.05173    94.05173    97.34192    97.34192     2  a</span></span>
+<span id="cb51-75"><a href="#cb51-75"></a><span class="co">#     dplyr 9880.28083 9880.28083 10086.79484 10086.79484 10293.30884 10293.30884     2   b</span></span>
+<span id="cb51-76"><a href="#cb51-76"></a><span class="co">#  collapse   89.30252   89.30252    91.89656    91.89656    94.49059    94.49059     2  a</span></span>
 <span id="cb51-77"><a href="#cb51-77"></a></span>
 <span id="cb51-78"><a href="#cb51-78"></a><span class="co">## Standard Deviation</span></span>
 <span id="cb51-79"><a href="#cb51-79"></a><span class="co"># Small</span></span>
 <span id="cb51-80"><a href="#cb51-80"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, sd, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-81"><a href="#cb51-81"></a>               <span class="dt">collapse =</span> <span class="kw">fsd</span>(cgGGDC10S))</span>
 <span id="cb51-82"><a href="#cb51-82"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-83"><a href="#cb51-83"></a><span class="co">#      expr       min         lq       mean    median        uq       max neval cld</span></span>
-<span id="cb51-84"><a href="#cb51-84"></a><span class="co">#     dplyr 24511.972 25150.1075 26328.9566 25574.935 26020.737 32642.615   100   b</span></span>
-<span id="cb51-85"><a href="#cb51-85"></a><span class="co">#  collapse   427.952   462.3135   489.2267   483.064   510.954   667.142   100  a</span></span>
+<span id="cb51-83"><a href="#cb51-83"></a><span class="co">#      expr      min        lq       mean    median        uq       max neval cld</span></span>
+<span id="cb51-84"><a href="#cb51-84"></a><span class="co">#     dplyr 23725.62 24611.419 26140.1147 25158.518 26656.124 35508.773   100   b</span></span>
+<span id="cb51-85"><a href="#cb51-85"></a><span class="co">#  collapse   422.15   453.164   492.8132   485.517   515.862   883.123   100  a</span></span>
 <span id="cb51-86"><a href="#cb51-86"></a></span>
 <span id="cb51-87"><a href="#cb51-87"></a><span class="co"># Large</span></span>
 <span id="cb51-88"><a href="#cb51-88"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, sd, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-89"><a href="#cb51-89"></a>               <span class="dt">collapse =</span> <span class="kw">fsd</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb51-90"><a href="#cb51-90"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb51-91"><a href="#cb51-91"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
-<span id="cb51-92"><a href="#cb51-92"></a><span class="co">#     dplyr 4322.16314 4322.16314 4331.86481 4331.86481 4341.56647 4341.56647     2   b</span></span>
-<span id="cb51-93"><a href="#cb51-93"></a><span class="co">#  collapse   81.66879   81.66879   88.83487   88.83487   96.00095   96.00095     2  a</span></span>
+<span id="cb51-92"><a href="#cb51-92"></a><span class="co">#     dplyr 4304.44404 4304.44404 4380.66706 4380.66706 4456.89008 4456.89008     2   b</span></span>
+<span id="cb51-93"><a href="#cb51-93"></a><span class="co">#  collapse   81.43251   81.43251   82.12664   82.12664   82.82078   82.82078     2  a</span></span>
 <span id="cb51-94"><a href="#cb51-94"></a></span>
 <span id="cb51-95"><a href="#cb51-95"></a><span class="co">## Maximum</span></span>
 <span id="cb51-96"><a href="#cb51-96"></a><span class="co"># Small</span></span>
 <span id="cb51-97"><a href="#cb51-97"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, max, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-98"><a href="#cb51-98"></a>               <span class="dt">collapse =</span> <span class="kw">fmax</span>(cgGGDC10S))</span>
 <span id="cb51-99"><a href="#cb51-99"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-100"><a href="#cb51-100"></a><span class="co">#      expr       min         lq       mean    median         uq       max neval cld</span></span>
-<span id="cb51-101"><a href="#cb51-101"></a><span class="co">#     dplyr 11604.687 12193.0650 14188.5670 12621.910 14076.0100 26193.882   100   b</span></span>
-<span id="cb51-102"><a href="#cb51-102"></a><span class="co">#  collapse   179.392   207.0595   241.8222   236.512   255.4775   620.732   100  a</span></span>
+<span id="cb51-100"><a href="#cb51-100"></a><span class="co">#      expr       min        lq       mean     median         uq       max neval cld</span></span>
+<span id="cb51-101"><a href="#cb51-101"></a><span class="co">#     dplyr 11240.964 11646.603 12413.9514 12253.7220 12704.2085 20804.039   100   b</span></span>
+<span id="cb51-102"><a href="#cb51-102"></a><span class="co">#  collapse   178.945   207.059   236.9262   241.1965   251.6835   548.438   100  a</span></span>
 <span id="cb51-103"><a href="#cb51-103"></a></span>
 <span id="cb51-104"><a href="#cb51-104"></a><span class="co"># Large</span></span>
 <span id="cb51-105"><a href="#cb51-105"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, max, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-106"><a href="#cb51-106"></a>               <span class="dt">collapse =</span> <span class="kw">fmax</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb51-107"><a href="#cb51-107"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb51-108"><a href="#cb51-108"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
-<span id="cb51-109"><a href="#cb51-109"></a><span class="co">#     dplyr 1089.61112 1151.77752 1224.65946 1222.25172 1316.71758 1356.50016    10   b</span></span>
-<span id="cb51-110"><a href="#cb51-110"></a><span class="co">#  collapse   25.75031   25.85964   27.52566   26.41812   27.21445   34.14023    10  a</span></span>
+<span id="cb51-109"><a href="#cb51-109"></a><span class="co">#     dplyr 1044.13785 1062.44157 1100.07827 1083.97366 1103.79975 1223.72999    10   b</span></span>
+<span id="cb51-110"><a href="#cb51-110"></a><span class="co">#  collapse   24.18391   24.85061   25.75836   25.68442   26.44282   28.02878    10  a</span></span>
 <span id="cb51-111"><a href="#cb51-111"></a></span>
 <span id="cb51-112"><a href="#cb51-112"></a><span class="co">## First Value</span></span>
 <span id="cb51-113"><a href="#cb51-113"></a><span class="co"># Small</span></span>
 <span id="cb51-114"><a href="#cb51-114"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, first),</span>
 <span id="cb51-115"><a href="#cb51-115"></a>               <span class="dt">collapse =</span> <span class="kw">ffirst</span>(cgGGDC10S, <span class="dt">na.rm =</span> <span class="ot">FALSE</span>))</span>
 <span id="cb51-116"><a href="#cb51-116"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-117"><a href="#cb51-117"></a><span class="co">#      expr       min         lq       mean     median        uq       max neval cld</span></span>
-<span id="cb51-118"><a href="#cb51-118"></a><span class="co">#     dplyr 28453.237 29583.8065 33825.7938 30653.4635 35107.691 62379.262   100   b</span></span>
-<span id="cb51-119"><a href="#cb51-119"></a><span class="co">#  collapse    58.012    73.8545   102.5927   113.7935   121.826   246.775   100  a</span></span>
+<span id="cb51-117"><a href="#cb51-117"></a><span class="co">#      expr      min         lq       mean     median        uq       max neval cld</span></span>
+<span id="cb51-118"><a href="#cb51-118"></a><span class="co">#     dplyr 27466.06 28773.7895 30433.8506 29823.3625 31313.381 37054.127   100   b</span></span>
+<span id="cb51-119"><a href="#cb51-119"></a><span class="co">#  collapse    60.69    74.9695   104.9933   111.1155   126.065   213.306   100  a</span></span>
 <span id="cb51-120"><a href="#cb51-120"></a></span>
 <span id="cb51-121"><a href="#cb51-121"></a><span class="co"># Large</span></span>
 <span id="cb51-122"><a href="#cb51-122"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, first),</span>
 <span id="cb51-123"><a href="#cb51-123"></a>               <span class="dt">collapse =</span> <span class="kw">ffirst</span>(cgdata, <span class="dt">na.rm =</span> <span class="ot">FALSE</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb51-124"><a href="#cb51-124"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb51-125"><a href="#cb51-125"></a><span class="co">#      expr        min          lq        mean      median          uq         max neval cld</span></span>
-<span id="cb51-126"><a href="#cb51-126"></a><span class="co">#     dplyr 5012.43382 5120.352269 5340.409523 5253.901660 5577.550142 5764.035959    10   b</span></span>
-<span id="cb51-127"><a href="#cb51-127"></a><span class="co">#  collapse    4.38082    4.523173    4.688106    4.592341    4.780658    5.488854    10  a</span></span>
+<span id="cb51-126"><a href="#cb51-126"></a><span class="co">#     dplyr 4878.13483 5045.077204 5289.121344 5196.811698 5375.949782 6093.325884    10   b</span></span>
+<span id="cb51-127"><a href="#cb51-127"></a><span class="co">#  collapse    4.44953    4.526284    4.917643    4.608171    4.914073    6.536181    10  a</span></span>
 <span id="cb51-128"><a href="#cb51-128"></a></span>
 <span id="cb51-129"><a href="#cb51-129"></a><span class="co">## Number of Distinct Values</span></span>
 <span id="cb51-130"><a href="#cb51-130"></a><span class="co"># Small</span></span>
 <span id="cb51-131"><a href="#cb51-131"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, n_distinct, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-132"><a href="#cb51-132"></a>               <span class="dt">collapse =</span> <span class="kw">fNdistinct</span>(cgGGDC10S))</span>
 <span id="cb51-133"><a href="#cb51-133"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb51-134"><a href="#cb51-134"></a><span class="co">#      expr        min         lq       mean    median         uq        max neval cld</span></span>
-<span id="cb51-135"><a href="#cb51-135"></a><span class="co">#     dplyr 380.578829 386.757137 390.533263 390.39562 393.988366 404.063091   100   b</span></span>
-<span id="cb51-136"><a href="#cb51-136"></a><span class="co">#  collapse   1.291889   1.350347   1.459803   1.38694   1.446514   5.871735   100  a</span></span>
+<span id="cb51-134"><a href="#cb51-134"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
+<span id="cb51-135"><a href="#cb51-135"></a><span class="co">#     dplyr 370.935750 378.919332 399.013004 385.050768 399.750147 542.351303   100   b</span></span>
+<span id="cb51-136"><a href="#cb51-136"></a><span class="co">#  collapse   1.276267   1.327139   1.500403   1.387606   1.523264   5.796303   100  a</span></span>
 <span id="cb51-137"><a href="#cb51-137"></a></span>
 <span id="cb51-138"><a href="#cb51-138"></a><span class="co"># Large</span></span>
 <span id="cb51-139"><a href="#cb51-139"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, n_distinct, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb51-140"><a href="#cb51-140"></a>               <span class="dt">collapse =</span> <span class="kw">fNdistinct</span>(cgdata), <span class="dt">times =</span> <span class="dv">5</span>)</span>
 <span id="cb51-141"><a href="#cb51-141"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb51-142"><a href="#cb51-142"></a><span class="co">#      expr        min         lq       mean     median        uq        max neval cld</span></span>
-<span id="cb51-143"><a href="#cb51-143"></a><span class="co">#     dplyr 75649.7580 75850.6287 76677.1448 75989.4511 77120.740 78775.1462     5   b</span></span>
-<span id="cb51-144"><a href="#cb51-144"></a><span class="co">#  collapse   324.0985   325.4413   351.2717   347.2642   375.538   384.0163     5  a</span></span>
+<span id="cb51-142"><a href="#cb51-142"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
+<span id="cb51-143"><a href="#cb51-143"></a><span class="co">#     dplyr 74045.7033 74201.0000 74950.3911 74891.2018 75278.3091 76335.7411     5   b</span></span>
+<span id="cb51-144"><a href="#cb51-144"></a><span class="co">#  collapse   317.5298   319.3764   326.7462   325.0972   329.0956   342.6321     5  a</span></span>
 <span id="cb51-145"><a href="#cb51-145"></a></span>
 <span id="cb51-146"><a href="#cb51-146"></a><span class="kw">gc</span>()</span>
 <span id="cb51-147"><a href="#cb51-147"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb51-148"><a href="#cb51-148"></a><span class="co"># Ncells  1950123 104.2    3670808 196.1  3670808 196.1</span></span>
-<span id="cb51-149"><a href="#cb51-149"></a><span class="co"># Vcells 20493546 156.4   44612944 340.4 44612944 340.4</span></span></code></pre></div>
+<span id="cb51-148"><a href="#cb51-148"></a><span class="co"># Ncells  1950123 104.2    3670734 196.1  3670734 196.1</span></span>
+<span id="cb51-149"><a href="#cb51-149"></a><span class="co"># Vcells 20493548 156.4   44612936 340.4 44612936 340.4</span></span></code></pre></div>
 <!-- The benchmarks show that at this data size efficient primitives like `base::sum` or `base::max` can still deliver very decent performance with `summarize`. Less optimized base functions like `mean`, `median` and `sd` however take multiple seconds to compute, and here `collapse` fast functions really prove to be very useful complements to the *dplyr* system. -->
 <!-- Weighted statistics are also performed extremely fast by *collapse* functions. I would not know how to compute weighted statistics by groups in *dplyr*, as it would require the weighting variable to be split as well, which seems impossible in native *dplyr*. -->
 <!-- A further highlight of *collapse* is the extremely fast statistical mode function, which can also compute a weighted mode. Fast categorical aggregation has been an issue in R, and defining a mode function from base R and applying it to 17000 groups will probably let it run at least a minute. `fmode` reduces this time to half a second. -->
@@ -1791,58 +1791,58 @@ pre[class] {
 <span id="cb52-2"><a href="#cb52-2"></a><span class="co"># Small</span></span>
 <span id="cb52-3"><a href="#cb52-3"></a><span class="kw">microbenchmark</span>(<span class="kw">fmean</span>(cgGGDC10S, SUM)) </span>
 <span id="cb52-4"><a href="#cb52-4"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-5"><a href="#cb52-5"></a><span class="co">#                   expr     min      lq     mean   median      uq     max neval</span></span>
-<span id="cb52-6"><a href="#cb52-6"></a><span class="co">#  fmean(cgGGDC10S, SUM) 285.153 288.276 307.8669 293.1855 315.498 448.926   100</span></span>
+<span id="cb52-5"><a href="#cb52-5"></a><span class="co">#                   expr     min       lq     mean  median      uq     max neval</span></span>
+<span id="cb52-6"><a href="#cb52-6"></a><span class="co">#  fmean(cgGGDC10S, SUM) 285.152 301.4405 326.9209 325.315 334.686 453.387   100</span></span>
 <span id="cb52-7"><a href="#cb52-7"></a></span>
 <span id="cb52-8"><a href="#cb52-8"></a><span class="co"># Large </span></span>
 <span id="cb52-9"><a href="#cb52-9"></a><span class="kw">microbenchmark</span>(<span class="kw">fmean</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb52-10"><a href="#cb52-10"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb52-11"><a href="#cb52-11"></a><span class="co">#                expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb52-12"><a href="#cb52-12"></a><span class="co">#  fmean(cgdata, SUM) 50.34886 50.68488 52.32645 51.5303 52.06334 60.44701    10</span></span>
+<span id="cb52-11"><a href="#cb52-11"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb52-12"><a href="#cb52-12"></a><span class="co">#  fmean(cgdata, SUM) 51.64685 52.21269 53.04709 52.45746 53.25825 55.89691    10</span></span>
 <span id="cb52-13"><a href="#cb52-13"></a></span>
 <span id="cb52-14"><a href="#cb52-14"></a><span class="co">## Weighted Standard-Deviation</span></span>
 <span id="cb52-15"><a href="#cb52-15"></a><span class="co"># Small</span></span>
 <span id="cb52-16"><a href="#cb52-16"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(cgGGDC10S, SUM)) </span>
 <span id="cb52-17"><a href="#cb52-17"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-18"><a href="#cb52-18"></a><span class="co">#                 expr     min       lq   mean   median      uq     max neval</span></span>
-<span id="cb52-19"><a href="#cb52-19"></a><span class="co">#  fsd(cgGGDC10S, SUM) 433.307 438.2155 463.67 460.3055 471.238 625.194   100</span></span>
+<span id="cb52-18"><a href="#cb52-18"></a><span class="co">#                 expr     min      lq     mean   median      uq     max neval</span></span>
+<span id="cb52-19"><a href="#cb52-19"></a><span class="co">#  fsd(cgGGDC10S, SUM) 433.752 441.115 468.5864 462.0895 476.592 673.387   100</span></span>
 <span id="cb52-20"><a href="#cb52-20"></a></span>
 <span id="cb52-21"><a href="#cb52-21"></a><span class="co"># Large </span></span>
 <span id="cb52-22"><a href="#cb52-22"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb52-23"><a href="#cb52-23"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb52-24"><a href="#cb52-24"></a><span class="co">#              expr      min       lq     mean median       uq      max neval</span></span>
-<span id="cb52-25"><a href="#cb52-25"></a><span class="co">#  fsd(cgdata, SUM) 80.12656 80.98023 82.31804 82.435 83.53411 84.48149    10</span></span>
+<span id="cb52-24"><a href="#cb52-24"></a><span class="co">#              expr     min       lq     mean   median       uq      max neval</span></span>
+<span id="cb52-25"><a href="#cb52-25"></a><span class="co">#  fsd(cgdata, SUM) 81.2134 82.15186 84.33088 83.91788 85.15689 89.66487    10</span></span>
 <span id="cb52-26"><a href="#cb52-26"></a></span>
 <span id="cb52-27"><a href="#cb52-27"></a><span class="co">## Statistical Mode</span></span>
 <span id="cb52-28"><a href="#cb52-28"></a><span class="co"># Small</span></span>
 <span id="cb52-29"><a href="#cb52-29"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgGGDC10S)) </span>
 <span id="cb52-30"><a href="#cb52-30"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb52-31"><a href="#cb52-31"></a><span class="co">#              expr     min       lq     mean   median       uq      max neval</span></span>
-<span id="cb52-32"><a href="#cb52-32"></a><span class="co">#  fmode(cgGGDC10S) 1.58686 1.616089 1.674864 1.636169 1.663837 2.517287   100</span></span>
+<span id="cb52-31"><a href="#cb52-31"></a><span class="co">#              expr      min       lq     mean   median       uq     max neval</span></span>
+<span id="cb52-32"><a href="#cb52-32"></a><span class="co">#  fmode(cgGGDC10S) 1.587748 1.637504 1.679478 1.663387 1.697747 1.95367   100</span></span>
 <span id="cb52-33"><a href="#cb52-33"></a></span>
 <span id="cb52-34"><a href="#cb52-34"></a><span class="co"># Large </span></span>
 <span id="cb52-35"><a href="#cb52-35"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb52-36"><a href="#cb52-36"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb52-37"><a href="#cb52-37"></a><span class="co">#           expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb52-38"><a href="#cb52-38"></a><span class="co">#  fmode(cgdata) 381.0429 395.4862 423.7216 412.7158 437.5946 549.9662    10</span></span>
+<span id="cb52-38"><a href="#cb52-38"></a><span class="co">#  fmode(cgdata) 381.3137 391.2128 425.0835 404.3425 424.7772 549.6336    10</span></span>
 <span id="cb52-39"><a href="#cb52-39"></a></span>
 <span id="cb52-40"><a href="#cb52-40"></a><span class="co">## Weighted Statistical Mode</span></span>
 <span id="cb52-41"><a href="#cb52-41"></a><span class="co"># Small</span></span>
 <span id="cb52-42"><a href="#cb52-42"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgGGDC10S, SUM)) </span>
 <span id="cb52-43"><a href="#cb52-43"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb52-44"><a href="#cb52-44"></a><span class="co">#                   expr      min      lq     mean   median       uq      max neval</span></span>
-<span id="cb52-45"><a href="#cb52-45"></a><span class="co">#  fmode(cgGGDC10S, SUM) 1.786779 1.83832 1.938918 1.876251 1.980227 2.809133   100</span></span>
+<span id="cb52-45"><a href="#cb52-45"></a><span class="co">#  fmode(cgGGDC10S, SUM) 1.793468 1.84791 1.935726 1.890302 2.007889 2.626164   100</span></span>
 <span id="cb52-46"><a href="#cb52-46"></a></span>
 <span id="cb52-47"><a href="#cb52-47"></a><span class="co"># Large </span></span>
 <span id="cb52-48"><a href="#cb52-48"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb52-49"><a href="#cb52-49"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb52-50"><a href="#cb52-50"></a><span class="co">#                expr      min       lq     mean   median      uq      max neval</span></span>
-<span id="cb52-51"><a href="#cb52-51"></a><span class="co">#  fmode(cgdata, SUM) 428.4827 456.1661 481.5022 477.9687 519.985 525.3918    10</span></span>
+<span id="cb52-50"><a href="#cb52-50"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb52-51"><a href="#cb52-51"></a><span class="co">#  fmode(cgdata, SUM) 471.0955 478.6665 491.8299 481.7983 515.7568 517.8626    10</span></span>
 <span id="cb52-52"><a href="#cb52-52"></a></span>
 <span id="cb52-53"><a href="#cb52-53"></a><span class="kw">gc</span>()</span>
 <span id="cb52-54"><a href="#cb52-54"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb52-55"><a href="#cb52-55"></a><span class="co"># Ncells  1949570 104.2    3670808 196.1  3670808 196.1</span></span>
-<span id="cb52-56"><a href="#cb52-56"></a><span class="co"># Vcells 20490138 156.4   44612944 340.4 44612944 340.4</span></span></code></pre></div>
+<span id="cb52-55"><a href="#cb52-55"></a><span class="co"># Ncells  1949570 104.2    3670734 196.1  3670734 196.1</span></span>
+<span id="cb52-56"><a href="#cb52-56"></a><span class="co"># Vcells 20490142 156.4   44612936 340.4 44612936 340.4</span></span></code></pre></div>
 </div>
 <div id="transformation" class="section level3">
 <h3>3.2 Transformation</h3>
@@ -1852,68 +1852,68 @@ pre[class] {
 <span id="cb53-4"><a href="#cb53-4"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-5"><a href="#cb53-5"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgGGDC10S, <span class="dt">TRA =</span> <span class="st">&quot;replace_fill&quot;</span>))</span>
 <span id="cb53-6"><a href="#cb53-6"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-7"><a href="#cb53-7"></a><span class="co">#      expr      min       lq       mean    median         uq       max neval cld</span></span>
-<span id="cb53-8"><a href="#cb53-8"></a><span class="co">#     dplyr 9258.313 9624.683 11063.3296 10215.739 11219.5745 23185.722   100   b</span></span>
-<span id="cb53-9"><a href="#cb53-9"></a><span class="co">#  collapse  292.292  317.729   361.5818   351.421   387.1205   535.944   100  a</span></span>
+<span id="cb53-7"><a href="#cb53-7"></a><span class="co">#      expr      min       lq       mean    median        uq       max neval cld</span></span>
+<span id="cb53-8"><a href="#cb53-8"></a><span class="co">#     dplyr 9422.508 9950.641 10949.9220 10214.373 10769.504 27304.075   100   b</span></span>
+<span id="cb53-9"><a href="#cb53-9"></a><span class="co">#  collapse  291.399  340.710   366.2888   363.692   391.359   553.793   100  a</span></span>
 <span id="cb53-10"><a href="#cb53-10"></a></span>
 <span id="cb53-11"><a href="#cb53-11"></a><span class="co"># Large</span></span>
 <span id="cb53-12"><a href="#cb53-12"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-13"><a href="#cb53-13"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgdata, <span class="dt">TRA =</span> <span class="st">&quot;replace_fill&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-14"><a href="#cb53-14"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-15"><a href="#cb53-15"></a><span class="co">#      expr       min         lq      mean    median        uq      max neval cld</span></span>
-<span id="cb53-16"><a href="#cb53-16"></a><span class="co">#     dplyr 1135.8857 1189.32039 1219.9488 1203.5497 1246.5339 1312.591    10   b</span></span>
-<span id="cb53-17"><a href="#cb53-17"></a><span class="co">#  collapse   57.5754   80.31532  108.3542   92.5925  103.4029  299.836    10  a</span></span>
+<span id="cb53-15"><a href="#cb53-15"></a><span class="co">#      expr        min         lq     mean     median        uq       max neval cld</span></span>
+<span id="cb53-16"><a href="#cb53-16"></a><span class="co">#     dplyr 1152.99314 1200.45642 1273.494 1249.90417 1298.4063 1512.5563    10   b</span></span>
+<span id="cb53-17"><a href="#cb53-17"></a><span class="co">#  collapse   58.45658   79.04419  116.200   94.37434  113.0353  329.2473    10  a</span></span>
 <span id="cb53-18"><a href="#cb53-18"></a></span>
 <span id="cb53-19"><a href="#cb53-19"></a><span class="co">## Dividing by group sum</span></span>
 <span id="cb53-20"><a href="#cb53-20"></a><span class="co"># Small</span></span>
 <span id="cb53-21"><a href="#cb53-21"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) x<span class="op">/</span><span class="kw">sum</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb53-22"><a href="#cb53-22"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgGGDC10S, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>))</span>
 <span id="cb53-23"><a href="#cb53-23"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-24"><a href="#cb53-24"></a><span class="co">#      expr      min         lq       mean    median        uq       max neval cld</span></span>
-<span id="cb53-25"><a href="#cb53-25"></a><span class="co">#     dplyr 9571.580 10067.8080 11448.0179 10347.828 11459.879 26638.345   100   b</span></span>
-<span id="cb53-26"><a href="#cb53-26"></a><span class="co">#  collapse  552.456   612.6995   646.5515   636.127   672.943  1019.231   100  a</span></span>
+<span id="cb53-24"><a href="#cb53-24"></a><span class="co">#      expr      min       lq       mean    median         uq       max neval cld</span></span>
+<span id="cb53-25"><a href="#cb53-25"></a><span class="co">#     dplyr 9622.872 10204.11 11141.4289 10644.109 11165.1020 23135.235   100   b</span></span>
+<span id="cb53-26"><a href="#cb53-26"></a><span class="co">#  collapse  548.884   581.46   631.4444   619.615   652.6365  1326.693   100  a</span></span>
 <span id="cb53-27"><a href="#cb53-27"></a></span>
 <span id="cb53-28"><a href="#cb53-28"></a><span class="co"># Large</span></span>
 <span id="cb53-29"><a href="#cb53-29"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x<span class="op">/</span><span class="kw">sum</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb53-30"><a href="#cb53-30"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgdata, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-31"><a href="#cb53-31"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-32"><a href="#cb53-32"></a><span class="co">#      expr       min        lq     mean    median        uq       max neval cld</span></span>
-<span id="cb53-33"><a href="#cb53-33"></a><span class="co">#     dplyr 1291.8499 1465.4762 1579.587 1580.3437 1687.6963 1966.9558    10   b</span></span>
-<span id="cb53-34"><a href="#cb53-34"></a><span class="co">#  collapse  122.1386  124.5274  145.821  141.6015  149.2763  209.7385    10  a</span></span>
+<span id="cb53-32"><a href="#cb53-32"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
+<span id="cb53-33"><a href="#cb53-33"></a><span class="co">#     dplyr 1241.6062 1398.6664 1530.9812 1556.4277 1632.4495 1861.7946    10   b</span></span>
+<span id="cb53-34"><a href="#cb53-34"></a><span class="co">#  collapse  113.1424  121.9201  136.9692  133.0716  143.1489  196.7169    10  a</span></span>
 <span id="cb53-35"><a href="#cb53-35"></a></span>
 <span id="cb53-36"><a href="#cb53-36"></a><span class="co">## Centering</span></span>
 <span id="cb53-37"><a href="#cb53-37"></a><span class="co"># Small</span></span>
 <span id="cb53-38"><a href="#cb53-38"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb53-39"><a href="#cb53-39"></a>               <span class="dt">collapse =</span> <span class="kw">fwithin</span>(cgGGDC10S))</span>
 <span id="cb53-40"><a href="#cb53-40"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-41"><a href="#cb53-41"></a><span class="co">#      expr       min         lq       mean     median         uq       max neval cld</span></span>
-<span id="cb53-42"><a href="#cb53-42"></a><span class="co">#     dplyr 12229.434 13184.1830 16026.8331 13861.5875 15973.9030 35830.613   100   b</span></span>
-<span id="cb53-43"><a href="#cb53-43"></a><span class="co">#  collapse   310.142   346.5115   405.1267   369.0475   423.0435   969.698   100  a</span></span>
+<span id="cb53-41"><a href="#cb53-41"></a><span class="co">#      expr       min         lq       mean    median        uq       max neval cld</span></span>
+<span id="cb53-42"><a href="#cb53-42"></a><span class="co">#     dplyr 12829.158 13595.3640 14916.2687 13954.146 14407.980 35788.124   100   b</span></span>
+<span id="cb53-43"><a href="#cb53-43"></a><span class="co">#  collapse   310.589   348.7425   379.9439   374.625   400.507   700.608   100  a</span></span>
 <span id="cb53-44"><a href="#cb53-44"></a></span>
 <span id="cb53-45"><a href="#cb53-45"></a><span class="co"># Large</span></span>
 <span id="cb53-46"><a href="#cb53-46"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb53-47"><a href="#cb53-47"></a>               <span class="dt">collapse =</span> <span class="kw">fwithin</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-48"><a href="#cb53-48"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-49"><a href="#cb53-49"></a><span class="co">#      expr       min         lq      mean    median        uq       max neval cld</span></span>
-<span id="cb53-50"><a href="#cb53-50"></a><span class="co">#     dplyr 2108.7346 2689.56024 2683.7050 2747.5772 2786.0989 2887.1617    10   b</span></span>
-<span id="cb53-51"><a href="#cb53-51"></a><span class="co">#  collapse   64.0875   82.43232  131.9519  106.3336  125.4417  351.0082    10  a</span></span>
+<span id="cb53-49"><a href="#cb53-49"></a><span class="co">#      expr        min         lq      mean    median        uq       max neval cld</span></span>
+<span id="cb53-50"><a href="#cb53-50"></a><span class="co">#     dplyr 2205.50124 2646.09750 2706.8577 2763.9730 2831.4105 2870.2822    10   b</span></span>
+<span id="cb53-51"><a href="#cb53-51"></a><span class="co">#  collapse   64.86068   90.56183  140.7654  112.0254  131.0632  374.7248    10  a</span></span>
 <span id="cb53-52"><a href="#cb53-52"></a></span>
 <span id="cb53-53"><a href="#cb53-53"></a><span class="co">## Centering and Scaling (Standardizing)</span></span>
 <span id="cb53-54"><a href="#cb53-54"></a><span class="co"># Small</span></span>
 <span id="cb53-55"><a href="#cb53-55"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) (x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))<span class="op">/</span><span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb53-56"><a href="#cb53-56"></a>               <span class="dt">collapse =</span> <span class="kw">fscale</span>(cgGGDC10S))</span>
 <span id="cb53-57"><a href="#cb53-57"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-58"><a href="#cb53-58"></a><span class="co">#      expr       min         lq       mean     median         uq       max neval cld</span></span>
-<span id="cb53-59"><a href="#cb53-59"></a><span class="co">#     dplyr 30937.947 31823.5270 34189.3613 32373.9735 33690.6295 49103.822   100   b</span></span>
-<span id="cb53-60"><a href="#cb53-60"></a><span class="co">#  collapse   496.228   527.2425   554.5039   550.0015   573.6525   711.766   100  a</span></span>
+<span id="cb53-58"><a href="#cb53-58"></a><span class="co">#      expr       min        lq       mean     median         uq       max neval cld</span></span>
+<span id="cb53-59"><a href="#cb53-59"></a><span class="co">#     dplyr 31800.906 32996.848 36621.5260 34130.0930 37528.0415 57398.085   100   b</span></span>
+<span id="cb53-60"><a href="#cb53-60"></a><span class="co">#  collapse   516.754   565.172   634.9027   596.1865   639.2495  1398.092   100  a</span></span>
 <span id="cb53-61"><a href="#cb53-61"></a></span>
 <span id="cb53-62"><a href="#cb53-62"></a><span class="co"># Large</span></span>
 <span id="cb53-63"><a href="#cb53-63"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) (x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))<span class="op">/</span><span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb53-64"><a href="#cb53-64"></a>               <span class="dt">collapse =</span> <span class="kw">fscale</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb53-65"><a href="#cb53-65"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-66"><a href="#cb53-66"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb53-67"><a href="#cb53-67"></a><span class="co">#     dplyr 6275.8386 6275.8386 6738.0003 6738.0003 7200.1620 7200.1620     2   b</span></span>
-<span id="cb53-68"><a href="#cb53-68"></a><span class="co">#  collapse  102.7817  102.7817  119.8043  119.8043  136.8269  136.8269     2  a</span></span>
+<span id="cb53-66"><a href="#cb53-66"></a><span class="co">#      expr       min        lq      mean    median       uq      max neval cld</span></span>
+<span id="cb53-67"><a href="#cb53-67"></a><span class="co">#     dplyr 6435.4363 6435.4363 6704.2027 6704.2027 6972.969 6972.969     2   b</span></span>
+<span id="cb53-68"><a href="#cb53-68"></a><span class="co">#  collapse  106.2894  106.2894  122.0602  122.0602  137.831  137.831     2  a</span></span>
 <span id="cb53-69"><a href="#cb53-69"></a></span>
 <span id="cb53-70"><a href="#cb53-70"></a><span class="co">## Lag</span></span>
 <span id="cb53-71"><a href="#cb53-71"></a><span class="co"># Small</span></span>
@@ -1922,11 +1922,11 @@ pre[class] {
 <span id="cb53-74"><a href="#cb53-74"></a>               <span class="dt">dplyr_ordered =</span> <span class="kw">mutate_all</span>(gGGDC10S, dplyr<span class="op">::</span>lag, <span class="dt">order_by =</span> <span class="st">&quot;Year&quot;</span>),</span>
 <span id="cb53-75"><a href="#cb53-75"></a>               <span class="dt">collapse_ordered =</span> <span class="kw">flag</span>(cgGGDC10S, <span class="dt">t =</span> Year))</span>
 <span id="cb53-76"><a href="#cb53-76"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-77"><a href="#cb53-77"></a><span class="co">#                expr        min         lq        mean      median          uq        max neval cld</span></span>
-<span id="cb53-78"><a href="#cb53-78"></a><span class="co">#     dplyr_unordered  45988.116  47590.818  52886.6644  49549.1780  53991.5800 121991.785   100  b </span></span>
-<span id="cb53-79"><a href="#cb53-79"></a><span class="co">#  collapse_unordered    349.859    418.358    456.7218    455.1735    480.8325    988.440   100 a  </span></span>
-<span id="cb53-80"><a href="#cb53-80"></a><span class="co">#       dplyr_ordered 125601.487 129834.821 137941.9478 132902.3325 139579.0985 205542.403   100   c</span></span>
-<span id="cb53-81"><a href="#cb53-81"></a><span class="co">#    collapse_ordered    327.100    367.263    392.4488    389.3515    413.2260    527.019   100 a</span></span>
+<span id="cb53-77"><a href="#cb53-77"></a><span class="co">#                expr        min         lq        mean      median         uq        max neval cld</span></span>
+<span id="cb53-78"><a href="#cb53-78"></a><span class="co">#     dplyr_unordered  47350.386  48740.669  51035.0391  49742.4930  52168.069  68811.747   100  b </span></span>
+<span id="cb53-79"><a href="#cb53-79"></a><span class="co">#  collapse_unordered    375.294    442.231    468.3410    468.1135    490.426    582.799   100 a  </span></span>
+<span id="cb53-80"><a href="#cb53-80"></a><span class="co">#       dplyr_ordered 128288.897 131983.154 136240.5114 134911.4270 139166.616 161151.871   100   c</span></span>
+<span id="cb53-81"><a href="#cb53-81"></a><span class="co">#    collapse_ordered    322.637    375.964    408.4056    394.4825    421.257   1137.038   100 a</span></span>
 <span id="cb53-82"><a href="#cb53-82"></a></span>
 <span id="cb53-83"><a href="#cb53-83"></a><span class="co"># Large</span></span>
 <span id="cb53-84"><a href="#cb53-84"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gdata, dplyr<span class="op">::</span>lag),</span>
@@ -1934,82 +1934,87 @@ pre[class] {
 <span id="cb53-86"><a href="#cb53-86"></a>               <span class="dt">dplyr_ordered =</span> <span class="kw">mutate_all</span>(gdata, dplyr<span class="op">::</span>lag, <span class="dt">order_by =</span> <span class="st">&quot;Year&quot;</span>),</span>
 <span id="cb53-87"><a href="#cb53-87"></a>               <span class="dt">collapse_ordered =</span> <span class="kw">flag</span>(cgdata, <span class="dt">t =</span> Year), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb53-88"><a href="#cb53-88"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-89"><a href="#cb53-89"></a><span class="co">#                expr        min         lq        mean      median          uq         max neval cld</span></span>
-<span id="cb53-90"><a href="#cb53-90"></a><span class="co">#     dplyr_unordered  9324.8455  9324.8455  9434.80156  9434.80156  9544.75759  9544.75759     2  b </span></span>
-<span id="cb53-91"><a href="#cb53-91"></a><span class="co">#  collapse_unordered    71.0097    71.0097    74.28249    74.28249    77.55527    77.55527     2 a  </span></span>
-<span id="cb53-92"><a href="#cb53-92"></a><span class="co">#       dplyr_ordered 27199.4605 27199.4605 27235.42051 27235.42051 27271.38054 27271.38054     2   c</span></span>
-<span id="cb53-93"><a href="#cb53-93"></a><span class="co">#    collapse_ordered   106.1973   106.1973   166.25002   166.25002   226.30277   226.30277     2 a</span></span>
-<span id="cb53-94"><a href="#cb53-94"></a></span>
-<span id="cb53-95"><a href="#cb53-95"></a><span class="co">## First-Difference (unordered)</span></span>
-<span id="cb53-96"><a href="#cb53-96"></a><span class="co"># Small</span></span>
-<span id="cb53-97"><a href="#cb53-97"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">lag</span>(x)),</span>
-<span id="cb53-98"><a href="#cb53-98"></a>               <span class="dt">collapse_unordered =</span> <span class="kw">fdiff</span>(cgGGDC10S))</span>
-<span id="cb53-99"><a href="#cb53-99"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-100"><a href="#cb53-100"></a><span class="co">#                expr       min        lq       mean     median        uq        max neval cld</span></span>
-<span id="cb53-101"><a href="#cb53-101"></a><span class="co">#     dplyr_unordered 59554.957 64226.507 81959.7487 67309.6365 76084.886 198763.446   100   b</span></span>
-<span id="cb53-102"><a href="#cb53-102"></a><span class="co">#  collapse_unordered   376.188   452.942   553.3659   488.4195   520.549   2367.794   100  a</span></span>
-<span id="cb53-103"><a href="#cb53-103"></a></span>
-<span id="cb53-104"><a href="#cb53-104"></a><span class="co"># Large</span></span>
-<span id="cb53-105"><a href="#cb53-105"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">lag</span>(x)),</span>
-<span id="cb53-106"><a href="#cb53-106"></a>               <span class="dt">collapse_unordered =</span> <span class="kw">fdiff</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
-<span id="cb53-107"><a href="#cb53-107"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-108"><a href="#cb53-108"></a><span class="co">#                expr         min          lq        mean      median          uq         max neval</span></span>
-<span id="cb53-109"><a href="#cb53-109"></a><span class="co">#     dplyr_unordered 13400.86260 13400.86260 13648.34989 13648.34989 13895.83717 13895.83717     2</span></span>
-<span id="cb53-110"><a href="#cb53-110"></a><span class="co">#  collapse_unordered    64.73367    64.73367    70.91867    70.91867    77.10367    77.10367     2</span></span>
-<span id="cb53-111"><a href="#cb53-111"></a><span class="co">#  cld</span></span>
-<span id="cb53-112"><a href="#cb53-112"></a><span class="co">#    b</span></span>
-<span id="cb53-113"><a href="#cb53-113"></a><span class="co">#   a</span></span>
-<span id="cb53-114"><a href="#cb53-114"></a></span>
-<span id="cb53-115"><a href="#cb53-115"></a><span class="kw">gc</span>()</span>
-<span id="cb53-116"><a href="#cb53-116"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb53-117"><a href="#cb53-117"></a><span class="co"># Ncells  1951949 104.3    3670810 196.1  3670810 196.1</span></span>
-<span id="cb53-118"><a href="#cb53-118"></a><span class="co"># Vcells 21539059 164.4   65092109 496.7 65092108 496.7</span></span></code></pre></div>
+<span id="cb53-89"><a href="#cb53-89"></a><span class="co">#                expr         min          lq        mean      median          uq         max neval</span></span>
+<span id="cb53-90"><a href="#cb53-90"></a><span class="co">#     dplyr_unordered  8975.91694  8975.91694  9083.08228  9083.08228  9190.24763  9190.24763     2</span></span>
+<span id="cb53-91"><a href="#cb53-91"></a><span class="co">#  collapse_unordered    53.55188    53.55188    62.14437    62.14437    70.73686    70.73686     2</span></span>
+<span id="cb53-92"><a href="#cb53-92"></a><span class="co">#       dplyr_ordered 25813.19249 25813.19249 26739.83750 26739.83750 27666.48252 27666.48252     2</span></span>
+<span id="cb53-93"><a href="#cb53-93"></a><span class="co">#    collapse_ordered    96.89318    96.89318   106.13697   106.13697   115.38075   115.38075     2</span></span>
+<span id="cb53-94"><a href="#cb53-94"></a><span class="co">#  cld</span></span>
+<span id="cb53-95"><a href="#cb53-95"></a><span class="co">#   b </span></span>
+<span id="cb53-96"><a href="#cb53-96"></a><span class="co">#  a  </span></span>
+<span id="cb53-97"><a href="#cb53-97"></a><span class="co">#    c</span></span>
+<span id="cb53-98"><a href="#cb53-98"></a><span class="co">#  a</span></span>
+<span id="cb53-99"><a href="#cb53-99"></a></span>
+<span id="cb53-100"><a href="#cb53-100"></a><span class="co">## First-Difference (unordered)</span></span>
+<span id="cb53-101"><a href="#cb53-101"></a><span class="co"># Small</span></span>
+<span id="cb53-102"><a href="#cb53-102"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">lag</span>(x)),</span>
+<span id="cb53-103"><a href="#cb53-103"></a>               <span class="dt">collapse_unordered =</span> <span class="kw">fdiff</span>(cgGGDC10S))</span>
+<span id="cb53-104"><a href="#cb53-104"></a><span class="co"># Unit: microseconds</span></span>
+<span id="cb53-105"><a href="#cb53-105"></a><span class="co">#                expr      min         lq       mean    median        uq       max neval cld</span></span>
+<span id="cb53-106"><a href="#cb53-106"></a><span class="co">#     dplyr_unordered 62157.31 63476.4170 66662.2014 64777.896 68252.823 95926.613   100   b</span></span>
+<span id="cb53-107"><a href="#cb53-107"></a><span class="co">#  collapse_unordered   386.45   460.5275   513.5147   497.789   528.803  1019.229   100  a</span></span>
+<span id="cb53-108"><a href="#cb53-108"></a></span>
+<span id="cb53-109"><a href="#cb53-109"></a><span class="co"># Large</span></span>
+<span id="cb53-110"><a href="#cb53-110"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">lag</span>(x)),</span>
+<span id="cb53-111"><a href="#cb53-111"></a>               <span class="dt">collapse_unordered =</span> <span class="kw">fdiff</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
+<span id="cb53-112"><a href="#cb53-112"></a><span class="co"># Unit: milliseconds</span></span>
+<span id="cb53-113"><a href="#cb53-113"></a><span class="co">#                expr         min          lq        mean      median          uq         max neval</span></span>
+<span id="cb53-114"><a href="#cb53-114"></a><span class="co">#     dplyr_unordered 12545.43710 12545.43710 13110.48386 13110.48386 13675.53062 13675.53062     2</span></span>
+<span id="cb53-115"><a href="#cb53-115"></a><span class="co">#  collapse_unordered    64.10741    64.10741    73.32665    73.32665    82.54589    82.54589     2</span></span>
+<span id="cb53-116"><a href="#cb53-116"></a><span class="co">#  cld</span></span>
+<span id="cb53-117"><a href="#cb53-117"></a><span class="co">#    b</span></span>
+<span id="cb53-118"><a href="#cb53-118"></a><span class="co">#   a</span></span>
+<span id="cb53-119"><a href="#cb53-119"></a></span>
+<span id="cb53-120"><a href="#cb53-120"></a><span class="kw">gc</span>()</span>
+<span id="cb53-121"><a href="#cb53-121"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
+<span id="cb53-122"><a href="#cb53-122"></a><span class="co"># Ncells  1951949 104.3    3670735 196.1  3670735 196.1</span></span>
+<span id="cb53-123"><a href="#cb53-123"></a><span class="co"># Vcells 21539057 164.4   65092104 496.7 65092101 496.7</span></span></code></pre></div>
 <p>Below again some benchmarks for transformations not easily of efficiently performed with <em>dplyr</em>, such as centering on the overall mean, mean-preserving scaling, weighted scaling and centering, sequences of lags / leads, (iterated) panel-differences and growth rates.</p>
 <div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1"></a><span class="co"># Centering on overall mean</span></span>
 <span id="cb54-2"><a href="#cb54-2"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(cgdata, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-3"><a href="#cb54-3"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-4"><a href="#cb54-4"></a><span class="co">#                                    expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-5"><a href="#cb54-5"></a><span class="co">#  fwithin(cgdata, mean = &quot;overall.mean&quot;) 65.46998 82.38279 93.01224 96.96529 106.7676 112.8044    10</span></span>
+<span id="cb54-4"><a href="#cb54-4"></a><span class="co">#                                    expr      min       lq     mean   median       uq     max neval</span></span>
+<span id="cb54-5"><a href="#cb54-5"></a><span class="co">#  fwithin(cgdata, mean = &quot;overall.mean&quot;) 65.08112 83.53835 92.52791 95.56872 103.4503 115.175    10</span></span>
 <span id="cb54-6"><a href="#cb54-6"></a></span>
 <span id="cb54-7"><a href="#cb54-7"></a><span class="co"># Weighted Centering</span></span>
 <span id="cb54-8"><a href="#cb54-8"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-9"><a href="#cb54-9"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-10"><a href="#cb54-10"></a><span class="co">#                  expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-11"><a href="#cb54-11"></a><span class="co">#  fwithin(cgdata, SUM) 61.54701 71.74066 88.21771 91.02059 104.9598 114.7385    10</span></span>
+<span id="cb54-10"><a href="#cb54-10"></a><span class="co">#                  expr      min       lq     mean  median      uq      max neval</span></span>
+<span id="cb54-11"><a href="#cb54-11"></a><span class="co">#  fwithin(cgdata, SUM) 64.75179 65.81118 84.23177 81.5579 101.527 106.3509    10</span></span>
 <span id="cb54-12"><a href="#cb54-12"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(cgdata, SUM, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-13"><a href="#cb54-13"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-14"><a href="#cb54-14"></a><span class="co">#                                         expr      min       lq     mean   median       uq      max</span></span>
-<span id="cb54-15"><a href="#cb54-15"></a><span class="co">#  fwithin(cgdata, SUM, mean = &quot;overall.mean&quot;) 65.59894 67.82081 98.36905 85.39162 100.8093 224.7989</span></span>
+<span id="cb54-14"><a href="#cb54-14"></a><span class="co">#                                         expr      min       lq     mean  median       uq      max</span></span>
+<span id="cb54-15"><a href="#cb54-15"></a><span class="co">#  fwithin(cgdata, SUM, mean = &quot;overall.mean&quot;) 67.02944 67.83268 99.77674 87.0155 103.1862 233.4667</span></span>
 <span id="cb54-16"><a href="#cb54-16"></a><span class="co">#  neval</span></span>
 <span id="cb54-17"><a href="#cb54-17"></a><span class="co">#     10</span></span>
 <span id="cb54-18"><a href="#cb54-18"></a></span>
 <span id="cb54-19"><a href="#cb54-19"></a><span class="co"># Weighted Scaling and Standardizing</span></span>
 <span id="cb54-20"><a href="#cb54-20"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(cgdata, SUM, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-21"><a href="#cb54-21"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-22"><a href="#cb54-22"></a><span class="co">#                         expr      min      lq     mean   median       uq     max neval</span></span>
-<span id="cb54-23"><a href="#cb54-23"></a><span class="co">#  fsd(cgdata, SUM, TRA = &quot;/&quot;) 189.4275 236.869 259.0891 261.4259 291.6304 319.699    10</span></span>
+<span id="cb54-22"><a href="#cb54-22"></a><span class="co">#                         expr      min       lq     mean  median       uq     max neval</span></span>
+<span id="cb54-23"><a href="#cb54-23"></a><span class="co">#  fsd(cgdata, SUM, TRA = &quot;/&quot;) 143.8683 156.2623 164.8902 167.915 170.7149 185.994    10</span></span>
 <span id="cb54-24"><a href="#cb54-24"></a><span class="kw">microbenchmark</span>(<span class="kw">fscale</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-25"><a href="#cb54-25"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-26"><a href="#cb54-26"></a><span class="co">#                 expr     min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-27"><a href="#cb54-27"></a><span class="co">#  fscale(cgdata, SUM) 92.8366 94.76662 131.1591 120.8438 147.4262 244.6217    10</span></span>
+<span id="cb54-26"><a href="#cb54-26"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb54-27"><a href="#cb54-27"></a><span class="co">#  fscale(cgdata, SUM) 97.76158 101.3057 117.8158 112.4665 135.0901 144.7045    10</span></span>
 <span id="cb54-28"><a href="#cb54-28"></a></span>
 <span id="cb54-29"><a href="#cb54-29"></a><span class="co"># Sequence of lags and leads</span></span>
 <span id="cb54-30"><a href="#cb54-30"></a><span class="kw">microbenchmark</span>(<span class="kw">flag</span>(cgdata, <span class="dv">-1</span><span class="op">:</span><span class="dv">1</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-31"><a href="#cb54-31"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-32"><a href="#cb54-32"></a><span class="co">#                expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb54-33"><a href="#cb54-33"></a><span class="co">#  flag(cgdata, -1:1) 86.48381 183.2951 244.4768 233.978 260.3229 560.6181    10</span></span>
+<span id="cb54-32"><a href="#cb54-32"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb54-33"><a href="#cb54-33"></a><span class="co">#  flag(cgdata, -1:1) 72.85832 110.3707 200.5462 231.0337 250.2536 280.4177    10</span></span>
 <span id="cb54-34"><a href="#cb54-34"></a></span>
 <span id="cb54-35"><a href="#cb54-35"></a><span class="co"># Iterated difference</span></span>
 <span id="cb54-36"><a href="#cb54-36"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(cgdata, <span class="dv">1</span>, <span class="dv">2</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-37"><a href="#cb54-37"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-38"><a href="#cb54-38"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-39"><a href="#cb54-39"></a><span class="co">#  fdiff(cgdata, 1, 2) 58.64015 83.51135 124.0488 132.9581 141.6289 212.5101    10</span></span>
+<span id="cb54-38"><a href="#cb54-38"></a><span class="co">#                 expr      min       lq     mean   median       uq    max neval</span></span>
+<span id="cb54-39"><a href="#cb54-39"></a><span class="co">#  fdiff(cgdata, 1, 2) 61.83958 65.19715 85.75602 86.90238 99.94373 110.68    10</span></span>
 <span id="cb54-40"><a href="#cb54-40"></a></span>
 <span id="cb54-41"><a href="#cb54-41"></a><span class="co"># Growth Rate</span></span>
 <span id="cb54-42"><a href="#cb54-42"></a><span class="kw">microbenchmark</span>(<span class="kw">fgrowth</span>(cgdata,<span class="dv">1</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb54-43"><a href="#cb54-43"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-44"><a href="#cb54-44"></a><span class="co">#                expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb54-45"><a href="#cb54-45"></a><span class="co">#  fgrowth(cgdata, 1) 65.99521 89.86459 119.7048 98.1059 131.4835 231.4922    10</span></span></code></pre></div>
+<span id="cb54-44"><a href="#cb54-44"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb54-45"><a href="#cb54-45"></a><span class="co">#  fgrowth(cgdata, 1) 64.35151 79.62878 90.42032 96.65288 101.8938 110.4622    10</span></span></code></pre></div>
 <!-- Again the benchmarks show stunning performance gains using *collapse* functions. -->
 </div>
 </div>
