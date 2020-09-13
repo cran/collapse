@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2020-08-27" />
+<meta name="date" content="2020-09-13" />
 
 <title>collapse and plm</title>
 
@@ -320,7 +320,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore"><em>collapse</em> and <em>plm</em></h1>
 <h3 class="subtitle">Fast Transformation and Exploration of Panel Data</h3>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2020-08-27</h4>
+<h4 class="date">2020-09-13</h4>
 
 
 <div id="TOC">
@@ -1139,116 +1139,116 @@ pre[class] {
 <span id="cb37-11"><a href="#cb37-11"></a><span class="co"># Between Transformations</span></span>
 <span id="cb37-12"><a href="#cb37-12"></a><span class="kw">microbenchmark</span>(<span class="kw">Between</span>(LIFEEX_l, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-13"><a href="#cb37-13"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-14"><a href="#cb37-14"></a><span class="co">#                             expr     min       lq    mean   median       uq      max neval</span></span>
-<span id="cb37-15"><a href="#cb37-15"></a><span class="co">#  Between(LIFEEX_l, na.rm = TRUE) 265.177 312.7567 364.819 345.3323 363.8685 666.2094    10</span></span>
+<span id="cb37-14"><a href="#cb37-14"></a><span class="co">#                             expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-15"><a href="#cb37-15"></a><span class="co">#  Between(LIFEEX_l, na.rm = TRUE) 259.3286 308.1097 339.4339 319.2681 330.5273 538.9333    10</span></span>
 <span id="cb37-16"><a href="#cb37-16"></a><span class="kw">microbenchmark</span>(<span class="kw">fbetween</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-17"><a href="#cb37-17"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-18"><a href="#cb37-18"></a><span class="co">#                expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb37-19"><a href="#cb37-19"></a><span class="co">#  fbetween(LIFEEX_l) 10.92368 11.03034 19.37502 15.2235 21.96116 57.24993    10</span></span>
+<span id="cb37-18"><a href="#cb37-18"></a><span class="co">#                expr    min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-19"><a href="#cb37-19"></a><span class="co">#  fbetween(LIFEEX_l) 10.975 11.37127 19.58307 12.69261 21.41675 61.07831    10</span></span>
 <span id="cb37-20"><a href="#cb37-20"></a></span>
 <span id="cb37-21"><a href="#cb37-21"></a><span class="co"># Within Transformations</span></span>
 <span id="cb37-22"><a href="#cb37-22"></a><span class="kw">microbenchmark</span>(<span class="kw">Within</span>(LIFEEX_l, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-23"><a href="#cb37-23"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-24"><a href="#cb37-24"></a><span class="co">#                            expr     min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-25"><a href="#cb37-25"></a><span class="co">#  Within(LIFEEX_l, na.rm = TRUE) 439.216 480.8125 516.2898 497.3542 518.0032 740.3136    10</span></span>
+<span id="cb37-24"><a href="#cb37-24"></a><span class="co">#                            expr      min       lq    mean   median       uq      max neval</span></span>
+<span id="cb37-25"><a href="#cb37-25"></a><span class="co">#  Within(LIFEEX_l, na.rm = TRUE) 457.1429 501.7051 526.439 515.9118 537.5365 699.9286    10</span></span>
 <span id="cb37-26"><a href="#cb37-26"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-27"><a href="#cb37-27"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb37-28"><a href="#cb37-28"></a><span class="co">#               expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-29"><a href="#cb37-29"></a><span class="co">#  fwithin(LIFEEX_l) 10.49082 10.64255 16.04053 11.00825 17.13276 44.09635    10</span></span>
+<span id="cb37-29"><a href="#cb37-29"></a><span class="co">#  fwithin(LIFEEX_l) 10.55063 11.53014 19.91865 18.02013 21.84961 52.61657    10</span></span>
 <span id="cb37-30"><a href="#cb37-30"></a></span>
 <span id="cb37-31"><a href="#cb37-31"></a><span class="co"># Higher-Dimenional Between and Within Transformations</span></span>
 <span id="cb37-32"><a href="#cb37-32"></a><span class="kw">microbenchmark</span>(<span class="kw">fHDbetween</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-33"><a href="#cb37-33"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb37-34"><a href="#cb37-34"></a><span class="co">#                  expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-35"><a href="#cb37-35"></a><span class="co">#  fHDbetween(LIFEEX_l) 134.8304 141.0676 188.3519 167.5287 184.2318 402.8522    10</span></span>
+<span id="cb37-35"><a href="#cb37-35"></a><span class="co">#  fHDbetween(LIFEEX_l) 132.4029 165.7608 199.3022 178.8526 191.4146 413.2428    10</span></span>
 <span id="cb37-36"><a href="#cb37-36"></a><span class="kw">microbenchmark</span>(<span class="kw">fHDwithin</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-37"><a href="#cb37-37"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-38"><a href="#cb37-38"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-39"><a href="#cb37-39"></a><span class="co">#  fHDwithin(LIFEEX_l) 130.4059 140.0703 177.9897 169.0649 172.5254 286.0783    10</span></span>
+<span id="cb37-38"><a href="#cb37-38"></a><span class="co">#                 expr      min     lq     mean   median       uq      max neval</span></span>
+<span id="cb37-39"><a href="#cb37-39"></a><span class="co">#  fHDwithin(LIFEEX_l) 125.4718 162.55 176.3745 174.5186 187.0981 239.1917    10</span></span>
 <span id="cb37-40"><a href="#cb37-40"></a></span>
 <span id="cb37-41"><a href="#cb37-41"></a><span class="co"># Single Lag</span></span>
 <span id="cb37-42"><a href="#cb37-42"></a><span class="kw">microbenchmark</span>(plm<span class="op">::</span><span class="kw">lag</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-43"><a href="#cb37-43"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-44"><a href="#cb37-44"></a><span class="co">#                expr      min       lq    mean   median       uq      max neval</span></span>
-<span id="cb37-45"><a href="#cb37-45"></a><span class="co">#  plm::lag(LIFEEX_l) 554.9752 633.8315 737.603 699.5472 747.0988 1210.091    10</span></span>
+<span id="cb37-44"><a href="#cb37-44"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-45"><a href="#cb37-45"></a><span class="co">#  plm::lag(LIFEEX_l) 568.5512 665.1173 693.2567 692.7429 701.9452 846.2535    10</span></span>
 <span id="cb37-46"><a href="#cb37-46"></a><span class="kw">microbenchmark</span>(<span class="kw">flag</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-47"><a href="#cb37-47"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-48"><a href="#cb37-48"></a><span class="co">#            expr      min       lq     mean   median       uq     max neval</span></span>
-<span id="cb37-49"><a href="#cb37-49"></a><span class="co">#  flag(LIFEEX_l) 16.03321 18.15601 29.33758 24.43917 37.26743 63.8468    10</span></span>
+<span id="cb37-48"><a href="#cb37-48"></a><span class="co">#            expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-49"><a href="#cb37-49"></a><span class="co">#  flag(LIFEEX_l) 16.31435 17.62454 33.70666 24.43338 35.53869 85.16049    10</span></span>
 <span id="cb37-50"><a href="#cb37-50"></a></span>
 <span id="cb37-51"><a href="#cb37-51"></a><span class="co"># Sequence of Lags / Leads</span></span>
 <span id="cb37-52"><a href="#cb37-52"></a><span class="kw">microbenchmark</span>(plm<span class="op">::</span><span class="kw">lag</span>(LIFEEX_l, <span class="dv">-1</span><span class="op">:</span><span class="dv">3</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-53"><a href="#cb37-53"></a><span class="co"># Unit: seconds</span></span>
-<span id="cb37-54"><a href="#cb37-54"></a><span class="co">#                      expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb37-55"><a href="#cb37-55"></a><span class="co">#  plm::lag(LIFEEX_l, -1:3) 2.783993 3.071201 3.200926 3.19121 3.389521 3.467745    10</span></span>
+<span id="cb37-54"><a href="#cb37-54"></a><span class="co">#                      expr      min       lq    mean   median       uq      max neval</span></span>
+<span id="cb37-55"><a href="#cb37-55"></a><span class="co">#  plm::lag(LIFEEX_l, -1:3) 2.959353 2.981729 3.12499 3.043269 3.133288 3.821783    10</span></span>
 <span id="cb37-56"><a href="#cb37-56"></a><span class="kw">microbenchmark</span>(<span class="kw">flag</span>(LIFEEX_l, <span class="dv">-1</span><span class="op">:</span><span class="dv">3</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-57"><a href="#cb37-57"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb37-58"><a href="#cb37-58"></a><span class="co">#                  expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-59"><a href="#cb37-59"></a><span class="co">#  flag(LIFEEX_l, -1:3) 42.96646 49.97744 89.71753 76.57868 143.7911 163.6651    10</span></span>
+<span id="cb37-59"><a href="#cb37-59"></a><span class="co">#  flag(LIFEEX_l, -1:3) 43.20477 44.71442 64.09423 49.02272 94.78114 108.5907    10</span></span>
 <span id="cb37-60"><a href="#cb37-60"></a></span>
 <span id="cb37-61"><a href="#cb37-61"></a><span class="co"># Single difference</span></span>
 <span id="cb37-62"><a href="#cb37-62"></a><span class="kw">microbenchmark</span>(<span class="kw">diff</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-63"><a href="#cb37-63"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-64"><a href="#cb37-64"></a><span class="co">#            expr      min      lq     mean   median       uq      max neval</span></span>
-<span id="cb37-65"><a href="#cb37-65"></a><span class="co">#  diff(LIFEEX_l) 704.4412 726.521 914.0416 945.9021 1017.872 1174.872    10</span></span>
+<span id="cb37-64"><a href="#cb37-64"></a><span class="co">#            expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-65"><a href="#cb37-65"></a><span class="co">#  diff(LIFEEX_l) 688.8474 741.9468 782.3594 781.2172 808.3828 936.7413    10</span></span>
 <span id="cb37-66"><a href="#cb37-66"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-67"><a href="#cb37-67"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-68"><a href="#cb37-68"></a><span class="co">#             expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb37-69"><a href="#cb37-69"></a><span class="co">#  fdiff(LIFEEX_l) 14.62173 15.56287 22.85593 16.5783 31.47336 52.64823    10</span></span>
+<span id="cb37-68"><a href="#cb37-68"></a><span class="co">#             expr    min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-69"><a href="#cb37-69"></a><span class="co">#  fdiff(LIFEEX_l) 14.329 15.97164 28.35018 24.97512 31.51398 72.16086    10</span></span>
 <span id="cb37-70"><a href="#cb37-70"></a></span>
 <span id="cb37-71"><a href="#cb37-71"></a><span class="co"># Iterated Difference</span></span>
 <span id="cb37-72"><a href="#cb37-72"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(LIFEEX_l, <span class="dt">diff =</span> <span class="dv">2</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-73"><a href="#cb37-73"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-74"><a href="#cb37-74"></a><span class="co">#                       expr      min       lq    mean   median       uq      max neval</span></span>
-<span id="cb37-75"><a href="#cb37-75"></a><span class="co">#  fdiff(LIFEEX_l, diff = 2) 19.31491 19.80489 27.7223 21.10615 34.39673 61.31703    10</span></span>
+<span id="cb37-74"><a href="#cb37-74"></a><span class="co">#                       expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-75"><a href="#cb37-75"></a><span class="co">#  fdiff(LIFEEX_l, diff = 2) 19.84372 21.00218 32.26413 24.42423 35.07191 84.34877    10</span></span>
 <span id="cb37-76"><a href="#cb37-76"></a></span>
 <span id="cb37-77"><a href="#cb37-77"></a><span class="co"># Sequence of Lagged / Leaded and iterated differences</span></span>
 <span id="cb37-78"><a href="#cb37-78"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(LIFEEX_l, <span class="dv">-1</span><span class="op">:</span><span class="dv">3</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-79"><a href="#cb37-79"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-80"><a href="#cb37-80"></a><span class="co">#                        expr      min       lq     mean   median     uq      max neval</span></span>
-<span id="cb37-81"><a href="#cb37-81"></a><span class="co">#  fdiff(LIFEEX_l, -1:3, 1:2) 89.63542 138.4972 148.8543 153.6112 167.07 196.2122    10</span></span>
+<span id="cb37-80"><a href="#cb37-80"></a><span class="co">#                        expr      min      lq     mean   median       uq      max neval</span></span>
+<span id="cb37-81"><a href="#cb37-81"></a><span class="co">#  fdiff(LIFEEX_l, -1:3, 1:2) 87.07177 90.3682 133.3943 147.8839 152.9499 168.5298    10</span></span>
 <span id="cb37-82"><a href="#cb37-82"></a></span>
 <span id="cb37-83"><a href="#cb37-83"></a><span class="co"># Single Growth Rate</span></span>
 <span id="cb37-84"><a href="#cb37-84"></a><span class="kw">microbenchmark</span>(<span class="kw">fgrowth</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-85"><a href="#cb37-85"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-86"><a href="#cb37-86"></a><span class="co">#               expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-87"><a href="#cb37-87"></a><span class="co">#  fgrowth(LIFEEX_l) 18.83073 21.38952 28.72738 21.82505 32.43859 64.12347    10</span></span>
+<span id="cb37-86"><a href="#cb37-86"></a><span class="co">#               expr      min       lq    mean   median       uq      max neval</span></span>
+<span id="cb37-87"><a href="#cb37-87"></a><span class="co">#  fgrowth(LIFEEX_l) 18.00474 19.17882 31.2606 23.46212 33.76619 86.99814    10</span></span>
 <span id="cb37-88"><a href="#cb37-88"></a></span>
 <span id="cb37-89"><a href="#cb37-89"></a><span class="co"># Single Log-Difference</span></span>
 <span id="cb37-90"><a href="#cb37-90"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(LIFEEX_l, <span class="dt">log =</span> <span class="ot">TRUE</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-91"><a href="#cb37-91"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb37-92"><a href="#cb37-92"></a><span class="co">#                         expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb37-93"><a href="#cb37-93"></a><span class="co">#  fdiff(LIFEEX_l, log = TRUE) 58.08888 60.15545 70.60731 62.62185 76.25069 122.6421    10</span></span>
+<span id="cb37-93"><a href="#cb37-93"></a><span class="co">#  fdiff(LIFEEX_l, log = TRUE) 58.26026 59.28931 74.38643 71.59703 79.39275 115.1845    10</span></span>
 <span id="cb37-94"><a href="#cb37-94"></a></span>
 <span id="cb37-95"><a href="#cb37-95"></a><span class="co"># Panel Series to Matrix Conversion</span></span>
 <span id="cb37-96"><a href="#cb37-96"></a><span class="co"># system.time(as.matrix(LIFEEX_l))  This takes about 3 minutes to compute</span></span>
 <span id="cb37-97"><a href="#cb37-97"></a><span class="kw">microbenchmark</span>(<span class="kw">psmat</span>(LIFEEX_l), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb37-98"><a href="#cb37-98"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb37-99"><a href="#cb37-99"></a><span class="co">#             expr      min       lq     mean   median       uq     max neval</span></span>
-<span id="cb37-100"><a href="#cb37-100"></a><span class="co">#  psmat(LIFEEX_l) 4.404012 4.501741 4.828884 4.641193 4.856953 5.83959    10</span></span></code></pre></div>
+<span id="cb37-99"><a href="#cb37-99"></a><span class="co">#             expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb37-100"><a href="#cb37-100"></a><span class="co">#  psmat(LIFEEX_l) 4.524056 4.736916 5.632043 5.306103 5.784258 7.910625    10</span></span></code></pre></div>
 <!-- The results show that I did not promise to much in the introduction. A speed gain of 20-40x is the norm, and for certain operations such as the sequence of lags and leads the speed gain is about 100x, and for the panel series to matrix conversion a 300x speed gain by using *collapse* vs. native *plm*.  -->
 <p>This shows a comparison between flag and <em>data.table</em>’s shift:</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a><span class="kw">microbenchmark</span>(<span class="kw">L</span>(data, <span class="dt">cols =</span> <span class="dv">3</span><span class="op">:</span><span class="dv">6</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb38-2"><a href="#cb38-2"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb38-3"><a href="#cb38-3"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb38-4"><a href="#cb38-4"></a><span class="co">#  L(data, cols = 3:6) 18.40948 19.34035 30.12659 23.46412 26.82213 78.79385    10</span></span>
+<span id="cb38-4"><a href="#cb38-4"></a><span class="co">#  L(data, cols = 3:6) 17.15375 23.33739 33.99619 28.99202 38.25544 80.72435    10</span></span>
 <span id="cb38-5"><a href="#cb38-5"></a><span class="kw">library</span>(data.table)</span>
 <span id="cb38-6"><a href="#cb38-6"></a><span class="kw">setDT</span>(data)</span>
 <span id="cb38-7"><a href="#cb38-7"></a><span class="co"># &#39;Improper&#39; panel-lag</span></span>
 <span id="cb38-8"><a href="#cb38-8"></a><span class="kw">microbenchmark</span>(data[, <span class="kw">shift</span>(.SD), <span class="dt">by =</span> iso3c, <span class="dt">.SDcols =</span> <span class="dv">3</span><span class="op">:</span><span class="dv">6</span>], <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb38-9"><a href="#cb38-9"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb38-10"><a href="#cb38-10"></a><span class="co">#                                           expr      min       lq     mean   median       uq     max</span></span>
-<span id="cb38-11"><a href="#cb38-11"></a><span class="co">#  data[, shift(.SD), by = iso3c, .SDcols = 3:6] 466.7878 550.4052 661.8505 618.3715 638.6309 1206.33</span></span>
-<span id="cb38-12"><a href="#cb38-12"></a><span class="co">#  neval</span></span>
-<span id="cb38-13"><a href="#cb38-13"></a><span class="co">#     10</span></span>
+<span id="cb38-10"><a href="#cb38-10"></a><span class="co">#                                           expr      min       lq     mean   median       uq</span></span>
+<span id="cb38-11"><a href="#cb38-11"></a><span class="co">#  data[, shift(.SD), by = iso3c, .SDcols = 3:6] 479.9099 492.2772 531.4705 496.2901 509.9183</span></span>
+<span id="cb38-12"><a href="#cb38-12"></a><span class="co">#       max neval</span></span>
+<span id="cb38-13"><a href="#cb38-13"></a><span class="co">#  732.4971    10</span></span>
 <span id="cb38-14"><a href="#cb38-14"></a></span>
 <span id="cb38-15"><a href="#cb38-15"></a><span class="co"># This does what L is actually doing (without sorting the data)</span></span>
 <span id="cb38-16"><a href="#cb38-16"></a><span class="kw">microbenchmark</span>(data[<span class="kw">order</span>(year), <span class="kw">shift</span>(.SD), <span class="dt">by =</span> iso3c, <span class="dt">.SDcols =</span> <span class="dv">3</span><span class="op">:</span><span class="dv">6</span>], <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb38-17"><a href="#cb38-17"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb38-18"><a href="#cb38-18"></a><span class="co">#                                                      expr      min       lq    mean   median</span></span>
-<span id="cb38-19"><a href="#cb38-19"></a><span class="co">#  data[order(year), shift(.SD), by = iso3c, .SDcols = 3:6] 457.6924 518.0032 534.052 528.8557</span></span>
+<span id="cb38-18"><a href="#cb38-18"></a><span class="co">#                                                      expr      min       lq     mean   median</span></span>
+<span id="cb38-19"><a href="#cb38-19"></a><span class="co">#  data[order(year), shift(.SD), by = iso3c, .SDcols = 3:6] 499.5944 507.5697 568.9052 519.7275</span></span>
 <span id="cb38-20"><a href="#cb38-20"></a><span class="co">#        uq      max neval</span></span>
-<span id="cb38-21"><a href="#cb38-21"></a><span class="co">#  548.4479 605.3386    10</span></span></code></pre></div>
+<span id="cb38-21"><a href="#cb38-21"></a><span class="co">#  590.0393 905.9306    10</span></span></code></pre></div>
 <p>The above dataset has 1 million obs in 20 thousand groups, but what about 10 million obs and 1 million groups? Do <em>collapse</em> functions scale efficiently as data and the number of groups grows large? Here is a simple benchmark:</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a>x &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="fl">1e7</span>)                                     <span class="co"># 10 million obs</span></span>
 <span id="cb39-2"><a href="#cb39-2"></a>g &lt;-<span class="st"> </span><span class="kw">qF</span>(<span class="kw">rep</span>(<span class="dv">1</span><span class="op">:</span><span class="fl">1e6</span>, <span class="dt">each =</span> <span class="dv">10</span>), <span class="dt">na.exclude =</span> <span class="ot">FALSE</span>)  <span class="co"># 1 million individuals</span></span>
@@ -1256,32 +1256,32 @@ pre[class] {
 <span id="cb39-4"><a href="#cb39-4"></a></span>
 <span id="cb39-5"><a href="#cb39-5"></a><span class="kw">microbenchmark</span>(<span class="kw">fbetween</span>(x, g), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-6"><a href="#cb39-6"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-7"><a href="#cb39-7"></a><span class="co">#            expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb39-8"><a href="#cb39-8"></a><span class="co">#  fbetween(x, g) 82.31429 87.52021 114.0272 92.18595 154.4765 186.1841    10</span></span>
+<span id="cb39-7"><a href="#cb39-7"></a><span class="co">#            expr      min     lq     mean   median       uq      max neval</span></span>
+<span id="cb39-8"><a href="#cb39-8"></a><span class="co">#  fbetween(x, g) 81.69717 83.085 112.2723 98.97229 151.3367 157.4155    10</span></span>
 <span id="cb39-9"><a href="#cb39-9"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(x, g), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-10"><a href="#cb39-10"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-11"><a href="#cb39-11"></a><span class="co">#           expr      min       lq     mean  median       uq      max neval</span></span>
-<span id="cb39-12"><a href="#cb39-12"></a><span class="co">#  fwithin(x, g) 78.37348 84.62674 106.9417 92.2009 144.8473 164.8044    10</span></span>
+<span id="cb39-11"><a href="#cb39-11"></a><span class="co">#           expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb39-12"><a href="#cb39-12"></a><span class="co">#  fwithin(x, g) 83.35989 91.51461 130.2614 107.4775 174.4131 204.9899    10</span></span>
 <span id="cb39-13"><a href="#cb39-13"></a><span class="kw">microbenchmark</span>(<span class="kw">flag</span>(x, <span class="dv">1</span>, g, t), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-14"><a href="#cb39-14"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-15"><a href="#cb39-15"></a><span class="co">#              expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb39-16"><a href="#cb39-16"></a><span class="co">#  flag(x, 1, g, t) 123.7077 152.1578 186.8671 166.5097 184.9056 403.7211    10</span></span>
+<span id="cb39-15"><a href="#cb39-15"></a><span class="co">#              expr     min      lq     mean   median       uq      max neval</span></span>
+<span id="cb39-16"><a href="#cb39-16"></a><span class="co">#  flag(x, 1, g, t) 163.285 261.106 332.2679 305.8936 312.1866 671.7405    10</span></span>
 <span id="cb39-17"><a href="#cb39-17"></a><span class="kw">microbenchmark</span>(<span class="kw">flag</span>(x, <span class="dv">-1</span><span class="op">:</span><span class="dv">1</span>, g, t), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-18"><a href="#cb39-18"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-19"><a href="#cb39-19"></a><span class="co">#                 expr     min       lq     mean   median       uq      max neval</span></span>
-<span id="cb39-20"><a href="#cb39-20"></a><span class="co">#  flag(x, -1:1, g, t) 214.199 286.1189 283.8001 289.1447 291.8001 310.7986    10</span></span>
+<span id="cb39-19"><a href="#cb39-19"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb39-20"><a href="#cb39-20"></a><span class="co">#  flag(x, -1:1, g, t) 243.2605 320.7474 339.7466 327.6718 369.2031 436.0287    10</span></span>
 <span id="cb39-21"><a href="#cb39-21"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(x, <span class="dv">1</span>, <span class="dv">1</span>, g, t), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-22"><a href="#cb39-22"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-23"><a href="#cb39-23"></a><span class="co">#                  expr     min       lq     mean   median       uq      max neval</span></span>
-<span id="cb39-24"><a href="#cb39-24"></a><span class="co">#  fdiff(x, 1, 1, g, t) 125.084 144.2342 165.5158 161.6867 189.5336 196.7642    10</span></span>
+<span id="cb39-23"><a href="#cb39-23"></a><span class="co">#                  expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb39-24"><a href="#cb39-24"></a><span class="co">#  fdiff(x, 1, 1, g, t) 154.0499 171.7816 218.6543 222.0589 252.5233 298.2802    10</span></span>
 <span id="cb39-25"><a href="#cb39-25"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(x, <span class="dv">1</span>, <span class="dv">2</span>, g, t), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-26"><a href="#cb39-26"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-27"><a href="#cb39-27"></a><span class="co">#                  expr      min      lq     mean   median       uq      max neval</span></span>
-<span id="cb39-28"><a href="#cb39-28"></a><span class="co">#  fdiff(x, 1, 2, g, t) 153.8178 178.037 193.8496 197.1196 210.3894 222.0244    10</span></span>
+<span id="cb39-27"><a href="#cb39-27"></a><span class="co">#                  expr     min       lq     mean   median       uq      max neval</span></span>
+<span id="cb39-28"><a href="#cb39-28"></a><span class="co">#  fdiff(x, 1, 2, g, t) 182.819 188.7541 234.6669 225.9098 268.5039 303.0117    10</span></span>
 <span id="cb39-29"><a href="#cb39-29"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(x, <span class="dv">-1</span><span class="op">:</span><span class="dv">1</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>, g, t), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb39-30"><a href="#cb39-30"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb39-31"><a href="#cb39-31"></a><span class="co">#                       expr      min       lq    mean   median       uq      max neval</span></span>
-<span id="cb39-32"><a href="#cb39-32"></a><span class="co">#  fdiff(x, -1:1, 1:2, g, t) 543.7556 550.1803 624.834 581.9881 631.2491 821.7484    10</span></span></code></pre></div>
+<span id="cb39-31"><a href="#cb39-31"></a><span class="co">#                       expr      min      lq    mean   median       uq      max neval</span></span>
+<span id="cb39-32"><a href="#cb39-32"></a><span class="co">#  fdiff(x, -1:1, 1:2, g, t) 586.9009 663.974 763.325 682.9339 951.8816 1051.613    10</span></span></code></pre></div>
 <p>The results show that <em>collapse</em> functions perform very well even as the number of groups grows large.</p>
 <!-- in fact tests show that the large sample performance for aggregations with *collapse* is similar to *data.table*, and *collapse* grouped transformations like the ones shown here are generally faster than what can be done *data.table*.  -->
 <p>The conclusion of this benchmark analysis is that <em>collapse</em>’s fast functions, with or without the help of <em>plm</em> classes, allow for very fast transformations of panel data, and should enable R programmers and econometricians to implement high-performance panel data estimators without having to dive into C/C++ themselves or resorting to <em>data.table</em> metaprogramming.</p>
@@ -1474,7 +1474,7 @@ pre[class] {
 <span id="cb47-7"><a href="#cb47-7"></a><span class="kw">microbenchmark</span>(<span class="kw">qsu</span>(LIFEEX_l))</span>
 <span id="cb47-8"><a href="#cb47-8"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb47-9"><a href="#cb47-9"></a><span class="co">#           expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb47-10"><a href="#cb47-10"></a><span class="co">#  qsu(LIFEEX_l) 19.02798 22.03858 24.87759 22.91367 24.43894 165.5956   100</span></span></code></pre></div>
+<span id="cb47-10"><a href="#cb47-10"></a><span class="co">#  qsu(LIFEEX_l) 19.43452 23.08103 26.25191 23.76401 27.00912 164.6876   100</span></span></code></pre></div>
 <p>Using the transformation functions and the functions <code>pwcor</code> and <code>pwcov</code>, we can also easily explore the correlation structure of the data:</p>
 <div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1"></a><span class="co"># Overall pairwise correlations with pairwise observation count and significance testing (* = significant at 5% level)</span></span>
 <span id="cb48-2"><a href="#cb48-2"></a><span class="kw">pwcor</span>(<span class="kw">get_vars</span>(pwlddev, <span class="dv">9</span><span class="op">:</span><span class="dv">12</span>), <span class="dt">N =</span> <span class="ot">TRUE</span>, <span class="dt">P =</span> <span class="ot">TRUE</span>)</span>
@@ -1802,9 +1802,9 @@ pre[class] {
 <span id="cb66-20"><a href="#cb66-20"></a>                      <span class="dt">X2 =</span> <span class="kw">get_vars</span>(dat, <span class="kw">c</span>(<span class="st">&quot;PCGDP&quot;</span>,<span class="st">&quot;ODA&quot;</span>)),</span>
 <span id="cb66-21"><a href="#cb66-21"></a>                      <span class="dt">time.FE =</span> <span class="ot">TRUE</span>))</span>
 <span id="cb66-22"><a href="#cb66-22"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb66-23"><a href="#cb66-23"></a><span class="co">#        expr      min       lq     mean   median       uq      max neval cld</span></span>
-<span id="cb66-24"><a href="#cb66-24"></a><span class="co">#      HT_est 10.19764 16.52609 22.80901 16.79496 17.41078 151.7218   100  a </span></span>
-<span id="cb66-25"><a href="#cb66-25"></a><span class="co">#  HT_est_TFE 37.68200 46.13035 48.63128 47.40527 50.04951 109.0913   100   b</span></span></code></pre></div>
+<span id="cb66-23"><a href="#cb66-23"></a><span class="co">#        expr      min       lq     mean   median       uq       max neval cld</span></span>
+<span id="cb66-24"><a href="#cb66-24"></a><span class="co">#      HT_est 10.22353 16.79586 25.09753 17.31439 19.93900 188.98483   100  a </span></span>
+<span id="cb66-25"><a href="#cb66-25"></a><span class="co">#  HT_est_TFE 39.86238 47.58022 53.63198 51.11138 58.22099  84.42508   100   b</span></span></code></pre></div>
 <p>At around 100,000 obs and 13,000 groups in an unbalanced panel, the computation involving 3 grouped centering and 1 grouped averaging task as well as 2 list-to matrix conversions and an IV-procedure took about 10 milliseconds with only individual effects, and about 40 - 45 milliseconds with individual and time-fixed effects (projected out iteratively). This should leave some room for running this on much larger data, and even for implementing a bootstrap standard error at this sample size.</p>
 </div>
 <div id="references" class="section level2">

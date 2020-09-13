@@ -246,8 +246,21 @@ ftransform(GGDC10S, AGR_perc = AGR / SUM * 100, # Computing Agricultural percent
 ftransform(GGDC10S, MIN_mean = fmean(MIN), Intercept = 1) %>% tail(2)
 
 ## --------------------------------------------------------------------------------------------------
-GGDC10S %>% ftransform(num_vars(.) %>% lapply(log)) %>% tail(2)
-GGDC10S %>% ftransform(num_vars(.) %>% lapply(sum, na.rm = TRUE)) %>% tail(2)
+# Apply the log to columns 6-16
+GGDC10S %>% ftransformv(6:16, log) %>% tail(2)
+
+# Convert data to percentage terms 
+GGDC10S %>% ftransformv(6:16, `*`, 100/SUM) %>% tail(2)
+
+# Same thing using fselect to get the right indices
+# GGDC10S %>% ftransformv(fselect(., AGR:SUM, return = "indices"), `*`, 100/SUM) %>% tail(2)
+
+# Apply log to numeric columns
+GGDC10S %>% ftransformv(is.numeric, log) %>% tail(2)
+
+## --------------------------------------------------------------------------------------------------
+# Same as above, but also replacing any generated infinite values with NA
+GGDC10S %>% ftransform(num_vars(.) %>% lapply(log) %>% replace_Inf) %>% tail(2)
 rm(GGDC10S)
 
 ## --------------------------------------------------------------------------------------------------
@@ -255,15 +268,16 @@ rm(GGDC10S)
 settransform(GGDC10S, FIRE_MAN = FIRE / MAN,
                       Regioncode = NULL, Region = NULL)
 tail(GGDC10S, 2)
+rm(GGDC10S)
 
 # Bulk-processing the data into percentage terms
-settransform(GGDC10S, fselect(GGDC10S, AGR:SUM) %>% lapply(`*`, 100/.$SUM))
+settransformv(GGDC10S, 6:16, `*`, 100/SUM)
 tail(GGDC10S, 2)
 
 # Same thing via replacement 
 ftransform(GGDC10S) <- fselect(GGDC10S, AGR:SUM) %>% lapply(`*`, 100/.$SUM)
 # Or using double pipes
-GGDC10S %<>% ftransform(fselect(., AGR:SUM) %>% lapply(`*`, 100/.$SUM))
+GGDC10S %<>% ftransformv(6:16, `*`, 100/SUM)
 rm(GGDC10S)
 
 ## --------------------------------------------------------------------------------------------------

@@ -168,11 +168,15 @@ GGDC10S %>% fsubset(Variable == "VA", Country, Year, AGR, SUM) %>%
              head
 
 ## -------------------------------------------------------------------------------------------------
-# This replaces variables mpg, carb and wt by their log
-mtcars %>% ftransform(fselect(., mpg, carb, wt) %>% lapply(log)) %>% head
+# This replaces variables mpg, carb and wt by their log (.c turns expressions into character vectors)
+mtcars %>% ftransformv(.c(mpg, carb, wt), log) %>% head
 
-# This adds the log of mpg, carb and wt
-mtcars %>% ftransform(fselect(., mpg, carb, wt) %>% lapply(log) %>% add_stub("log.")) %>% head
+# Logging numeric variables
+iris %>% ftransformv(is.numeric, log) %>% head
+
+## -------------------------------------------------------------------------------------------------
+# Logging values and replacing generated Inf values
+mtcars %>% ftransform(fselect(., mpg, cyl, vs:gear) %>% lapply(log) %>% replace_Inf) %>% head
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% fsubset(Variable == "VA", Country, Year, AGR, SUM) %>%
@@ -203,6 +207,10 @@ GGDC10S %>%
 # AGR_gmed = TRUE if AGR is greater than it's median value, grouped by Variable and Country
 # Note: This calls fmedian.default
 settransform(GGDC10S, AGR_gmed = AGR > fmedian(AGR, list(Variable, Country), TRA = "replace"))
+tail(GGDC10S, 3)
+
+# Dividing (scaling) the sectoral data (columns 6 through 16) by their grouped standard deviation
+settransformv(GGDC10S, 6:16, fsd, list(Variable, Country), TRA = "/", apply = FALSE)
 tail(GGDC10S, 3)
 
 

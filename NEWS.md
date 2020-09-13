@@ -1,5 +1,16 @@
+# collapse 1.3.2
+collapse 1.3.2, released mid September 2020, is a minor update:
+
+* Fixed a small bug in `fNdistinct` for grouped distinct value counts on logical vectors. 
+
+* Additional security for `ftransform`, which now efficiently checks the names of the data and replacement arguments for uniqueness, and also allows computing and transforming list-columns.  
+
+* Added function `ftransformv` to facilitate transforming selected columns with function - a very efficient replacement for `dplyr::mutate_if` and `dplyr::mutate_at`. 
+
+* `frename` now allows additional arguments to be passed to a renaming function.  
+
 # collapse 1.3.1
-A patch for v1.3.0 that takes care of the failures of some unit tests on certain operating systems (mostly because of numeric precision issues). No changes to the code or functionality.
+collapse 1.3.1, released end of August 2020, is a patch for v1.3.0 that takes care of some unit test failures on certain operating systems (mostly because of numeric precision issues). It provides no changes to the code or functionality.
 
 # collapse 1.3.0
 collapse 1.3.0, released mid August 2020, is another major update:
@@ -57,7 +68,7 @@ collapse 1.3.0, released mid August 2020, is another major update:
 
 
 # collapse 1.2.1
-collapse 1.2.1, released end of May 2020, is a patch for 1.2.0:
+collapse 1.2.1, released end of May 2020, is a patch for v1.2.0:
 
 * Minor fixes for 1.2.0 issues that prevented correct installation on Mac OS X and a vignette rebuilding error on solaris.
 
