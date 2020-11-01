@@ -19,20 +19,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// TRAmCpp
-SEXP TRAmCpp(const SEXP& x, const SEXP& xAG, const IntegerVector& g, int ret);
-RcppExport SEXP _collapse_TRAmCpp(SEXP xSEXP, SEXP xAGSEXP, SEXP gSEXP, SEXP retSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type xAG(xAGSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type g(gSEXP);
-    Rcpp::traits::input_parameter< int >::type ret(retSEXP);
-    rcpp_result_gen = Rcpp::wrap(TRAmCpp(x, xAG, g, ret));
-    return rcpp_result_gen;
-END_RCPP
-}
 // TRAlCpp
 List TRAlCpp(const List& x, const SEXP& xAG, const IntegerVector& g, int ret);
 RcppExport SEXP _collapse_TRAlCpp(SEXP xSEXP, SEXP xAGSEXP, SEXP gSEXP, SEXP retSEXP) {
@@ -47,16 +33,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// TRAmCpp
+SEXP TRAmCpp(const SEXP& x, const SEXP& xAG, const IntegerVector& g, int ret);
+RcppExport SEXP _collapse_TRAmCpp(SEXP xSEXP, SEXP xAGSEXP, SEXP gSEXP, SEXP retSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type xAG(xAGSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type g(gSEXP);
+    Rcpp::traits::input_parameter< int >::type ret(retSEXP);
+    rcpp_result_gen = Rcpp::wrap(TRAmCpp(x, xAG, g, ret));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fNdistinctCpp
-SEXP fNdistinctCpp(SEXP x, int ng, IntegerVector g, SEXP gs, bool narm);
+SEXP fNdistinctCpp(const SEXP& x, int ng, const IntegerVector& g, const SEXP& gs, bool narm);
 RcppExport SEXP _collapse_fNdistinctCpp(SEXP xSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP narmSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type g(gSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type gs(gsSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type g(gSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type gs(gsSEXP);
     Rcpp::traits::input_parameter< bool >::type narm(narmSEXP);
     rcpp_result_gen = Rcpp::wrap(fNdistinctCpp(x, ng, g, gs, narm));
     return rcpp_result_gen;
@@ -254,8 +254,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // fdiffgrowthCpp
-NumericVector fdiffgrowthCpp(const NumericVector& x, const IntegerVector& n, const IntegerVector& diff, double fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, int ret, double rho, bool names);
-RcppExport SEXP _collapse_fdiffgrowthCpp(SEXP xSEXP, SEXP nSEXP, SEXP diffSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP retSEXP, SEXP rhoSEXP, SEXP namesSEXP) {
+NumericVector fdiffgrowthCpp(const NumericVector& x, const IntegerVector& n, const IntegerVector& diff, double fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, int ret, double rho, bool names, double power);
+RcppExport SEXP _collapse_fdiffgrowthCpp(SEXP xSEXP, SEXP nSEXP, SEXP diffSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP retSEXP, SEXP rhoSEXP, SEXP namesSEXP, SEXP powerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -270,13 +270,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(fdiffgrowthCpp(x, n, diff, fill, ng, g, gs, t, ret, rho, names));
+    Rcpp::traits::input_parameter< double >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdiffgrowthCpp(x, n, diff, fill, ng, g, gs, t, ret, rho, names, power));
     return rcpp_result_gen;
 END_RCPP
 }
 // fdiffgrowthmCpp
-NumericMatrix fdiffgrowthmCpp(const NumericMatrix& x, const IntegerVector& n, const IntegerVector& diff, double fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, int ret, double rho, bool names);
-RcppExport SEXP _collapse_fdiffgrowthmCpp(SEXP xSEXP, SEXP nSEXP, SEXP diffSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP retSEXP, SEXP rhoSEXP, SEXP namesSEXP) {
+NumericMatrix fdiffgrowthmCpp(const NumericMatrix& x, const IntegerVector& n, const IntegerVector& diff, double fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, int ret, double rho, bool names, double power);
+RcppExport SEXP _collapse_fdiffgrowthmCpp(SEXP xSEXP, SEXP nSEXP, SEXP diffSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP retSEXP, SEXP rhoSEXP, SEXP namesSEXP, SEXP powerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -291,13 +292,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(fdiffgrowthmCpp(x, n, diff, fill, ng, g, gs, t, ret, rho, names));
+    Rcpp::traits::input_parameter< double >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdiffgrowthmCpp(x, n, diff, fill, ng, g, gs, t, ret, rho, names, power));
     return rcpp_result_gen;
 END_RCPP
 }
 // fdiffgrowthlCpp
-List fdiffgrowthlCpp(const List& x, const IntegerVector& n, const IntegerVector& diff, double fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, int ret, double rho, bool names);
-RcppExport SEXP _collapse_fdiffgrowthlCpp(SEXP xSEXP, SEXP nSEXP, SEXP diffSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP retSEXP, SEXP rhoSEXP, SEXP namesSEXP) {
+List fdiffgrowthlCpp(const List& x, const IntegerVector& n, const IntegerVector& diff, double fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, int ret, double rho, bool names, double power);
+RcppExport SEXP _collapse_fdiffgrowthlCpp(SEXP xSEXP, SEXP nSEXP, SEXP diffSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP retSEXP, SEXP rhoSEXP, SEXP namesSEXP, SEXP powerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -312,7 +314,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
     Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(fdiffgrowthlCpp(x, n, diff, fill, ng, g, gs, t, ret, rho, names));
+    Rcpp::traits::input_parameter< double >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(fdiffgrowthlCpp(x, n, diff, fill, ng, g, gs, t, ret, rho, names, power));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -554,16 +557,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // fmodeCpp
-SEXP fmodeCpp(SEXP x, int ng, IntegerVector g, SEXP gs, SEXP w, bool narm, int ret);
+SEXP fmodeCpp(const SEXP& x, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& w, bool narm, int ret);
 RcppExport SEXP _collapse_fmodeCpp(SEXP xSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP wSEXP, SEXP narmSEXP, SEXP retSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type g(gSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type gs(gsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type w(wSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type g(gSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type gs(gsSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type w(wSEXP);
     Rcpp::traits::input_parameter< bool >::type narm(narmSEXP);
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
     rcpp_result_gen = Rcpp::wrap(fmodeCpp(x, ng, g, gs, w, narm, ret));
@@ -863,12 +866,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // mrtl
-SEXP mrtl(SEXP X, bool names, int ret);
+SEXP mrtl(const SEXP& X, bool names, int ret);
 RcppExport SEXP _collapse_mrtl(SEXP XSEXP, SEXP namesSEXP, SEXP retSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type X(XSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
     rcpp_result_gen = Rcpp::wrap(mrtl(X, names, ret));
@@ -876,12 +879,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // mctl
-SEXP mctl(SEXP X, bool names, int ret);
+SEXP mctl(const SEXP& X, bool names, int ret);
 RcppExport SEXP _collapse_mctl(SEXP XSEXP, SEXP namesSEXP, SEXP retSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type X(XSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
     rcpp_result_gen = Rcpp::wrap(mctl(X, names, ret));
@@ -889,14 +892,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // psmatCpp
-SEXP psmatCpp(SEXP x, IntegerVector g, SEXP t, bool transpose);
+SEXP psmatCpp(const SEXP& x, const IntegerVector& g, const SEXP& t, bool transpose);
 RcppExport SEXP _collapse_psmatCpp(SEXP xSEXP, SEXP gSEXP, SEXP tSEXP, SEXP transposeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type g(gSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type t(tSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type g(gSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type t(tSEXP);
     Rcpp::traits::input_parameter< bool >::type transpose(transposeSEXP);
     rcpp_result_gen = Rcpp::wrap(psmatCpp(x, g, t, transpose));
     return rcpp_result_gen;
@@ -914,8 +917,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // qFCpp
-SEXP qFCpp(SEXP x, bool sort, bool ordered, bool na_exclude, int ret);
-RcppExport SEXP _collapse_qFCpp(SEXP xSEXP, SEXP sortSEXP, SEXP orderedSEXP, SEXP na_excludeSEXP, SEXP retSEXP) {
+SEXP qFCpp(SEXP x, bool sort, bool ordered, bool na_exclude, bool keep_attr, int ret);
+RcppExport SEXP _collapse_qFCpp(SEXP xSEXP, SEXP sortSEXP, SEXP orderedSEXP, SEXP na_excludeSEXP, SEXP keep_attrSEXP, SEXP retSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -923,8 +926,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type sort(sortSEXP);
     Rcpp::traits::input_parameter< bool >::type ordered(orderedSEXP);
     Rcpp::traits::input_parameter< bool >::type na_exclude(na_excludeSEXP);
+    Rcpp::traits::input_parameter< bool >::type keep_attr(keep_attrSEXP);
     Rcpp::traits::input_parameter< int >::type ret(retSEXP);
-    rcpp_result_gen = Rcpp::wrap(qFCpp(x, sort, ordered, na_exclude, ret));
+    rcpp_result_gen = Rcpp::wrap(qFCpp(x, sort, ordered, na_exclude, keep_attr, ret));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -937,6 +941,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
     Rcpp::traits::input_parameter< bool >::type sort(sortSEXP);
     rcpp_result_gen = Rcpp::wrap(funiqueCpp(x, sort));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fdroplevelsCpp
+IntegerVector fdroplevelsCpp(const IntegerVector& x, bool check_NA);
+RcppExport SEXP _collapse_fdroplevelsCpp(SEXP xSEXP, SEXP check_NASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< bool >::type check_NA(check_NASEXP);
+    rcpp_result_gen = Rcpp::wrap(fdroplevelsCpp(x, check_NA));
     return rcpp_result_gen;
 END_RCPP
 }

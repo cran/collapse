@@ -261,7 +261,6 @@ GGDC10S %>% ftransformv(is.numeric, log) %>% tail(2)
 ## --------------------------------------------------------------------------------------------------
 # Same as above, but also replacing any generated infinite values with NA
 GGDC10S %>% ftransform(num_vars(.) %>% lapply(log) %>% replace_Inf) %>% tail(2)
-rm(GGDC10S)
 
 ## --------------------------------------------------------------------------------------------------
 # Computing a new column and deleting some others by reference

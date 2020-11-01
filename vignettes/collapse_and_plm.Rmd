@@ -983,7 +983,7 @@ microbenchmark(HT_est = HT_est(y = dat$LIFEEX,     # The estimator as before
                       time.FE = TRUE))
 ```
 
-At around 100,000 obs and 13,000 groups in an unbalanced panel, the computation involving 3 grouped centering and 1 grouped averaging task as well as 2 list-to matrix conversions and an IV-procedure took about 10 milliseconds with only individual effects, and about 40 - 45 milliseconds with individual and time-fixed effects (projected out iteratively). This should leave some room for running this on much larger data, and even for implementing a bootstrap standard error at this sample size. 
+At around 100,000 obs and 13,000 groups in an unbalanced panel, the computation involving 3 grouped centering and 1 grouped averaging task as well as 2 list-to matrix conversions and an IV-procedure took about 10 milliseconds with only individual effects, and about 40 - 45 milliseconds with individual and time-fixed effects (projected out iteratively). This should leave some room for running this on much larger data. <!--, and even for implementing a bootstrap standard error at this sample size. -->
 ```{r, echo=FALSE}
 options(oldopts)
 ```

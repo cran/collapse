@@ -3,7 +3,7 @@ library(dplyr)
 library(microbenchmark)
 library(collapse)
 knitr::opts_chunk$set(error = FALSE, message = FALSE, warning = FALSE, 
-                      comment = "#", tidy = FALSE, cache = FALSE, collapse = TRUE,
+                      comment = "#", tidy = FALSE, cache = TRUE, collapse = TRUE,
                       fig.width = 8, fig.height = 5, 
                       out.width = '100%')
 
@@ -34,6 +34,9 @@ head(GGDC10S)
 # Summarize the Data: 
 # descr(GGDC10S, cols = is.categorical)
 # aperm(qsu(GGDC10S, ~Variable, cols = is.numeric))
+
+# Efficiently converting to tibble (no deep copy)
+GGDC10S <- qTBL(GGDC10S)
 
 ## -------------------------------------------------------------------------------------------------
 library(dplyr)
@@ -70,12 +73,15 @@ class(group_by(GGDC10S, Variable, Country))
 class(fgroup_by(GGDC10S, Variable, Country))
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% head(3)
-GGDC10S %>% group_by(Variable, Country) %>% get_vars(6:16) %>% head(3)
+head(fgroup_by(GGDC10S, Variable, Country))
 
 ## -------------------------------------------------------------------------------------------------
-GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% fmean %>% head(3)
-GGDC10S %>% group_by(Variable, Country) %>% get_vars(6:16) %>% fmean %>% head(3)
+GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% tail(3)
+GGDC10S %>% group_by(Variable, Country) %>% get_vars(6:16) %>% tail(3)
+
+## -------------------------------------------------------------------------------------------------
+GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% fmean %>% tail(3)
+GGDC10S %>% group_by(Variable, Country) %>% get_vars(6:16) %>% fmean %>% tail(3)
 
 ## -------------------------------------------------------------------------------------------------
 # fgroup_by fully supports grouped tibbles created with group_by or fgroup_by: 
@@ -212,7 +218,11 @@ tail(GGDC10S, 3)
 # Dividing (scaling) the sectoral data (columns 6 through 16) by their grouped standard deviation
 settransformv(GGDC10S, 6:16, fsd, list(Variable, Country), TRA = "/", apply = FALSE)
 tail(GGDC10S, 3)
+rm(GGDC10S)
 
+
+## ---- echo=FALSE----------------------------------------------------------------------------------
+GGDC10S <- qTBL(GGDC10S)
 
 ## -------------------------------------------------------------------------------------------------
 # This subtracts weighted group means from the data, using SUM column as weights.. 
@@ -235,6 +245,9 @@ add_vars(GGDC10S, seq(7,27,2)) <- GGDC10S %>%
 
 head(GGDC10S)
 rm(GGDC10S)
+
+## ---- echo=FALSE----------------------------------------------------------------------------------
+GGDC10S <- qTBL(GGDC10S)
 
 ## -------------------------------------------------------------------------------------------------
 # This divides by the product
@@ -272,23 +285,23 @@ head(TRA(gGGDC, gsumGGDC, "/"))
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% # Same as ... %>% fmean(TRA = "replace")
-  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fbetween %>% head(2)
+  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fbetween %>% tail(2)
 
 GGDC10S %>% # Same as ... %>% fmean(TRA = "replace_fill")
-  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fbetween(fill = TRUE) %>% head(2)
+  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fbetween(fill = TRUE) %>% tail(2)
 
 GGDC10S %>% # Same as ... %>% fmean(TRA = "-")
-  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fwithin %>% head(2)
+  fgroup_by(Variable, Country) %>% get_vars(6:16) %>% fwithin %>% tail(2)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% 
   fgroup_by(Variable, Country) %>% 
-    fselect(Country, Variable, AGR:SUM) %>% fwithin(mean = "overall.mean") %>% head(3)
+    fselect(Country, Variable, AGR:SUM) %>% fwithin(mean = "overall.mean") %>% tail(3)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% 
   fgroup_by(Variable, Country) %>% 
-    fselect(Country, Variable, AGR:SUM) %>% fwithin(SUM, mean = "overall.mean") %>% head(3)
+    fselect(Country, Variable, AGR:SUM) %>% fwithin(SUM, mean = "overall.mean") %>% tail(3)
 
 ## -------------------------------------------------------------------------------------------------
 # This efficiently scales and centers (i.e. standardizes) the data

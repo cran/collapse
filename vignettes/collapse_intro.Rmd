@@ -490,7 +490,6 @@ Instead of passing comma-separated `column = value` expressions, it is also poss
 ```{r}
 # Same as above, but also replacing any generated infinite values with NA
 GGDC10S %>% ftransform(num_vars(.) %>% lapply(log) %>% replace_Inf) %>% tail(2)
-rm(GGDC10S)
 ```
 This mode of usage toggles automatic column matching and replacement. Non-matching columns are added to the data frame. Apart from to `ftransform`, the function `settransform(v)` can be used to change the input data frame by reference: 
 <!-- and is a simple wrapper around `X <- ftransform(X, ...)`: -->
@@ -557,7 +556,7 @@ microbenchmark(cbind(wlddev, wlddev), add_vars(wlddev, wlddev))
 ```
 
 ### 2.6 Renaming Columns
-`frename` is a faster version or `dplyr::rename`:
+`frename` is a fast substitute for `dplyr::rename`:
 
 ```{r}
 frename(GGDC10S, AGR = Agriculture, MIN = Mining) %>% head(2)
@@ -571,6 +570,7 @@ setrename(GGDC10S, AGR = Agriculture, MIN = Mining)
 head(GGDC10S, 2)
 rm(GGDC10S)
 ```
+Both functions are not limited to data frames but can be applied to any R object with a 'names' attribute. 
 
 ### 2.7 Using Shortcuts
 The most frequently required among the functions introduced above can be abbreviated as follows: `fselect -> slt`, `fsubset -> sbt`, `ftransform(v) -> tfm(v)`, `settransform(v) -> settfm(v)`, `get_vars -> gv`, `num_vars -> nv`, `add_vars -> av`. This was done to make it possible to write faster and more parsimonious code, and to facilitate the avoidance of piped `%>%` expressions. Needless to say pipes `%>%` have become a very convenient feature of the R language and do a great job avoiding complex nested calls. They do however require reconstructing the entire call before evaluating it, and thus take out a lot of speed:
@@ -985,7 +985,7 @@ head(collap(wlddev, ~ iso3c + decade,
                           flast = c("year","date"),
                           fmode = "OECD")))
 ```
-Through setting the argument `give.names = FALSE`, the output can also be generated without changing the column names. Next to `collap`, the functions `collapv` provides a programmers alternative allowing grouping and weighting columns to be passed using column names or indices, and the function `collapg` operates on grouped tibbles (class 'grouped_df').
+Through setting the argument `give.names = FALSE`, the output can also be generated without changing the column names. Next to `collap`, the functions `collapv` provides a programmers alternative allowing grouping and weighting columns to be passed using column names or indices, and the function `collapg` operates on grouped data frames (class 'grouped_df').
 
 
 

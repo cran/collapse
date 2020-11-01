@@ -15,10 +15,14 @@ RcppExport SEXP subsetDT(SEXP, SEXP, SEXP);
 RcppExport SEXP subsetVector(SEXP, SEXP);
 RcppExport SEXP setAttributes(SEXP x, SEXP a);
 RcppExport void setattributes(SEXP x, SEXP a);
+// RcppExport SEXP CsetAttr(SEXP object, SEXP a, SEXP v); -> mot more efficeint than attr i.e. for row.names...
 RcppExport void setattr(SEXP x, SEXP a, SEXP v);
 RcppExport SEXP duplAttributes(SEXP x, SEXP y);
 RcppExport void duplattributes(SEXP x, SEXP y);
 RcppExport SEXP cond_duplAttributes(SEXP x, SEXP y);
+RcppExport SEXP CsetAttrib(SEXP object, SEXP a);
+RcppExport SEXP CcopyAttrib(SEXP to, SEXP from);
+RcppExport SEXP CcopyMostAttrib(SEXP to, SEXP from);
 
 static const R_CMethodDef CEntries[]  = {
   {"C_multi_yw", (DL_FUNC) &multi_yw, 10},
@@ -48,9 +52,9 @@ static const R_CallMethodDef CallEntries[] = {
   {"Cpp_ffirst", (DL_FUNC) &_collapse_ffirstCpp, 4},
   {"Cpp_ffirstm", (DL_FUNC) &_collapse_ffirstmCpp, 5},
   {"Cpp_ffirstl", (DL_FUNC) &_collapse_ffirstlCpp, 4},
-  {"Cpp_fdiffgrowth", (DL_FUNC) &_collapse_fdiffgrowthCpp, 11},
-  {"Cpp_fdiffgrowthm", (DL_FUNC) &_collapse_fdiffgrowthmCpp, 11},
-  {"Cpp_fdiffgrowthl", (DL_FUNC) &_collapse_fdiffgrowthlCpp, 11},
+  {"Cpp_fdiffgrowth", (DL_FUNC) &_collapse_fdiffgrowthCpp, 12},
+  {"Cpp_fdiffgrowthm", (DL_FUNC) &_collapse_fdiffgrowthmCpp, 12},
+  {"Cpp_fdiffgrowthl", (DL_FUNC) &_collapse_fdiffgrowthlCpp, 12},
   {"Cpp_flaglead", (DL_FUNC) &_collapse_flagleadCpp, 8},
   {"Cpp_flagleadm", (DL_FUNC) &_collapse_flagleadmCpp, 8},
   {"Cpp_flagleadl", (DL_FUNC) &_collapse_flagleadlCpp, 8},
@@ -87,17 +91,21 @@ static const R_CallMethodDef CallEntries[] = {
   {"Cpp_mrtl", (DL_FUNC) &_collapse_mrtl, 3},
   {"Cpp_mctl", (DL_FUNC) &_collapse_mctl, 3},
   {"Cpp_psmat", (DL_FUNC) &_collapse_psmatCpp, 4},
-  {"Cpp_qF", (DL_FUNC) &_collapse_qFCpp, 5},
+  {"Cpp_qF", (DL_FUNC) &_collapse_qFCpp, 6},
   // {"Cpp_qG", (DL_FUNC) &_collapse_qGCpp, 5},
   {"Cpp_funique", (DL_FUNC) &_collapse_funiqueCpp, 2},
+  {"Cpp_fdroplevels", (DL_FUNC) &_collapse_fdroplevelsCpp, 2},
   {"C_setAttributes", (DL_FUNC) &setAttributes, 2},
   {"C_setattributes", (DL_FUNC) &setattributes, 2},
-  // {"C_setAttr", (DL_FUNC) &setAttr, 3},
+  // {"C_setAttr", (DL_FUNC) &CsetAttr, 3},
   {"C_setattr", (DL_FUNC) &setattr, 3},
   {"C_duplAttributes", (DL_FUNC) &duplAttributes, 2},
   {"C_duplattributes", (DL_FUNC) &duplattributes, 2},
   {"C_cond_duplAttributes", (DL_FUNC) &cond_duplAttributes, 2},
   // {"C_cond_duplattributes", (DL_FUNC) &cond_duplattributes, 2},
+  {"C_setAttrib", (DL_FUNC) &CsetAttrib, 2},
+  {"C_copyAttrib", (DL_FUNC) &CcopyAttrib, 2},
+  {"C_copyMostAttrib", (DL_FUNC) &CcopyMostAttrib, 2},
   {"Cpp_groups2GRP", (DL_FUNC) &_collapse_groups2GRPCpp, 3},
   {"Cpp_lassign", (DL_FUNC) &_collapse_lassignCpp, 4},
   {"Cpp_seqid", (DL_FUNC) &_collapse_seqid, 7},
