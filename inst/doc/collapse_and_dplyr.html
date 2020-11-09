@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2020-11-01" />
+<meta name="date" content="2020-11-03" />
 
 <title>collapse and dplyr</title>
 
@@ -32,6 +32,45 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -40,69 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
   div.column{display: inline-block; vertical-align: top; width: 50%;}
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
-      code.sourceCode > span { display: inline-block; line-height: 1.25; }
-  code.sourceCode > span { color: inherit; text-decoration: inherit; }
-  code.sourceCode > span:empty { height: 1.2em; }
-  .sourceCode { overflow: visible; }
-  code.sourceCode { white-space: pre; position: relative; }
-  div.sourceCode { margin: 1em 0; }
-  pre.sourceCode { margin: 0; }
-  @media screen {
-  div.sourceCode { overflow: auto; }
-  }
-  @media print {
-  code.sourceCode { white-space: pre-wrap; }
-  code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-  }
-  pre.numberSource code
-    { counter-reset: source-line 0; }
-  pre.numberSource code > span
-    { position: relative; left: -4em; counter-increment: source-line; }
-  pre.numberSource code > span > a:first-child::before
-    { content: counter(source-line);
-      position: relative; left: -1em; text-align: right; vertical-align: baseline;
-      border: none; display: inline-block;
-      -webkit-touch-callout: none; -webkit-user-select: none;
-      -khtml-user-select: none; -moz-user-select: none;
-      -ms-user-select: none; user-select: none;
-      padding: 0 4px; width: 4em;
-      color: #aaaaaa;
-    }
-  pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-  div.sourceCode
-    {   }
-  @media screen {
-  code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-  }
-  code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-  code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-  code span.at { color: #7d9029; } /* Attribute */
-  code span.bn { color: #40a070; } /* BaseN */
-  code span.bu { } /* BuiltIn */
-  code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-  code span.ch { color: #4070a0; } /* Char */
-  code span.cn { color: #880000; } /* Constant */
-  code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-  code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-  code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-  code span.dt { color: #902000; } /* DataType */
-  code span.dv { color: #40a070; } /* DecVal */
-  code span.er { color: #ff0000; font-weight: bold; } /* Error */
-  code span.ex { } /* Extension */
-  code span.fl { color: #40a070; } /* Float */
-  code span.fu { color: #06287e; } /* Function */
-  code span.im { } /* Import */
-  code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-  code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-  code span.op { color: #666666; } /* Operator */
-  code span.ot { color: #007020; } /* Other */
-  code span.pp { color: #bc7a00; } /* Preprocessor */
-  code span.sc { color: #4070a0; } /* SpecialChar */
-  code span.ss { color: #bb6688; } /* SpecialString */
-  code span.st { color: #4070a0; } /* String */
-  code span.va { color: #19177c; } /* Variable */
-  code span.vs { color: #4070a0; } /* VerbatimString */
-  code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
     </style>
 
 
@@ -392,7 +368,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore"><em>collapse</em> and <em>dplyr</em></h1>
 <h3 class="subtitle">Fast (Weighted) Aggregations and Transformations in a Piped Workflow</h3>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2020-11-01</h4>
+<h4 class="date">2020-11-03</h4>
 
 
 <div id="TOC">
@@ -611,32 +587,37 @@ pre[class] {
 <span id="cb7-17"><a href="#cb7-17"></a><span class="kw">microbenchmark</span>(<span class="dt">collapse =</span> GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span>fmedian,</span>
 <span id="cb7-18"><a href="#cb7-18"></a>               <span class="dt">hybrid =</span> GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span>fmedian,</span>
 <span id="cb7-19"><a href="#cb7-19"></a>               <span class="dt">dplyr =</span> GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">summarise_all</span>(median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</span>
-<span id="cb7-20"><a href="#cb7-20"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb7-21"><a href="#cb7-21"></a><span class="co">#      expr      min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#  collapse   938.46  1022.354  1130.047  1046.898  1097.324  7569.703   100 a  </span></span>
-<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#    hybrid 12165.16 12642.649 13353.758 12950.337 13519.303 20939.736   100  b </span></span>
-<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#     dplyr 58681.15 60824.925 63850.124 62604.338 66157.140 81467.906   100   c</span></span></code></pre></div>
-<p>Benchmarks on the different components of this code and with larger data are provided under ‘Benchmarks’. Note that a grouped tibble created with <code>fgroup_by</code> can no longer be used for grouped computations with <em>dplyr</em> verbs like <code>mutate</code> or <code>summarize</code>. To avoid errors with these functions and <code>print.grouped_df</code>, <code>[.grouped_df</code> etc., the classes assigned after <code>fgroup_by</code> are reshuffled, so that the data.frame is treated by the <em>dplyr</em> ecosystem like a normal tibble:</p>
+<span id="cb7-20"><a href="#cb7-20"></a><span class="co"># Unit: milliseconds</span></span>
+<span id="cb7-21"><a href="#cb7-21"></a><span class="co">#      expr       min        lq     mean    median        uq        max neval cld</span></span>
+<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#  collapse  1.081704  1.165376  1.29456  1.183895  1.281846   2.656957   100 a  </span></span>
+<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#    hybrid 14.173713 14.670386 17.37238 15.638521 20.000590  32.971442   100  b </span></span>
+<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#     dplyr 68.109861 72.025905 83.19409 79.217407 87.998442 126.110877   100   c</span></span></code></pre></div>
+<p>Benchmarks on the different components of this code and with larger data are provided under ‘Benchmarks’. Note that a grouped tibble created with <code>fgroup_by</code> can no longer be used for grouped computations with <em>dplyr</em> verbs like <code>mutate</code> or <code>summarize</code>. <code>fgroup_by</code> first assigns the class <em>GDP_df</em> which is for printing grouping information and subsetting, then the object classes (<em>tbl_df</em>, <em>data.table</em> or whatever else), followed by classes <em>grouped_df</em> and <em>data.frame</em>, and adds the grouping object in a ‘groups’ attribute. Since <em>tbl_df</em> is assigned before <em>grouped_df</em>, the object is treated by the <em>dplyr</em> ecosystem like a normal tibble.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">class</span>(<span class="kw">group_by</span>(GGDC10S, Variable, Country))</span>
 <span id="cb8-2"><a href="#cb8-2"></a><span class="co"># [1] &quot;grouped_df&quot; &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;data.frame&quot;</span></span>
 <span id="cb8-3"><a href="#cb8-3"></a></span>
 <span id="cb8-4"><a href="#cb8-4"></a><span class="kw">class</span>(<span class="kw">fgroup_by</span>(GGDC10S, Variable, Country))</span>
 <span id="cb8-5"><a href="#cb8-5"></a><span class="co"># [1] &quot;GRP_df&quot;     &quot;tbl_df&quot;     &quot;tbl&quot;        &quot;grouped_df&quot; &quot;data.frame&quot;</span></span></code></pre></div>
-<p>In general <code>fgroup_by</code> first assigns the class <em>GDP_df</em> which is for printing grouping information, then the object classes (<em>tbl_df</em>, <em>data.table</em> or whatever else), followed by classes <em>grouped_df</em> and <em>data.frame</em>, and adds the grouping object in a ‘groups’ attribute. The function <code>fungroup</code> removes classes ‘GDP_df’ and ‘grouped_df’ and the ‘groups’ attribute (and can thus also be used for grouped tibbles created with <code>dplyr::group_by</code>). Thus any kind of data frame based class can be grouped with <code>fgroup_by</code>, and still retain full responsiveness to all methods defined for that class. Functions performing aggregation on the grouped data frame remove the grouping object and classes afterwards, yielding an object with the same class and attributes as the input.</p>
+<p>The function <code>fungroup</code> removes classes ‘GDP_df’ and ‘grouped_df’ and the ‘groups’ attribute (and can thus also be used for grouped tibbles created with <code>dplyr::group_by</code>).</p>
+<p>Note that any kind of data frame based class can be grouped with <code>fgroup_by</code>, and still retain full responsiveness to all methods defined for that class. Functions performing aggregation on the grouped data frame remove the grouping object and classes afterwards, yielding an object with the same class and attributes as the input.</p>
 <p>The print method shown below reports the grouping variables, and then in square brackets the information <code>[number of groups | average group size (standard-deviation of group sizes)]</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">head</span>(<span class="kw">fgroup_by</span>(GGDC10S, Variable, Country))</span>
-<span id="cb9-2"><a href="#cb9-2"></a><span class="co"># # A tibble: 6 x 16</span></span>
-<span id="cb9-3"><a href="#cb9-3"></a><span class="co">#   Country Regioncode Region Variable  Year   AGR   MIN    MAN     PU    CON   WRT   TRA  FIRE   GOV</span></span>
-<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#   &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb9-5"><a href="#cb9-5"></a><span class="co"># 1 BWA     SSA        Sub-s~ VA        1960  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
-<span id="cb9-6"><a href="#cb9-6"></a><span class="co"># 2 BWA     SSA        Sub-s~ VA        1961  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
-<span id="cb9-7"><a href="#cb9-7"></a><span class="co"># 3 BWA     SSA        Sub-s~ VA        1962  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
-<span id="cb9-8"><a href="#cb9-8"></a><span class="co"># 4 BWA     SSA        Sub-s~ VA        1963  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
-<span id="cb9-9"><a href="#cb9-9"></a><span class="co"># 5 BWA     SSA        Sub-s~ VA        1964  16.3  3.49  0.737  0.104  0.660  6.24  1.66  1.12  4.82</span></span>
-<span id="cb9-10"><a href="#cb9-10"></a><span class="co"># 6 BWA     SSA        Sub-s~ VA        1965  15.7  2.50  1.02   0.135  1.35   7.06  1.94  1.25  5.70</span></span>
-<span id="cb9-11"><a href="#cb9-11"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
-<span id="cb9-12"><a href="#cb9-12"></a><span class="co"># </span></span>
-<span id="cb9-13"><a href="#cb9-13"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">fgroup_by</span>(GGDC10S, Variable, Country)</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="co"># # A tibble: 5,027 x 16</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="co">#    Country Regioncode Region Variable  Year   AGR   MIN    MAN     PU    CON   WRT   TRA  FIRE   GOV</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#  1 BWA     SSA        Sub-s~ VA        1960  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="co">#  2 BWA     SSA        Sub-s~ VA        1961  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co">#  3 BWA     SSA        Sub-s~ VA        1962  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="co">#  4 BWA     SSA        Sub-s~ VA        1963  NA   NA    NA     NA     NA     NA    NA    NA    NA   </span></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#  5 BWA     SSA        Sub-s~ VA        1964  16.3  3.49  0.737  0.104  0.660  6.24  1.66  1.12  4.82</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#  6 BWA     SSA        Sub-s~ VA        1965  15.7  2.50  1.02   0.135  1.35   7.06  1.94  1.25  5.70</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#  7 BWA     SSA        Sub-s~ VA        1966  17.7  1.97  0.804  0.203  1.35   8.27  2.15  1.36  6.37</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="co">#  8 BWA     SSA        Sub-s~ VA        1967  19.1  2.30  0.938  0.203  0.897  4.31  1.72  1.54  7.04</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#  9 BWA     SSA        Sub-s~ VA        1968  21.1  1.84  0.750  0.203  1.22   5.17  2.44  1.03  5.03</span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="co"># 10 BWA     SSA        Sub-s~ VA        1969  21.9  5.24  2.14   0.578  3.47   5.75  2.72  1.23  5.59</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="co"># # ... with 5,017 more rows, and 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
+<span id="cb9-16"><a href="#cb9-16"></a><span class="co"># </span></span>
+<span id="cb9-17"><a href="#cb9-17"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
 <p>Note further that <code>fselect</code> and <code>get_vars</code> are not full drop-in replacements for <code>select</code> because they do not have a grouped_df method:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select_at</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">tail</span>(<span class="dv">3</span>)</span>
 <span id="cb10-2"><a href="#cb10-2"></a><span class="co"># # A tibble: 3 x 13</span></span>
@@ -1007,25 +988,21 @@ pre[class] {
 <span id="cb29-8"><a href="#cb29-8"></a><span class="co"># 1 VA       BWA      61.3  21.7  23.1  6.31  23.2  26.7  8.98  11.3  27.0  10.1  220.</span></span>
 <span id="cb29-9"><a href="#cb29-9"></a><span class="co"># 2 VA       BWA      61.3  21.7  23.1  6.31  23.2  26.7  8.98  11.3  27.0  10.1  220.</span></span>
 <span id="cb29-10"><a href="#cb29-10"></a><span class="co"># 3 VA       BWA      61.3  21.7  23.1  6.31  23.2  26.7  8.98  11.3  27.0  10.1  220.</span></span>
-<span id="cb29-11"><a href="#cb29-11"></a><span class="co"># </span></span>
-<span id="cb29-12"><a href="#cb29-12"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span>
-<span id="cb29-13"><a href="#cb29-13"></a></span>
-<span id="cb29-14"><a href="#cb29-14"></a><span class="co"># Scaling sectoral data by Variable and Country</span></span>
-<span id="cb29-15"><a href="#cb29-15"></a>GGDC10S <span class="op">%&gt;%</span></span>
-<span id="cb29-16"><a href="#cb29-16"></a><span class="st">  </span><span class="kw">fselect</span>(Variable, Country, AGR<span class="op">:</span>SUM) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb29-17"><a href="#cb29-17"></a><span class="st">   </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fsd</span>(<span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>head</span>
-<span id="cb29-18"><a href="#cb29-18"></a><span class="co"># # A tibble: 6 x 13</span></span>
-<span id="cb29-19"><a href="#cb29-19"></a><span class="co">#   Variable Country     AGR      MIN      MAN       PU      CON      WRT      TRA     FIRE      GOV</span></span>
-<span id="cb29-20"><a href="#cb29-20"></a><span class="co">#   &lt;chr&gt;    &lt;chr&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span id="cb29-21"><a href="#cb29-21"></a><span class="co"># 1 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
-<span id="cb29-22"><a href="#cb29-22"></a><span class="co"># 2 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
-<span id="cb29-23"><a href="#cb29-23"></a><span class="co"># 3 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
-<span id="cb29-24"><a href="#cb29-24"></a><span class="co"># 4 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
-<span id="cb29-25"><a href="#cb29-25"></a><span class="co"># 5 VA       BWA      0.0270  5.56e-4  5.23e-4  3.88e-4  5.11e-4  0.00194  0.00154  5.23e-4  0.00134</span></span>
-<span id="cb29-26"><a href="#cb29-26"></a><span class="co"># 6 VA       BWA      0.0260  3.97e-4  7.23e-4  5.03e-4  1.04e-3  0.00220  0.00180  5.83e-4  0.00158</span></span>
-<span id="cb29-27"><a href="#cb29-27"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
-<span id="cb29-28"><a href="#cb29-28"></a><span class="co"># </span></span>
-<span id="cb29-29"><a href="#cb29-29"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb29-11"><a href="#cb29-11"></a></span>
+<span id="cb29-12"><a href="#cb29-12"></a><span class="co"># Scaling sectoral data by Variable and Country</span></span>
+<span id="cb29-13"><a href="#cb29-13"></a>GGDC10S <span class="op">%&gt;%</span></span>
+<span id="cb29-14"><a href="#cb29-14"></a><span class="st">  </span><span class="kw">fselect</span>(Variable, Country, AGR<span class="op">:</span>SUM) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb29-15"><a href="#cb29-15"></a><span class="st">   </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fsd</span>(<span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>head</span>
+<span id="cb29-16"><a href="#cb29-16"></a><span class="co"># # A tibble: 6 x 13</span></span>
+<span id="cb29-17"><a href="#cb29-17"></a><span class="co">#   Variable Country     AGR      MIN      MAN       PU      CON      WRT      TRA     FIRE      GOV</span></span>
+<span id="cb29-18"><a href="#cb29-18"></a><span class="co">#   &lt;chr&gt;    &lt;chr&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb29-19"><a href="#cb29-19"></a><span class="co"># 1 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
+<span id="cb29-20"><a href="#cb29-20"></a><span class="co"># 2 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
+<span id="cb29-21"><a href="#cb29-21"></a><span class="co"># 3 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
+<span id="cb29-22"><a href="#cb29-22"></a><span class="co"># 4 VA       BWA     NA      NA       NA       NA       NA       NA       NA       NA       NA      </span></span>
+<span id="cb29-23"><a href="#cb29-23"></a><span class="co"># 5 VA       BWA      0.0270  5.56e-4  5.23e-4  3.88e-4  5.11e-4  0.00194  0.00154  5.23e-4  0.00134</span></span>
+<span id="cb29-24"><a href="#cb29-24"></a><span class="co"># 6 VA       BWA      0.0260  3.97e-4  7.23e-4  5.03e-4  1.04e-3  0.00220  0.00180  5.83e-4  0.00158</span></span>
+<span id="cb29-25"><a href="#cb29-25"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span></code></pre></div>
 <!-- # Normalizing Data by expressing them in percentages of the median value within each country and sector (i.e. the median is 100%) -->
 <!-- GGDC10S %>% -->
 <!--   fselect(Variable, Country, AGR:SUM) %>%   -->
@@ -1067,9 +1044,7 @@ pre[class] {
 <span id="cb31-10"><a href="#cb31-10"></a><span class="co"># 3 VA       BWA      NA      NA      NA     NA    NA     NA     NA     NA     NA     NA     NA </span></span>
 <span id="cb31-11"><a href="#cb31-11"></a><span class="co"># 4 VA       BWA      NA      NA      NA     NA    NA     NA     NA     NA     NA     NA     NA </span></span>
 <span id="cb31-12"><a href="#cb31-12"></a><span class="co"># 5 VA       BWA      37.5 -1301. -13317. -2965. -529. -2746. -6540. -2157. -4431. -7551. -2613.</span></span>
-<span id="cb31-13"><a href="#cb31-13"></a><span class="co"># 6 VA       BWA      39.3 -1302. -13318. -2964. -529. -2745. -6540. -2156. -4431. -7550. -2613.</span></span>
-<span id="cb31-14"><a href="#cb31-14"></a><span class="co"># </span></span>
-<span id="cb31-15"><a href="#cb31-15"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb31-13"><a href="#cb31-13"></a><span class="co"># 6 VA       BWA      39.3 -1302. -13318. -2964. -529. -2745. -6540. -2156. -4431. -7550. -2613.</span></span></code></pre></div>
 <!-- # Weighted scaling, weighted by SUM -->
 <!-- GGDC10S %>% -->
 <!--   fselect(Variable, Country, AGR:SUM) %>%  -->
@@ -1155,26 +1130,22 @@ pre[class] {
 <span id="cb34-12"><a href="#cb34-12"></a><span class="co"># 5  1.29e-105  2.81e-127  1.40e-101  4.44e-74  4.19e-102  3.97e-113  6.91e-92  1.01e-97  2.51e-117</span></span>
 <span id="cb34-13"><a href="#cb34-13"></a><span class="co"># 6  1.24e-105  2.00e-127  1.94e-101  5.75e-74  8.55e-102  4.49e-113  8.08e-92  1.13e-97  2.96e-117</span></span>
 <span id="cb34-14"><a href="#cb34-14"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
-<span id="cb34-15"><a href="#cb34-15"></a><span class="co"># </span></span>
-<span id="cb34-16"><a href="#cb34-16"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span>
-<span id="cb34-17"><a href="#cb34-17"></a></span>
-<span id="cb34-18"><a href="#cb34-18"></a><span class="co"># Same thing</span></span>
-<span id="cb34-19"><a href="#cb34-19"></a>GGDC10S <span class="op">%&gt;%</span></span>
-<span id="cb34-20"><a href="#cb34-20"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span></span>
-<span id="cb34-21"><a href="#cb34-21"></a><span class="st">    </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb34-22"><a href="#cb34-22"></a><span class="st">     </span><span class="kw">TRA</span>(<span class="kw">fprod</span>(., <span class="dt">keep.group_vars =</span> <span class="ot">FALSE</span>), <span class="st">&quot;/&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>head <span class="co"># [same as TRA(.,fprod(., keep.group_vars = FALSE),&quot;/&quot;)]</span></span>
-<span id="cb34-23"><a href="#cb34-23"></a><span class="co"># # A tibble: 6 x 11</span></span>
-<span id="cb34-24"><a href="#cb34-24"></a><span class="co">#          AGR        MIN        MAN        PU        CON        WRT       TRA      FIRE        GOV</span></span>
-<span id="cb34-25"><a href="#cb34-25"></a><span class="co">#        &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;</span></span>
-<span id="cb34-26"><a href="#cb34-26"></a><span class="co"># 1 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
-<span id="cb34-27"><a href="#cb34-27"></a><span class="co"># 2 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
-<span id="cb34-28"><a href="#cb34-28"></a><span class="co"># 3 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
-<span id="cb34-29"><a href="#cb34-29"></a><span class="co"># 4 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
-<span id="cb34-30"><a href="#cb34-30"></a><span class="co"># 5  1.29e-105  2.81e-127  1.40e-101  4.44e-74  4.19e-102  3.97e-113  6.91e-92  1.01e-97  2.51e-117</span></span>
-<span id="cb34-31"><a href="#cb34-31"></a><span class="co"># 6  1.24e-105  2.00e-127  1.94e-101  5.75e-74  8.55e-102  4.49e-113  8.08e-92  1.13e-97  2.96e-117</span></span>
-<span id="cb34-32"><a href="#cb34-32"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
-<span id="cb34-33"><a href="#cb34-33"></a><span class="co"># </span></span>
-<span id="cb34-34"><a href="#cb34-34"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb34-15"><a href="#cb34-15"></a></span>
+<span id="cb34-16"><a href="#cb34-16"></a><span class="co"># Same thing</span></span>
+<span id="cb34-17"><a href="#cb34-17"></a>GGDC10S <span class="op">%&gt;%</span></span>
+<span id="cb34-18"><a href="#cb34-18"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span></span>
+<span id="cb34-19"><a href="#cb34-19"></a><span class="st">    </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb34-20"><a href="#cb34-20"></a><span class="st">     </span><span class="kw">TRA</span>(<span class="kw">fprod</span>(., <span class="dt">keep.group_vars =</span> <span class="ot">FALSE</span>), <span class="st">&quot;/&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>head <span class="co"># [same as TRA(.,fprod(., keep.group_vars = FALSE),&quot;/&quot;)]</span></span>
+<span id="cb34-21"><a href="#cb34-21"></a><span class="co"># # A tibble: 6 x 11</span></span>
+<span id="cb34-22"><a href="#cb34-22"></a><span class="co">#          AGR        MIN        MAN        PU        CON        WRT       TRA      FIRE        GOV</span></span>
+<span id="cb34-23"><a href="#cb34-23"></a><span class="co">#        &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb34-24"><a href="#cb34-24"></a><span class="co"># 1 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
+<span id="cb34-25"><a href="#cb34-25"></a><span class="co"># 2 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
+<span id="cb34-26"><a href="#cb34-26"></a><span class="co"># 3 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
+<span id="cb34-27"><a href="#cb34-27"></a><span class="co"># 4 NA         NA         NA         NA        NA         NA         NA        NA        NA        </span></span>
+<span id="cb34-28"><a href="#cb34-28"></a><span class="co"># 5  1.29e-105  2.81e-127  1.40e-101  4.44e-74  4.19e-102  3.97e-113  6.91e-92  1.01e-97  2.51e-117</span></span>
+<span id="cb34-29"><a href="#cb34-29"></a><span class="co"># 6  1.24e-105  2.00e-127  1.94e-101  5.75e-74  8.55e-102  4.49e-113  8.08e-92  1.13e-97  2.96e-117</span></span>
+<span id="cb34-30"><a href="#cb34-30"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span></code></pre></div>
 <p><code>TRA.grouped_df</code> was designed such that it matches the columns of the statistics (aggregated columns) to those of the original data, and only transforms matching columns while returning the whole data frame. Thus it is easily possible to only apply a transformation to the first two sectors:</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a><span class="co"># This only demeans Agriculture (AGR) and Mining (MIN)</span></span>
 <span id="cb35-2"><a href="#cb35-2"></a>GGDC10S <span class="op">%&gt;%</span></span>
@@ -1189,9 +1160,7 @@ pre[class] {
 <span id="cb35-11"><a href="#cb35-11"></a><span class="co"># 4 BWA     SSA        Sub-s~ VA        1963   NA     NA  NA     NA     NA     NA    NA    NA    NA   </span></span>
 <span id="cb35-12"><a href="#cb35-12"></a><span class="co"># 5 BWA     SSA        Sub-s~ VA        1964 -446. -4505.  0.737  0.104  0.660  6.24  1.66  1.12  4.82</span></span>
 <span id="cb35-13"><a href="#cb35-13"></a><span class="co"># 6 BWA     SSA        Sub-s~ VA        1965 -446. -4506.  1.02   0.135  1.35   7.06  1.94  1.25  5.70</span></span>
-<span id="cb35-14"><a href="#cb35-14"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
-<span id="cb35-15"><a href="#cb35-15"></a><span class="co"># </span></span>
-<span id="cb35-16"><a href="#cb35-16"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb35-14"><a href="#cb35-14"></a><span class="co"># # ... with 2 more variables: OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span></code></pre></div>
 <p>Since <code>TRA</code> is already built into all <em>Fast Statistical Functions</em> as an argument, it is best used in computations where grouped statistics are computed using some other function.</p>
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="co"># Same as above, with one line of code using fmean.data.frame and ftransform...</span></span>
 <span id="cb36-2"><a href="#cb36-2"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">ftransform</span>(<span class="kw">fmean</span>(<span class="kw">list</span>(<span class="dt">AGR =</span> AGR, <span class="dt">MIN =</span> MIN), <span class="kw">list</span>(Variable, Country), <span class="dt">TRA =</span> <span class="st">&quot;-&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span>head</span>
@@ -1238,9 +1207,7 @@ pre[class] {
 <span id="cb37-25"><a href="#cb37-25"></a><span class="co"># 4 BWA     SSA        Sub-s~ VA        1963 NA       NA       NA       NA       NA       NA      </span></span>
 <span id="cb37-26"><a href="#cb37-26"></a><span class="co"># 5 BWA     SSA        Sub-s~ VA        1964  7.50e-4  1.65e-5  1.66e-5  1.03e-5  1.57e-5  6.82e-5</span></span>
 <span id="cb37-27"><a href="#cb37-27"></a><span class="co"># 6 BWA     SSA        Sub-s~ VA        1965  7.24e-4  1.18e-5  2.30e-5  1.33e-5  3.20e-5  7.72e-5</span></span>
-<span id="cb37-28"><a href="#cb37-28"></a><span class="co"># # ... with 5 more variables: TRA &lt;dbl&gt;, FIRE &lt;dbl&gt;, GOV &lt;dbl&gt;, OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span>
-<span id="cb37-29"><a href="#cb37-29"></a><span class="co"># </span></span>
-<span id="cb37-30"><a href="#cb37-30"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb37-28"><a href="#cb37-28"></a><span class="co"># # ... with 5 more variables: TRA &lt;dbl&gt;, FIRE &lt;dbl&gt;, GOV &lt;dbl&gt;, OTH &lt;dbl&gt;, SUM &lt;dbl&gt;</span></span></code></pre></div>
 <p>As discussed, whether using the argument to fast statistical functions or <code>TRA</code> directly, these data transformations are essentially a two-step process: Statistics are first computed and then used to transform the original data.</p>
 <!-- This process is already very efficient since all functions are written in C++, and programmatically separating the computation of statistics and data transformation tasks allows for unlimited combinations and drastically simplifies the code base of this package. -->
 <!-- Nonetheless there are of course more memory efficient and faster ways to program such data transformations, which principally involve doing them column-by-column with a single C++ function.  -->
@@ -1258,28 +1225,22 @@ pre[class] {
 <span id="cb38-5"><a href="#cb38-5"></a><span class="co">#   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
 <span id="cb38-6"><a href="#cb38-6"></a><span class="co"># 1 4444.  34.9 1614.  131.  997. 1307.  799.  320. 2958.    NA 12605.</span></span>
 <span id="cb38-7"><a href="#cb38-7"></a><span class="co"># 2 4444.  34.9 1614.  131.  997. 1307.  799.  320. 2958.    NA 12605.</span></span>
-<span id="cb38-8"><a href="#cb38-8"></a><span class="co"># </span></span>
-<span id="cb38-9"><a href="#cb38-9"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span>
-<span id="cb38-10"><a href="#cb38-10"></a></span>
-<span id="cb38-11"><a href="#cb38-11"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Same as ... %&gt;% fmean(TRA = &quot;replace_fill&quot;)</span></span>
-<span id="cb38-12"><a href="#cb38-12"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fbetween</span>(<span class="dt">fill =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">tail</span>(<span class="dv">2</span>)</span>
-<span id="cb38-13"><a href="#cb38-13"></a><span class="co"># # A tibble: 2 x 11</span></span>
-<span id="cb38-14"><a href="#cb38-14"></a><span class="co">#     AGR   MIN   MAN    PU   CON   WRT   TRA  FIRE   GOV   OTH    SUM</span></span>
-<span id="cb38-15"><a href="#cb38-15"></a><span class="co">#   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
-<span id="cb38-16"><a href="#cb38-16"></a><span class="co"># 1 4444.  34.9 1614.  131.  997. 1307.  799.  320. 2958.    NA 12605.</span></span>
-<span id="cb38-17"><a href="#cb38-17"></a><span class="co"># 2 4444.  34.9 1614.  131.  997. 1307.  799.  320. 2958.    NA 12605.</span></span>
-<span id="cb38-18"><a href="#cb38-18"></a><span class="co"># </span></span>
-<span id="cb38-19"><a href="#cb38-19"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span>
-<span id="cb38-20"><a href="#cb38-20"></a></span>
-<span id="cb38-21"><a href="#cb38-21"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Same as ... %&gt;% fmean(TRA = &quot;-&quot;)</span></span>
-<span id="cb38-22"><a href="#cb38-22"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span>fwithin <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">tail</span>(<span class="dv">2</span>)</span>
-<span id="cb38-23"><a href="#cb38-23"></a><span class="co"># # A tibble: 2 x 11</span></span>
-<span id="cb38-24"><a href="#cb38-24"></a><span class="co">#     AGR    MIN   MAN    PU   CON   WRT   TRA  FIRE   GOV   OTH   SUM</span></span>
-<span id="cb38-25"><a href="#cb38-25"></a><span class="co">#   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb38-26"><a href="#cb38-26"></a><span class="co"># 1  742.  -7.35  760.  187. 1798. 1713. 1249.  495. 2678.    NA 9614.</span></span>
-<span id="cb38-27"><a href="#cb38-27"></a><span class="co"># 2  717. -10.1   734.  194. 1934. 1803. 1266.  512. 2778.    NA 9928.</span></span>
-<span id="cb38-28"><a href="#cb38-28"></a><span class="co"># </span></span>
-<span id="cb38-29"><a href="#cb38-29"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb38-8"><a href="#cb38-8"></a></span>
+<span id="cb38-9"><a href="#cb38-9"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Same as ... %&gt;% fmean(TRA = &quot;replace_fill&quot;)</span></span>
+<span id="cb38-10"><a href="#cb38-10"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">fbetween</span>(<span class="dt">fill =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">tail</span>(<span class="dv">2</span>)</span>
+<span id="cb38-11"><a href="#cb38-11"></a><span class="co"># # A tibble: 2 x 11</span></span>
+<span id="cb38-12"><a href="#cb38-12"></a><span class="co">#     AGR   MIN   MAN    PU   CON   WRT   TRA  FIRE   GOV   OTH    SUM</span></span>
+<span id="cb38-13"><a href="#cb38-13"></a><span class="co">#   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span id="cb38-14"><a href="#cb38-14"></a><span class="co"># 1 4444.  34.9 1614.  131.  997. 1307.  799.  320. 2958.    NA 12605.</span></span>
+<span id="cb38-15"><a href="#cb38-15"></a><span class="co"># 2 4444.  34.9 1614.  131.  997. 1307.  799.  320. 2958.    NA 12605.</span></span>
+<span id="cb38-16"><a href="#cb38-16"></a></span>
+<span id="cb38-17"><a href="#cb38-17"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># Same as ... %&gt;% fmean(TRA = &quot;-&quot;)</span></span>
+<span id="cb38-18"><a href="#cb38-18"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">get_vars</span>(<span class="dv">6</span><span class="op">:</span><span class="dv">16</span>) <span class="op">%&gt;%</span><span class="st"> </span>fwithin <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">tail</span>(<span class="dv">2</span>)</span>
+<span id="cb38-19"><a href="#cb38-19"></a><span class="co"># # A tibble: 2 x 11</span></span>
+<span id="cb38-20"><a href="#cb38-20"></a><span class="co">#     AGR    MIN   MAN    PU   CON   WRT   TRA  FIRE   GOV   OTH   SUM</span></span>
+<span id="cb38-21"><a href="#cb38-21"></a><span class="co">#   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb38-22"><a href="#cb38-22"></a><span class="co"># 1  742.  -7.35  760.  187. 1798. 1713. 1249.  495. 2678.    NA 9614.</span></span>
+<span id="cb38-23"><a href="#cb38-23"></a><span class="co"># 2  717. -10.1   734.  194. 1934. 1803. 1266.  512. 2778.    NA 9928.</span></span></code></pre></div>
 <p>Apart from higher speed, <code>fwithin</code> has a <code>mean</code> argument to assign an arbitrary mean to centered data, the default being <code>mean = 0</code>. A very common choice for such an added mean is just the overall mean of the data, which can be added in by invoking <code>mean = &quot;overall.mean&quot;</code>:</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a>GGDC10S <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb39-2"><a href="#cb39-2"></a><span class="st">  </span><span class="kw">fgroup_by</span>(Variable, Country) <span class="op">%&gt;%</span><span class="st"> </span></span>
@@ -1289,9 +1250,7 @@ pre[class] {
 <span id="cb39-6"><a href="#cb39-6"></a><span class="co">#   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
 <span id="cb39-7"><a href="#cb39-7"></a><span class="co"># 1 EGY     EMP       2.53e6  1.87e6  5.54e6 335856.  1.80e6  3.39e6 1.47e6 1.66e6 1.71e6    NA 2.16e7</span></span>
 <span id="cb39-8"><a href="#cb39-8"></a><span class="co"># 2 EGY     EMP       2.53e6  1.87e6  5.54e6 335867.  1.80e6  3.39e6 1.47e6 1.66e6 1.71e6    NA 2.16e7</span></span>
-<span id="cb39-9"><a href="#cb39-9"></a><span class="co"># 3 EGY     EMP       2.53e6  1.87e6  5.54e6 335873.  1.80e6  3.39e6 1.47e6 1.66e6 1.72e6    NA 2.16e7</span></span>
-<span id="cb39-10"><a href="#cb39-10"></a><span class="co"># </span></span>
-<span id="cb39-11"><a href="#cb39-11"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb39-9"><a href="#cb39-9"></a><span class="co"># 3 EGY     EMP       2.53e6  1.87e6  5.54e6 335873.  1.80e6  3.39e6 1.47e6 1.66e6 1.72e6    NA 2.16e7</span></span></code></pre></div>
 <!-- in particular, which regards the joint use of weights and the `mean = "overall.mean"` option: `... %>% fmean(w = SUM, TRA = "-+")` will not properly group-center the data on the overall weighted mean. Instead, it will group-center data on a frequency weighted average of the weighted group-means, thus not taking into account different aggregated weights attached to those weighted group-means themselves. The reason for this shortcoming is simply that `TRA` was not designed to take a separate weight vector as input. `fwithin(w = SUM, mean = "overall.mean")` does a better job and properly centers data on the weighted overall mean after subtracting out weighted group means: -->
 <!-- ```{r} -->
 <!-- GGDC10S %>% # This does not center data on a properly computed weighted overall mean -->
@@ -1308,9 +1267,7 @@ pre[class] {
 <span id="cb40-6"><a href="#cb40-6"></a><span class="co">#   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
 <span id="cb40-7"><a href="#cb40-7"></a><span class="co"># 1 EGY     EMP      22020.  4.29e8  3.70e8  7.38e8  2.73e7  2.83e8  4.33e8 1.97e8 1.55e8 2.10e8    NA</span></span>
 <span id="cb40-8"><a href="#cb40-8"></a><span class="co"># 2 EGY     EMP      22219.  4.29e8  3.70e8  7.38e8  2.73e7  2.83e8  4.33e8 1.97e8 1.55e8 2.10e8    NA</span></span>
-<span id="cb40-9"><a href="#cb40-9"></a><span class="co"># 3 EGY     EMP      22533.  4.29e8  3.70e8  7.38e8  2.73e7  2.83e8  4.33e8 1.97e8 1.55e8 2.10e8    NA</span></span>
-<span id="cb40-10"><a href="#cb40-10"></a><span class="co"># </span></span>
-<span id="cb40-11"><a href="#cb40-11"></a><span class="co"># Grouped by:  Variable, Country  [85 | 59 (7.7)]</span></span></code></pre></div>
+<span id="cb40-9"><a href="#cb40-9"></a><span class="co"># 3 EGY     EMP      22533.  4.29e8  3.70e8  7.38e8  2.73e7  2.83e8  4.33e8 1.97e8 1.55e8 2.10e8    NA</span></span></code></pre></div>
 <p>Another argument to <code>fwithin</code> is the <code>theta</code> parameter, allowing partial- or quasi-demeaning operations, e.g. <code>fwithin(gdata, theta = theta)</code> is equal to <code>gdata - theta * fbetween(gdata)</code>. This is particularly useful to prepare data for variance components (also known as ‘random-effects’) estimation.</p>
 <p>Apart from <code>fbetween</code> and <code>fwithin</code>, the function <code>fscale</code> exists to efficiently scale and center data, to avoid sequential calls such as <code>... %&gt;% fsd(TRA = &quot;/&quot;) %&gt;% fmean(TRA = &quot;-&quot;)</code>.</p>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a><span class="co"># This efficiently scales and centers (i.e. standardizes) the data</span></span>
@@ -1652,8 +1609,8 @@ pre[class] {
 <span id="cb51-43"><a href="#cb51-43"></a></span>
 <span id="cb51-44"><a href="#cb51-44"></a><span class="kw">gc</span>()</span>
 <span id="cb51-45"><a href="#cb51-45"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb51-46"><a href="#cb51-46"></a><span class="co"># Ncells  1940236 103.7    3717688 198.6  3717688 198.6</span></span>
-<span id="cb51-47"><a href="#cb51-47"></a><span class="co"># Vcells 19908690 151.9   28370344 216.5 23082844 176.2</span></span></code></pre></div>
+<span id="cb51-46"><a href="#cb51-46"></a><span class="co"># Ncells  1941523 103.7    3719727 198.7  3719727 198.7</span></span>
+<span id="cb51-47"><a href="#cb51-47"></a><span class="co"># Vcells 19910761 152.0   28373326 216.5 23084915 176.2</span></span></code></pre></div>
 </div>
 <div id="selecting-subsetting-ordering-and-grouping" class="section level3">
 <h3>3.1 Selecting, Subsetting, Ordering and Grouping</h3>
@@ -1662,51 +1619,51 @@ pre[class] {
 <span id="cb52-3"><a href="#cb52-3"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">select</span>(GGDC10S, Country, Variable, AGR<span class="op">:</span>SUM),</span>
 <span id="cb52-4"><a href="#cb52-4"></a>               <span class="dt">collapse =</span> <span class="kw">fselect</span>(GGDC10S, Country, Variable, AGR<span class="op">:</span>SUM))</span>
 <span id="cb52-5"><a href="#cb52-5"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-6"><a href="#cb52-6"></a><span class="co">#      expr      min       lq       mean    median        uq      max neval cld</span></span>
-<span id="cb52-7"><a href="#cb52-7"></a><span class="co">#     dplyr 3061.707 3229.942 3340.91978 3326.7780 3465.7845 4142.519   100   b</span></span>
-<span id="cb52-8"><a href="#cb52-8"></a><span class="co">#  collapse   11.603   15.619   25.36942   23.8745   35.0305   56.227   100  a</span></span>
+<span id="cb52-6"><a href="#cb52-6"></a><span class="co">#      expr      min       lq       mean    median       uq       max neval cld</span></span>
+<span id="cb52-7"><a href="#cb52-7"></a><span class="co">#     dplyr 4076.471 5435.072 6056.79685 6045.7615 6584.604 10977.242   100   b</span></span>
+<span id="cb52-8"><a href="#cb52-8"></a><span class="co">#  collapse   12.495   23.651   43.01846   42.3935   59.574   189.655   100  a</span></span>
 <span id="cb52-9"><a href="#cb52-9"></a></span>
 <span id="cb52-10"><a href="#cb52-10"></a><span class="co"># Large</span></span>
 <span id="cb52-11"><a href="#cb52-11"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">select</span>(data, Country, Variable, AGR<span class="op">:</span>SUM),</span>
 <span id="cb52-12"><a href="#cb52-12"></a>               <span class="dt">collapse =</span> <span class="kw">fselect</span>(data, Country, Variable, AGR<span class="op">:</span>SUM))</span>
 <span id="cb52-13"><a href="#cb52-13"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-14"><a href="#cb52-14"></a><span class="co">#      expr      min       lq      mean   median        uq     max neval cld</span></span>
-<span id="cb52-15"><a href="#cb52-15"></a><span class="co">#     dplyr 2771.646 2847.285 3072.8900 3107.224 3194.9120 4258.99   100   b</span></span>
-<span id="cb52-16"><a href="#cb52-16"></a><span class="co">#  collapse   12.495   16.288   26.0611   28.783   34.3615   60.69   100  a</span></span>
+<span id="cb52-14"><a href="#cb52-14"></a><span class="co">#      expr      min       lq       mean   median       uq      max neval cld</span></span>
+<span id="cb52-15"><a href="#cb52-15"></a><span class="co">#     dplyr 3714.564 4652.577 5139.28975 4967.628 5836.024 8204.706   100   b</span></span>
+<span id="cb52-16"><a href="#cb52-16"></a><span class="co">#  collapse   13.834   32.576   47.57019   43.063   58.682  209.737   100  a</span></span>
 <span id="cb52-17"><a href="#cb52-17"></a></span>
 <span id="cb52-18"><a href="#cb52-18"></a><span class="co">## Subsetting columns </span></span>
 <span id="cb52-19"><a href="#cb52-19"></a><span class="co"># Small</span></span>
 <span id="cb52-20"><a href="#cb52-20"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">filter</span>(GGDC10S, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>),</span>
 <span id="cb52-21"><a href="#cb52-21"></a>               <span class="dt">collapse =</span> <span class="kw">fsubset</span>(GGDC10S, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>))</span>
 <span id="cb52-22"><a href="#cb52-22"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-23"><a href="#cb52-23"></a><span class="co">#      expr      min       lq     mean    median        uq      max neval cld</span></span>
-<span id="cb52-24"><a href="#cb52-24"></a><span class="co">#     dplyr 2046.047 2199.110 2389.479 2373.5925 2531.3415 2953.268   100   b</span></span>
-<span id="cb52-25"><a href="#cb52-25"></a><span class="co">#  collapse  173.144  197.688  241.938  218.8845  292.0695  382.881   100  a</span></span>
+<span id="cb52-23"><a href="#cb52-23"></a><span class="co">#      expr      min       lq      mean   median        uq      max neval cld</span></span>
+<span id="cb52-24"><a href="#cb52-24"></a><span class="co">#     dplyr 2798.864 3329.007 3954.7035 3851.562 4406.0245 8506.370   100   b</span></span>
+<span id="cb52-25"><a href="#cb52-25"></a><span class="co">#  collapse  187.425  250.345  346.4534  338.256  371.7245  586.816   100  a</span></span>
 <span id="cb52-26"><a href="#cb52-26"></a></span>
 <span id="cb52-27"><a href="#cb52-27"></a><span class="co"># Large</span></span>
 <span id="cb52-28"><a href="#cb52-28"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">filter</span>(data, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>),</span>
 <span id="cb52-29"><a href="#cb52-29"></a>               <span class="dt">collapse =</span> <span class="kw">fsubset</span>(data, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>))</span>
 <span id="cb52-30"><a href="#cb52-30"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb52-31"><a href="#cb52-31"></a><span class="co">#      expr       min        lq      mean    median        uq      max neval cld</span></span>
-<span id="cb52-32"><a href="#cb52-32"></a><span class="co">#     dplyr 16.687886 16.824215 19.049358 17.017886 17.842553 47.73067   100   b</span></span>
-<span id="cb52-33"><a href="#cb52-33"></a><span class="co">#  collapse  6.478627  7.755342  8.712829  7.850393  8.254694 46.17416   100  a</span></span>
+<span id="cb52-31"><a href="#cb52-31"></a><span class="co">#      expr       min        lq     mean    median       uq      max neval cld</span></span>
+<span id="cb52-32"><a href="#cb52-32"></a><span class="co">#     dplyr 17.152861 18.861989 23.23889 20.288865 24.60319 64.22929   100   b</span></span>
+<span id="cb52-33"><a href="#cb52-33"></a><span class="co">#  collapse  7.815132  8.698479 10.58554  8.914464 10.98438 51.13059   100  a</span></span>
 <span id="cb52-34"><a href="#cb52-34"></a></span>
 <span id="cb52-35"><a href="#cb52-35"></a><span class="co">## Ordering rows</span></span>
 <span id="cb52-36"><a href="#cb52-36"></a><span class="co"># Small</span></span>
 <span id="cb52-37"><a href="#cb52-37"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">arrange</span>(GGDC10S, <span class="kw">desc</span>(Country), Variable, Year),</span>
 <span id="cb52-38"><a href="#cb52-38"></a>               <span class="dt">collapse =</span> <span class="kw">roworder</span>(GGDC10S, <span class="op">-</span>Country, Variable, Year))</span>
 <span id="cb52-39"><a href="#cb52-39"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-40"><a href="#cb52-40"></a><span class="co">#      expr      min        lq      mean    median       uq       max neval cld</span></span>
-<span id="cb52-41"><a href="#cb52-41"></a><span class="co">#     dplyr 7402.806 7586.8840 8268.6522 8225.6870 8571.530 12362.405   100   b</span></span>
-<span id="cb52-42"><a href="#cb52-42"></a><span class="co">#  collapse  563.165  637.6885  742.6505  701.0555  845.194  1074.565   100  a</span></span>
+<span id="cb52-40"><a href="#cb52-40"></a><span class="co">#      expr      min        lq      mean   median       uq      max neval cld</span></span>
+<span id="cb52-41"><a href="#cb52-41"></a><span class="co">#     dplyr 7665.639 8047.4045 8766.8443 8575.984 8930.528 13935.42   100   b</span></span>
+<span id="cb52-42"><a href="#cb52-42"></a><span class="co">#  collapse  594.848  660.2235  770.0449  711.096  877.769  1309.29   100  a</span></span>
 <span id="cb52-43"><a href="#cb52-43"></a></span>
 <span id="cb52-44"><a href="#cb52-44"></a><span class="co"># Large</span></span>
 <span id="cb52-45"><a href="#cb52-45"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">arrange</span>(data, <span class="kw">desc</span>(Country), Variable, Year),</span>
 <span id="cb52-46"><a href="#cb52-46"></a>               <span class="dt">collapse =</span> <span class="kw">roworder</span>(data, <span class="op">-</span>Country, Variable, Year), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb52-47"><a href="#cb52-47"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb52-48"><a href="#cb52-48"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb52-49"><a href="#cb52-49"></a><span class="co">#     dplyr 2385.8920 2385.8920 2400.7634 2400.7634 2415.6348 2415.6348     2   b</span></span>
-<span id="cb52-50"><a href="#cb52-50"></a><span class="co">#  collapse  178.9655  178.9655  191.7726  191.7726  204.5797  204.5797     2  a</span></span>
+<span id="cb52-49"><a href="#cb52-49"></a><span class="co">#     dplyr 2445.0560 2445.0560 2455.9221 2455.9221 2466.7883 2466.7883     2   b</span></span>
+<span id="cb52-50"><a href="#cb52-50"></a><span class="co">#  collapse  176.2919  176.2919  189.2582  189.2582  202.2246  202.2246     2  a</span></span>
 <span id="cb52-51"><a href="#cb52-51"></a></span>
 <span id="cb52-52"><a href="#cb52-52"></a></span>
 <span id="cb52-53"><a href="#cb52-53"></a><span class="co">## Grouping </span></span>
@@ -1714,17 +1671,17 @@ pre[class] {
 <span id="cb52-55"><a href="#cb52-55"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">group_by</span>(GGDC10S, Country, Variable),</span>
 <span id="cb52-56"><a href="#cb52-56"></a>               <span class="dt">collapse =</span> <span class="kw">fgroup_by</span>(GGDC10S, Country, Variable))</span>
 <span id="cb52-57"><a href="#cb52-57"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-58"><a href="#cb52-58"></a><span class="co">#      expr      min        lq     mean   median       uq      max neval cld</span></span>
-<span id="cb52-59"><a href="#cb52-59"></a><span class="co">#     dplyr 2951.930 3089.3745 3234.075 3220.126 3343.959 3789.091   100   b</span></span>
-<span id="cb52-60"><a href="#cb52-60"></a><span class="co">#  collapse  354.322  372.1715  400.887  396.492  416.349  502.475   100  a</span></span>
+<span id="cb52-58"><a href="#cb52-58"></a><span class="co">#      expr      min        lq      mean   median        uq      max neval cld</span></span>
+<span id="cb52-59"><a href="#cb52-59"></a><span class="co">#     dplyr 3007.708 3125.5175 3318.7517 3288.844 3430.5280 4540.122   100   b</span></span>
+<span id="cb52-60"><a href="#cb52-60"></a><span class="co">#  collapse  340.487  393.3675  420.7581  403.854  442.2315  682.759   100  a</span></span>
 <span id="cb52-61"><a href="#cb52-61"></a></span>
 <span id="cb52-62"><a href="#cb52-62"></a><span class="co"># Large</span></span>
 <span id="cb52-63"><a href="#cb52-63"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">group_by</span>(data, Country, Variable),</span>
 <span id="cb52-64"><a href="#cb52-64"></a>               <span class="dt">collapse =</span> <span class="kw">fgroup_by</span>(data, Country, Variable), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb52-65"><a href="#cb52-65"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb52-66"><a href="#cb52-66"></a><span class="co">#      expr      min       lq     mean   median       uq       max neval cld</span></span>
-<span id="cb52-67"><a href="#cb52-67"></a><span class="co">#     dplyr 68.24201 69.36343 75.40416 73.60413 76.35837 101.41563    10   b</span></span>
-<span id="cb52-68"><a href="#cb52-68"></a><span class="co">#  collapse 64.51629 64.94290 67.42560 66.49741 69.54639  72.26315    10  a</span></span>
+<span id="cb52-67"><a href="#cb52-67"></a><span class="co">#     dplyr 72.87757 73.70982 79.63603 76.28110 82.08767 104.99177    10   b</span></span>
+<span id="cb52-68"><a href="#cb52-68"></a><span class="co">#  collapse 67.24905 69.50795 70.69778 71.39647 71.74142  72.62009    10  a</span></span>
 <span id="cb52-69"><a href="#cb52-69"></a></span>
 <span id="cb52-70"><a href="#cb52-70"></a><span class="co">## Computing a new column </span></span>
 <span id="cb52-71"><a href="#cb52-71"></a><span class="co"># Small</span></span>
@@ -1732,16 +1689,16 @@ pre[class] {
 <span id="cb52-73"><a href="#cb52-73"></a>               <span class="dt">collapse =</span> <span class="kw">ftransform</span>(GGDC10S, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>))</span>
 <span id="cb52-74"><a href="#cb52-74"></a><span class="co"># Unit: microseconds</span></span>
 <span id="cb52-75"><a href="#cb52-75"></a><span class="co">#      expr      min       lq       mean   median       uq      max neval cld</span></span>
-<span id="cb52-76"><a href="#cb52-76"></a><span class="co">#     dplyr 3038.949 3177.285 3314.79642 3244.668 3424.283 4187.144   100   b</span></span>
-<span id="cb52-77"><a href="#cb52-77"></a><span class="co">#  collapse   28.113   33.915   46.62425   40.609   59.351   91.481   100  a</span></span>
+<span id="cb52-76"><a href="#cb52-76"></a><span class="co">#     dplyr 3167.465 3271.664 3492.30631 3374.301 3565.294 6032.374   100   b</span></span>
+<span id="cb52-77"><a href="#cb52-77"></a><span class="co">#  collapse   27.221   32.799   47.82018   50.650   58.459   84.341   100  a</span></span>
 <span id="cb52-78"><a href="#cb52-78"></a></span>
 <span id="cb52-79"><a href="#cb52-79"></a><span class="co"># Large</span></span>
 <span id="cb52-80"><a href="#cb52-80"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate</span>(data, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>),</span>
 <span id="cb52-81"><a href="#cb52-81"></a>               <span class="dt">collapse =</span> <span class="kw">ftransform</span>(data, <span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>))</span>
 <span id="cb52-82"><a href="#cb52-82"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb52-83"><a href="#cb52-83"></a><span class="co">#      expr      min       lq     mean   median       uq      max neval cld</span></span>
-<span id="cb52-84"><a href="#cb52-84"></a><span class="co">#     dplyr 3.908239 4.282418 6.051429 6.376659 6.592421 26.69856   100   b</span></span>
-<span id="cb52-85"><a href="#cb52-85"></a><span class="co">#  collapse 1.265113 1.526390 3.426617 3.652093 3.759861 33.76178   100  a</span></span>
+<span id="cb52-84"><a href="#cb52-84"></a><span class="co">#     dplyr 4.015335 4.544139 6.416678 6.540203 6.958784 28.94852   100   b</span></span>
+<span id="cb52-85"><a href="#cb52-85"></a><span class="co">#  collapse 1.311076 1.625680 3.598834 3.753388 3.909574 32.73136   100  a</span></span>
 <span id="cb52-86"><a href="#cb52-86"></a></span>
 <span id="cb52-87"><a href="#cb52-87"></a><span class="co">## All combined with pipes </span></span>
 <span id="cb52-88"><a href="#cb52-88"></a><span class="co"># Small</span></span>
@@ -1755,9 +1712,9 @@ pre[class] {
 <span id="cb52-96"><a href="#cb52-96"></a><span class="st">                       </span><span class="kw">ftransform</span>(<span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>) <span class="op">%&gt;%</span></span>
 <span id="cb52-97"><a href="#cb52-97"></a><span class="st">                       </span><span class="kw">fgroup_by</span>(Country))</span>
 <span id="cb52-98"><a href="#cb52-98"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-99"><a href="#cb52-99"></a><span class="co">#      expr       min        lq       mean    median         uq       max neval cld</span></span>
-<span id="cb52-100"><a href="#cb52-100"></a><span class="co">#     dplyr 15968.534 16537.947 17243.7636 16887.136 17721.3960 22449.839   100   b</span></span>
-<span id="cb52-101"><a href="#cb52-101"></a><span class="co">#  collapse   711.766   788.074   836.2107   835.822   863.9365  1039.311   100  a</span></span>
+<span id="cb52-99"><a href="#cb52-99"></a><span class="co">#      expr       min         lq       mean    median         uq       max neval cld</span></span>
+<span id="cb52-100"><a href="#cb52-100"></a><span class="co">#     dplyr 16498.216 16936.4315 17943.9194 17458.317 18483.3480 22977.729   100   b</span></span>
+<span id="cb52-101"><a href="#cb52-101"></a><span class="co">#  collapse   699.716   790.5275   885.3152   843.408   891.1565  2314.686   100  a</span></span>
 <span id="cb52-102"><a href="#cb52-102"></a></span>
 <span id="cb52-103"><a href="#cb52-103"></a><span class="co"># Large</span></span>
 <span id="cb52-104"><a href="#cb52-104"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">filter</span>(data, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
@@ -1770,14 +1727,14 @@ pre[class] {
 <span id="cb52-111"><a href="#cb52-111"></a><span class="st">                       </span><span class="kw">ftransform</span>(<span class="dt">NEW =</span> AGR<span class="op">+</span><span class="dv">1</span>) <span class="op">%&gt;%</span></span>
 <span id="cb52-112"><a href="#cb52-112"></a><span class="st">                       </span><span class="kw">fgroup_by</span>(Country), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb52-113"><a href="#cb52-113"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb52-114"><a href="#cb52-114"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb52-115"><a href="#cb52-115"></a><span class="co">#     dplyr 23.080387 23.429353 24.995460 23.817811 28.121649 28.246153    10   b</span></span>
-<span id="cb52-116"><a href="#cb52-116"></a><span class="co">#  collapse  6.872664  7.004753  7.956109  8.225465  8.684431  9.260536    10  a</span></span>
+<span id="cb52-114"><a href="#cb52-114"></a><span class="co">#      expr       min        lq      mean   median        uq       max neval cld</span></span>
+<span id="cb52-115"><a href="#cb52-115"></a><span class="co">#     dplyr 24.159393 24.741299 27.358005 26.99195 29.543815 30.956189    10   b</span></span>
+<span id="cb52-116"><a href="#cb52-116"></a><span class="co">#  collapse  7.616552  7.875375  8.230901  8.37495  8.554119  8.709413    10  a</span></span>
 <span id="cb52-117"><a href="#cb52-117"></a></span>
 <span id="cb52-118"><a href="#cb52-118"></a><span class="kw">gc</span>()</span>
 <span id="cb52-119"><a href="#cb52-119"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb52-120"><a href="#cb52-120"></a><span class="co"># Ncells  1946045 104.0    3717688 198.6  3717688 198.6</span></span>
-<span id="cb52-121"><a href="#cb52-121"></a><span class="co"># Vcells 21425190 163.5   57610832 439.6 66845873 510.0</span></span></code></pre></div>
+<span id="cb52-120"><a href="#cb52-120"></a><span class="co"># Ncells  1947335 104.0    3719727 198.7  3719727 198.7</span></span>
+<span id="cb52-121"><a href="#cb52-121"></a><span class="co"># Vcells 21427266 163.5   57612820 439.6 66847863 510.1</span></span></code></pre></div>
 </div>
 <div id="aggregation" class="section level3">
 <h3>3.1 Aggregation</h3>
@@ -1789,8 +1746,8 @@ pre[class] {
 <span id="cb53-6"><a href="#cb53-6"></a><span class="kw">rm</span>(data, GGDC10S) </span>
 <span id="cb53-7"><a href="#cb53-7"></a><span class="kw">gc</span>()</span>
 <span id="cb53-8"><a href="#cb53-8"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb53-9"><a href="#cb53-9"></a><span class="co"># Ncells  1963051 104.9    3717688 198.6  3717688 198.6</span></span>
-<span id="cb53-10"><a href="#cb53-10"></a><span class="co"># Vcells 20525803 156.6   57610832 439.6 66845873 510.0</span></span>
+<span id="cb53-9"><a href="#cb53-9"></a><span class="co"># Ncells  1964339 105.0    3719727 198.7  3719727 198.7</span></span>
+<span id="cb53-10"><a href="#cb53-10"></a><span class="co"># Vcells 20527848 156.7   57612820 439.6 66847863 510.1</span></span>
 <span id="cb53-11"><a href="#cb53-11"></a></span>
 <span id="cb53-12"><a href="#cb53-12"></a><span class="co">## Conversion of Grouping object: This time would be required extra in all hybrid calls </span></span>
 <span id="cb53-13"><a href="#cb53-13"></a><span class="co">## i.e. when calling collapse functions on data grouped with dplyr::group_by</span></span>
@@ -1798,13 +1755,13 @@ pre[class] {
 <span id="cb53-15"><a href="#cb53-15"></a><span class="kw">microbenchmark</span>(<span class="kw">GRP</span>(gGGDC10S))</span>
 <span id="cb53-16"><a href="#cb53-16"></a><span class="co"># Unit: microseconds</span></span>
 <span id="cb53-17"><a href="#cb53-17"></a><span class="co">#           expr     min      lq     mean  median      uq     max neval</span></span>
-<span id="cb53-18"><a href="#cb53-18"></a><span class="co">#  GRP(gGGDC10S) 166.897 169.128 174.2155 170.021 172.475 260.609   100</span></span>
+<span id="cb53-18"><a href="#cb53-18"></a><span class="co">#  GRP(gGGDC10S) 167.789 170.021 179.5078 171.806 178.053 298.986   100</span></span>
 <span id="cb53-19"><a href="#cb53-19"></a></span>
 <span id="cb53-20"><a href="#cb53-20"></a><span class="co"># Large</span></span>
 <span id="cb53-21"><a href="#cb53-21"></a><span class="kw">microbenchmark</span>(<span class="kw">GRP</span>(gdata))</span>
 <span id="cb53-22"><a href="#cb53-22"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-23"><a href="#cb53-23"></a><span class="co">#        expr      min       lq     mean   median      uq      max neval</span></span>
-<span id="cb53-24"><a href="#cb53-24"></a><span class="co">#  GRP(gdata) 30.59297 32.09169 33.24536 32.70618 34.7076 37.20012   100</span></span>
+<span id="cb53-23"><a href="#cb53-23"></a><span class="co">#        expr     min       lq     mean median       uq     max neval</span></span>
+<span id="cb53-24"><a href="#cb53-24"></a><span class="co">#  GRP(gdata) 31.6742 33.14414 34.64294   34.1 35.95996 42.4368   100</span></span>
 <span id="cb53-25"><a href="#cb53-25"></a></span>
 <span id="cb53-26"><a href="#cb53-26"></a></span>
 <span id="cb53-27"><a href="#cb53-27"></a><span class="co">## Sum </span></span>
@@ -1812,102 +1769,102 @@ pre[class] {
 <span id="cb53-29"><a href="#cb53-29"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-30"><a href="#cb53-30"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgGGDC10S))</span>
 <span id="cb53-31"><a href="#cb53-31"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-32"><a href="#cb53-32"></a><span class="co">#      expr      min       lq     mean   median        uq       max neval cld</span></span>
-<span id="cb53-33"><a href="#cb53-33"></a><span class="co">#     dplyr 8332.340 8654.086 9140.232 8870.069 9343.3150 16933.768   100   b</span></span>
-<span id="cb53-34"><a href="#cb53-34"></a><span class="co">#  collapse  240.082  266.187  295.635  301.441  309.2495   409.656   100  a</span></span>
+<span id="cb53-32"><a href="#cb53-32"></a><span class="co">#      expr      min       lq      mean   median        uq      max neval cld</span></span>
+<span id="cb53-33"><a href="#cb53-33"></a><span class="co">#     dplyr 8629.980 8920.264 9734.9650 9277.263 9642.9625 18442.96   100   b</span></span>
+<span id="cb53-34"><a href="#cb53-34"></a><span class="co">#  collapse  243.205  274.666  301.6189  299.655  328.8845   489.98   100  a</span></span>
 <span id="cb53-35"><a href="#cb53-35"></a></span>
 <span id="cb53-36"><a href="#cb53-36"></a><span class="co"># Large</span></span>
 <span id="cb53-37"><a href="#cb53-37"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-38"><a href="#cb53-38"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-39"><a href="#cb53-39"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-40"><a href="#cb53-40"></a><span class="co">#      expr       min       lq      mean    median        uq       max neval cld</span></span>
-<span id="cb53-41"><a href="#cb53-41"></a><span class="co">#     dplyr 554.04039 558.6305 572.88754 572.61591 577.02841 616.51064    10   b</span></span>
-<span id="cb53-42"><a href="#cb53-42"></a><span class="co">#  collapse  39.87983  40.1632  42.23696  42.53389  43.58458  44.49181    10  a</span></span>
+<span id="cb53-40"><a href="#cb53-40"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
+<span id="cb53-41"><a href="#cb53-41"></a><span class="co">#     dplyr 574.90197 587.82173 600.47789 597.79804 613.82635 639.04469    10   b</span></span>
+<span id="cb53-42"><a href="#cb53-42"></a><span class="co">#  collapse  42.05168  42.46446  43.34241  43.14678  44.21063  45.00183    10  a</span></span>
 <span id="cb53-43"><a href="#cb53-43"></a></span>
 <span id="cb53-44"><a href="#cb53-44"></a><span class="co">## Mean</span></span>
 <span id="cb53-45"><a href="#cb53-45"></a><span class="co"># Small</span></span>
 <span id="cb53-46"><a href="#cb53-46"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, mean.default, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-47"><a href="#cb53-47"></a>               <span class="dt">collapse =</span> <span class="kw">fmean</span>(cgGGDC10S))</span>
 <span id="cb53-48"><a href="#cb53-48"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-49"><a href="#cb53-49"></a><span class="co">#      expr       min        lq      mean    median        uq      max neval cld</span></span>
-<span id="cb53-50"><a href="#cb53-50"></a><span class="co">#     dplyr 11151.289 11524.352 12388.270 11807.719 12031.959 31118.65   100   b</span></span>
-<span id="cb53-51"><a href="#cb53-51"></a><span class="co">#  collapse   260.609   274.442   304.975   316.167   323.753   405.64   100  a</span></span>
+<span id="cb53-49"><a href="#cb53-49"></a><span class="co">#      expr       min        lq       mean    median        uq       max neval cld</span></span>
+<span id="cb53-50"><a href="#cb53-50"></a><span class="co">#     dplyr 11606.897 11933.996 13132.9611 12422.191 12791.461 32610.873   100   b</span></span>
+<span id="cb53-51"><a href="#cb53-51"></a><span class="co">#  collapse   257.038   293.854   314.6761   314.605   345.842   401.623   100  a</span></span>
 <span id="cb53-52"><a href="#cb53-52"></a></span>
 <span id="cb53-53"><a href="#cb53-53"></a><span class="co"># Large</span></span>
 <span id="cb53-54"><a href="#cb53-54"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, mean.default, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-55"><a href="#cb53-55"></a>               <span class="dt">collapse =</span> <span class="kw">fmean</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-56"><a href="#cb53-56"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-57"><a href="#cb53-57"></a><span class="co">#      expr       min         lq       mean     median         uq        max neval cld</span></span>
-<span id="cb53-58"><a href="#cb53-58"></a><span class="co">#     dplyr 1297.2944 1438.65988 1518.14667 1520.49527 1656.09684 1702.34151    10   b</span></span>
-<span id="cb53-59"><a href="#cb53-59"></a><span class="co">#  collapse   43.1959   43.56049   44.67526   44.88919   45.46507   46.20808    10  a</span></span>
+<span id="cb53-57"><a href="#cb53-57"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
+<span id="cb53-58"><a href="#cb53-58"></a><span class="co">#     dplyr 1375.81000 1466.20992 1596.33399 1616.75351 1660.26688 1823.24360    10   b</span></span>
+<span id="cb53-59"><a href="#cb53-59"></a><span class="co">#  collapse   44.35611   45.83185   47.77972   48.07223   48.96852   50.41704    10  a</span></span>
 <span id="cb53-60"><a href="#cb53-60"></a></span>
 <span id="cb53-61"><a href="#cb53-61"></a><span class="co">## Median</span></span>
 <span id="cb53-62"><a href="#cb53-62"></a><span class="co"># Small</span></span>
 <span id="cb53-63"><a href="#cb53-63"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-64"><a href="#cb53-64"></a>               <span class="dt">collapse =</span> <span class="kw">fmedian</span>(cgGGDC10S))</span>
 <span id="cb53-65"><a href="#cb53-65"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-66"><a href="#cb53-66"></a><span class="co">#      expr       min         lq       mean     median         uq       max neval cld</span></span>
-<span id="cb53-67"><a href="#cb53-67"></a><span class="co">#     dplyr 49193.474 50737.4920 53360.0773 51968.2435 53670.2325 76091.065   100   b</span></span>
-<span id="cb53-68"><a href="#cb53-68"></a><span class="co">#  collapse   491.319   505.1525   558.5509   557.5865   586.8155   759.514   100  a</span></span>
+<span id="cb53-66"><a href="#cb53-66"></a><span class="co">#      expr       min        lq       mean    median         uq       max neval cld</span></span>
+<span id="cb53-67"><a href="#cb53-67"></a><span class="co">#     dplyr 51911.524 53378.785 56322.4122 54890.003 57287.2440 75711.240   100   b</span></span>
+<span id="cb53-68"><a href="#cb53-68"></a><span class="co">#  collapse   494.888   553.793   587.4494   576.775   622.2925   953.631   100  a</span></span>
 <span id="cb53-69"><a href="#cb53-69"></a></span>
 <span id="cb53-70"><a href="#cb53-70"></a><span class="co"># Large</span></span>
 <span id="cb53-71"><a href="#cb53-71"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, median, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-72"><a href="#cb53-72"></a>               <span class="dt">collapse =</span> <span class="kw">fmedian</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb53-73"><a href="#cb53-73"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-74"><a href="#cb53-74"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
-<span id="cb53-75"><a href="#cb53-75"></a><span class="co">#     dplyr 9448.74285 9448.74285 9555.37111 9555.37111 9661.99936 9661.99936     2   b</span></span>
-<span id="cb53-76"><a href="#cb53-76"></a><span class="co">#  collapse   87.67387   87.67387   88.16765   88.16765   88.66142   88.66142     2  a</span></span>
+<span id="cb53-74"><a href="#cb53-74"></a><span class="co">#      expr        min         lq        mean      median          uq         max neval cld</span></span>
+<span id="cb53-75"><a href="#cb53-75"></a><span class="co">#     dplyr 9984.66604 9984.66604 10165.73788 10165.73788 10346.80971 10346.80971     2   b</span></span>
+<span id="cb53-76"><a href="#cb53-76"></a><span class="co">#  collapse   90.08934   90.08934    90.97647    90.97647    91.86361    91.86361     2  a</span></span>
 <span id="cb53-77"><a href="#cb53-77"></a></span>
 <span id="cb53-78"><a href="#cb53-78"></a><span class="co">## Standard Deviation</span></span>
 <span id="cb53-79"><a href="#cb53-79"></a><span class="co"># Small</span></span>
 <span id="cb53-80"><a href="#cb53-80"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, sd, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-81"><a href="#cb53-81"></a>               <span class="dt">collapse =</span> <span class="kw">fsd</span>(cgGGDC10S))</span>
 <span id="cb53-82"><a href="#cb53-82"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-83"><a href="#cb53-83"></a><span class="co">#      expr       min         lq       mean    median         uq       max neval cld</span></span>
-<span id="cb53-84"><a href="#cb53-84"></a><span class="co">#     dplyr 23062.091 23747.5280 25054.2217 24247.549 25451.3025 32090.132   100   b</span></span>
-<span id="cb53-85"><a href="#cb53-85"></a><span class="co">#  collapse   428.844   440.0005   473.3309   485.518   489.0875   622.962   100  a</span></span>
+<span id="cb53-83"><a href="#cb53-83"></a><span class="co">#      expr       min         lq      mean    median        uq       max neval cld</span></span>
+<span id="cb53-84"><a href="#cb53-84"></a><span class="co">#     dplyr 24131.725 25285.4985 26925.154 25794.444 27472.781 36035.823   100   b</span></span>
+<span id="cb53-85"><a href="#cb53-85"></a><span class="co">#  collapse   427.506   483.0635   500.748   499.128   520.102   674.281   100  a</span></span>
 <span id="cb53-86"><a href="#cb53-86"></a></span>
 <span id="cb53-87"><a href="#cb53-87"></a><span class="co"># Large</span></span>
 <span id="cb53-88"><a href="#cb53-88"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, sd, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-89"><a href="#cb53-89"></a>               <span class="dt">collapse =</span> <span class="kw">fsd</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb53-90"><a href="#cb53-90"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-91"><a href="#cb53-91"></a><span class="co">#      expr        min         lq       mean     median        uq       max neval cld</span></span>
-<span id="cb53-92"><a href="#cb53-92"></a><span class="co">#     dplyr 4005.86147 4005.86147 4090.09343 4090.09343 4174.3254 4174.3254     2   b</span></span>
-<span id="cb53-93"><a href="#cb53-93"></a><span class="co">#  collapse   80.23403   80.23403   80.94357   80.94357   81.6531   81.6531     2  a</span></span>
+<span id="cb53-91"><a href="#cb53-91"></a><span class="co">#      expr        min         lq       mean     median         uq        max neval cld</span></span>
+<span id="cb53-92"><a href="#cb53-92"></a><span class="co">#     dplyr 4439.37215 4439.37215 4485.89032 4485.89032 4532.40850 4532.40850     2   b</span></span>
+<span id="cb53-93"><a href="#cb53-93"></a><span class="co">#  collapse   80.69404   80.69404   80.74759   80.74759   80.80114   80.80114     2  a</span></span>
 <span id="cb53-94"><a href="#cb53-94"></a></span>
 <span id="cb53-95"><a href="#cb53-95"></a><span class="co">## Maximum</span></span>
 <span id="cb53-96"><a href="#cb53-96"></a><span class="co"># Small</span></span>
 <span id="cb53-97"><a href="#cb53-97"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, max, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-98"><a href="#cb53-98"></a>               <span class="dt">collapse =</span> <span class="kw">fmax</span>(cgGGDC10S))</span>
 <span id="cb53-99"><a href="#cb53-99"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-100"><a href="#cb53-100"></a><span class="co">#      expr       min        lq       mean     median         uq       max neval cld</span></span>
-<span id="cb53-101"><a href="#cb53-101"></a><span class="co">#     dplyr 10950.923 11278.469 11854.4592 11534.6155 12198.4095 20697.869   100   b</span></span>
-<span id="cb53-102"><a href="#cb53-102"></a><span class="co">#  collapse   183.408   213.753   243.8971   245.4365   251.9075   600.204   100  a</span></span>
+<span id="cb53-100"><a href="#cb53-100"></a><span class="co">#      expr       min        lq       mean   median        uq       max neval cld</span></span>
+<span id="cb53-101"><a href="#cb53-101"></a><span class="co">#     dplyr 11197.688 11455.843 12189.7812 11678.07 12417.729 19523.328   100   b</span></span>
+<span id="cb53-102"><a href="#cb53-102"></a><span class="co">#  collapse   183.854   212.191   238.5329   241.42   268.641   513.631   100  a</span></span>
 <span id="cb53-103"><a href="#cb53-103"></a></span>
 <span id="cb53-104"><a href="#cb53-104"></a><span class="co"># Large</span></span>
 <span id="cb53-105"><a href="#cb53-105"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, max, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-106"><a href="#cb53-106"></a>               <span class="dt">collapse =</span> <span class="kw">fmax</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-107"><a href="#cb53-107"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-108"><a href="#cb53-108"></a><span class="co">#      expr        min         lq       mean     median        uq        max neval cld</span></span>
-<span id="cb53-109"><a href="#cb53-109"></a><span class="co">#     dplyr 1043.28961 1053.34804 1081.87716 1061.95773 1087.9202 1238.50209    10   b</span></span>
-<span id="cb53-110"><a href="#cb53-110"></a><span class="co">#  collapse   24.16298   24.23438   24.95289   24.97449   25.1657   27.24656    10  a</span></span>
+<span id="cb53-108"><a href="#cb53-108"></a><span class="co">#      expr        min         lq       mean    median         uq        max neval cld</span></span>
+<span id="cb53-109"><a href="#cb53-109"></a><span class="co">#     dplyr 1087.60284 1098.31323 1140.16451 1115.5109 1147.93149 1309.77563    10   b</span></span>
+<span id="cb53-110"><a href="#cb53-110"></a><span class="co">#  collapse   25.05903   25.89931   26.32954   26.4058   26.62714   27.41164    10  a</span></span>
 <span id="cb53-111"><a href="#cb53-111"></a></span>
 <span id="cb53-112"><a href="#cb53-112"></a><span class="co">## First Value</span></span>
 <span id="cb53-113"><a href="#cb53-113"></a><span class="co"># Small</span></span>
 <span id="cb53-114"><a href="#cb53-114"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gGGDC10S, first),</span>
 <span id="cb53-115"><a href="#cb53-115"></a>               <span class="dt">collapse =</span> <span class="kw">ffirst</span>(cgGGDC10S, <span class="dt">na.rm =</span> <span class="ot">FALSE</span>))</span>
 <span id="cb53-116"><a href="#cb53-116"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-117"><a href="#cb53-117"></a><span class="co">#      expr       min        lq       mean    median         uq       max neval cld</span></span>
-<span id="cb53-118"><a href="#cb53-118"></a><span class="co">#     dplyr 10229.340 10669.118 11194.4586 10828.206 11343.1755 18912.431   100   b</span></span>
-<span id="cb53-119"><a href="#cb53-119"></a><span class="co">#  collapse    59.797    79.209   105.7833    97.951   128.7425   193.672   100  a</span></span>
+<span id="cb53-117"><a href="#cb53-117"></a><span class="co">#      expr       min        lq        mean    median        uq       max neval cld</span></span>
+<span id="cb53-118"><a href="#cb53-118"></a><span class="co">#     dplyr 10644.788 10972.334 11744.53784 11245.438 11894.281 17999.393   100   b</span></span>
+<span id="cb53-119"><a href="#cb53-119"></a><span class="co">#  collapse    56.674    68.499    97.36251    87.018   123.611   149.047   100  a</span></span>
 <span id="cb53-120"><a href="#cb53-120"></a></span>
 <span id="cb53-121"><a href="#cb53-121"></a><span class="co"># Large</span></span>
 <span id="cb53-122"><a href="#cb53-122"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, first),</span>
 <span id="cb53-123"><a href="#cb53-123"></a>               <span class="dt">collapse =</span> <span class="kw">ffirst</span>(cgdata, <span class="dt">na.rm =</span> <span class="ot">FALSE</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb53-124"><a href="#cb53-124"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-125"><a href="#cb53-125"></a><span class="co">#      expr         min          lq      mean     median          uq         max neval cld</span></span>
-<span id="cb53-126"><a href="#cb53-126"></a><span class="co">#     dplyr 1148.937016 1243.711587 1329.5020 1346.93653 1390.871643 1528.336071    10   b</span></span>
-<span id="cb53-127"><a href="#cb53-127"></a><span class="co">#  collapse    4.257652    4.352256    4.4457    4.38684    4.513351    4.694974    10  a</span></span>
+<span id="cb53-125"><a href="#cb53-125"></a><span class="co">#      expr         min          lq        mean     median        uq         max neval cld</span></span>
+<span id="cb53-126"><a href="#cb53-126"></a><span class="co">#     dplyr 1211.604755 1313.805692 1399.628187 1380.34833 1458.9910 1649.790331    10   b</span></span>
+<span id="cb53-127"><a href="#cb53-127"></a><span class="co">#  collapse    4.462029    4.543692    4.908321    4.60996    4.8043    7.223855    10  a</span></span>
 <span id="cb53-128"><a href="#cb53-128"></a></span>
 <span id="cb53-129"><a href="#cb53-129"></a><span class="co">## Number of Distinct Values</span></span>
 <span id="cb53-130"><a href="#cb53-130"></a><span class="co"># Small</span></span>
@@ -1915,21 +1872,21 @@ pre[class] {
 <span id="cb53-132"><a href="#cb53-132"></a>               <span class="dt">collapse =</span> <span class="kw">fNdistinct</span>(cgGGDC10S))</span>
 <span id="cb53-133"><a href="#cb53-133"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb53-134"><a href="#cb53-134"></a><span class="co">#      expr       min        lq      mean   median        uq        max neval cld</span></span>
-<span id="cb53-135"><a href="#cb53-135"></a><span class="co">#     dplyr 65.389148 67.188865 71.079318 68.63940 71.151994 219.626696   100   b</span></span>
-<span id="cb53-136"><a href="#cb53-136"></a><span class="co">#  collapse  1.246817  1.292334  1.370013  1.33272  1.417061   1.988927   100  a</span></span>
+<span id="cb53-135"><a href="#cb53-135"></a><span class="co">#     dplyr 67.888968 70.023594 73.453264 71.60353 75.698969 100.882276   100   b</span></span>
+<span id="cb53-136"><a href="#cb53-136"></a><span class="co">#  collapse  1.308844  1.348337  1.426595  1.39497  1.488682   2.283002   100  a</span></span>
 <span id="cb53-137"><a href="#cb53-137"></a></span>
 <span id="cb53-138"><a href="#cb53-138"></a><span class="co"># Large</span></span>
 <span id="cb53-139"><a href="#cb53-139"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">summarise_all</span>(gdata, n_distinct, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb53-140"><a href="#cb53-140"></a>               <span class="dt">collapse =</span> <span class="kw">fNdistinct</span>(cgdata), <span class="dt">times =</span> <span class="dv">5</span>)</span>
 <span id="cb53-141"><a href="#cb53-141"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb53-142"><a href="#cb53-142"></a><span class="co">#      expr        min        lq       mean     median        uq        max neval cld</span></span>
-<span id="cb53-143"><a href="#cb53-143"></a><span class="co">#     dplyr 12713.3442 13077.167 13102.5746 13167.2314 13199.612 13355.5185     5   b</span></span>
-<span id="cb53-144"><a href="#cb53-144"></a><span class="co">#  collapse   305.4437   307.343   313.8839   308.1359   316.446   332.0508     5  a</span></span>
+<span id="cb53-142"><a href="#cb53-142"></a><span class="co">#      expr        min         lq       mean     median        uq        max neval cld</span></span>
+<span id="cb53-143"><a href="#cb53-143"></a><span class="co">#     dplyr 13415.7085 13595.9671 13695.4467 13643.5005 13848.312 13973.7459     5   b</span></span>
+<span id="cb53-144"><a href="#cb53-144"></a><span class="co">#  collapse   313.1502   318.9737   331.4337   324.1024   336.696   364.2464     5  a</span></span>
 <span id="cb53-145"><a href="#cb53-145"></a></span>
 <span id="cb53-146"><a href="#cb53-146"></a><span class="kw">gc</span>()</span>
 <span id="cb53-147"><a href="#cb53-147"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb53-148"><a href="#cb53-148"></a><span class="co"># Ncells  1965766 105.0    3717688 198.6  3717688 198.6</span></span>
-<span id="cb53-149"><a href="#cb53-149"></a><span class="co"># Vcells 20532054 156.7   57610832 439.6 66845873 510.0</span></span></code></pre></div>
+<span id="cb53-148"><a href="#cb53-148"></a><span class="co"># Ncells  1967054 105.1    3719727 198.7  3719727 198.7</span></span>
+<span id="cb53-149"><a href="#cb53-149"></a><span class="co"># Vcells 20534100 156.7   57612820 439.6 66847863 510.1</span></span></code></pre></div>
 <!-- The benchmarks show that at this data size efficient primitives like `base::sum` or `base::max` can still deliver very decent performance with `summarize`. Less optimized base functions like `mean`, `median` and `sd` however take multiple seconds to compute, and here `collapse` fast functions really prove to be very useful complements to the *dplyr* system. -->
 <!-- Weighted statistics are also performed extremely fast by *collapse* functions. I would not know how to compute weighted statistics by groups in *dplyr*, as it would require the weighting variable to be split as well, which seems impossible in native *dplyr*. -->
 <!-- A further highlight of *collapse* is the extremely fast statistical mode function, which can also compute a weighted mode. Fast categorical aggregation has been an issue in R, and defining a mode function from base R and applying it to 17000 groups will probably let it run at least a minute. `fmode` reduces this time to half a second. -->
@@ -1941,58 +1898,58 @@ pre[class] {
 <span id="cb54-2"><a href="#cb54-2"></a><span class="co"># Small</span></span>
 <span id="cb54-3"><a href="#cb54-3"></a><span class="kw">microbenchmark</span>(<span class="kw">fmean</span>(cgGGDC10S, SUM)) </span>
 <span id="cb54-4"><a href="#cb54-4"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb54-5"><a href="#cb54-5"></a><span class="co">#                   expr     min      lq     mean  median      uq     max neval</span></span>
-<span id="cb54-6"><a href="#cb54-6"></a><span class="co">#  fmean(cgGGDC10S, SUM) 288.276 325.761 336.1944 344.727 347.627 432.415   100</span></span>
+<span id="cb54-5"><a href="#cb54-5"></a><span class="co">#                   expr     min       lq    mean  median     uq     max neval</span></span>
+<span id="cb54-6"><a href="#cb54-6"></a><span class="co">#  fmean(cgGGDC10S, SUM) 284.706 288.7225 307.188 299.655 315.72 415.456   100</span></span>
 <span id="cb54-7"><a href="#cb54-7"></a></span>
 <span id="cb54-8"><a href="#cb54-8"></a><span class="co"># Large </span></span>
 <span id="cb54-9"><a href="#cb54-9"></a><span class="kw">microbenchmark</span>(<span class="kw">fmean</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb54-10"><a href="#cb54-10"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb54-11"><a href="#cb54-11"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-12"><a href="#cb54-12"></a><span class="co">#  fmean(cgdata, SUM) 48.38978 49.62633 50.98619 50.54627 52.10435 55.63328    10</span></span>
+<span id="cb54-12"><a href="#cb54-12"></a><span class="co">#  fmean(cgdata, SUM) 49.32106 50.58572 51.18905 50.92822 51.98873 53.33461    10</span></span>
 <span id="cb54-13"><a href="#cb54-13"></a></span>
 <span id="cb54-14"><a href="#cb54-14"></a><span class="co">## Weighted Standard-Deviation</span></span>
 <span id="cb54-15"><a href="#cb54-15"></a><span class="co"># Small</span></span>
 <span id="cb54-16"><a href="#cb54-16"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(cgGGDC10S, SUM)) </span>
 <span id="cb54-17"><a href="#cb54-17"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb54-18"><a href="#cb54-18"></a><span class="co">#                 expr     min      lq     mean   median       uq     max neval</span></span>
-<span id="cb54-19"><a href="#cb54-19"></a><span class="co">#  fsd(cgGGDC10S, SUM) 440.001 447.587 461.4876 460.9745 462.9825 585.031   100</span></span>
+<span id="cb54-18"><a href="#cb54-18"></a><span class="co">#                 expr     min       lq    mean  median      uq      max neval</span></span>
+<span id="cb54-19"><a href="#cb54-19"></a><span class="co">#  fsd(cgGGDC10S, SUM) 439.108 469.6765 526.309 501.136 520.994 1052.252   100</span></span>
 <span id="cb54-20"><a href="#cb54-20"></a></span>
 <span id="cb54-21"><a href="#cb54-21"></a><span class="co"># Large </span></span>
 <span id="cb54-22"><a href="#cb54-22"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb54-23"><a href="#cb54-23"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-24"><a href="#cb54-24"></a><span class="co">#              expr      min      lq     mean   median       uq      max neval</span></span>
-<span id="cb54-25"><a href="#cb54-25"></a><span class="co">#  fsd(cgdata, SUM) 77.75602 78.2451 79.50143 79.19427 80.87663 81.94852    10</span></span>
+<span id="cb54-24"><a href="#cb54-24"></a><span class="co">#              expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb54-25"><a href="#cb54-25"></a><span class="co">#  fsd(cgdata, SUM) 81.44954 82.68564 82.92077 83.05335 83.54467 84.41173    10</span></span>
 <span id="cb54-26"><a href="#cb54-26"></a></span>
 <span id="cb54-27"><a href="#cb54-27"></a><span class="co">## Statistical Mode</span></span>
 <span id="cb54-28"><a href="#cb54-28"></a><span class="co"># Small</span></span>
 <span id="cb54-29"><a href="#cb54-29"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgGGDC10S)) </span>
 <span id="cb54-30"><a href="#cb54-30"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb54-31"><a href="#cb54-31"></a><span class="co">#              expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-32"><a href="#cb54-32"></a><span class="co">#  fmode(cgGGDC10S) 2.094242 2.109414 2.186535 2.123247 2.215844 2.797529   100</span></span>
+<span id="cb54-32"><a href="#cb54-32"></a><span class="co">#  fmode(cgGGDC10S) 1.581948 1.618316 1.714822 1.719392 1.785436 2.170995   100</span></span>
 <span id="cb54-33"><a href="#cb54-33"></a></span>
 <span id="cb54-34"><a href="#cb54-34"></a><span class="co"># Large </span></span>
 <span id="cb54-35"><a href="#cb54-35"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb54-36"><a href="#cb54-36"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb54-37"><a href="#cb54-37"></a><span class="co">#           expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-38"><a href="#cb54-38"></a><span class="co">#  fmode(cgdata) 458.2787 464.5704 500.8933 493.9852 531.8195 569.1526    10</span></span>
+<span id="cb54-38"><a href="#cb54-38"></a><span class="co">#  fmode(cgdata) 372.7925 373.9126 398.7384 382.0784 413.3698 450.2717    10</span></span>
 <span id="cb54-39"><a href="#cb54-39"></a></span>
 <span id="cb54-40"><a href="#cb54-40"></a><span class="co">## Weighted Statistical Mode</span></span>
 <span id="cb54-41"><a href="#cb54-41"></a><span class="co"># Small</span></span>
 <span id="cb54-42"><a href="#cb54-42"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgGGDC10S, SUM)) </span>
 <span id="cb54-43"><a href="#cb54-43"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb54-44"><a href="#cb54-44"></a><span class="co">#                   expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb54-45"><a href="#cb54-45"></a><span class="co">#  fmode(cgGGDC10S, SUM) 1.764465 1.785215 1.937573 1.849028 2.015925 3.221464   100</span></span>
+<span id="cb54-45"><a href="#cb54-45"></a><span class="co">#  fmode(cgGGDC10S, SUM) 1.812212 1.849473 1.971727 1.897667 2.053185 2.732374   100</span></span>
 <span id="cb54-46"><a href="#cb54-46"></a></span>
 <span id="cb54-47"><a href="#cb54-47"></a><span class="co"># Large </span></span>
 <span id="cb54-48"><a href="#cb54-48"></a><span class="kw">microbenchmark</span>(<span class="kw">fmode</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>) </span>
 <span id="cb54-49"><a href="#cb54-49"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb54-50"><a href="#cb54-50"></a><span class="co">#                expr      min       lq    mean   median      uq      max neval</span></span>
-<span id="cb54-51"><a href="#cb54-51"></a><span class="co">#  fmode(cgdata, SUM) 424.7289 450.3931 463.624 459.4651 465.009 527.9559    10</span></span>
+<span id="cb54-50"><a href="#cb54-50"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb54-51"><a href="#cb54-51"></a><span class="co">#  fmode(cgdata, SUM) 475.0108 477.3567 493.2336 480.5965 484.4472 551.1018    10</span></span>
 <span id="cb54-52"><a href="#cb54-52"></a></span>
 <span id="cb54-53"><a href="#cb54-53"></a><span class="kw">gc</span>()</span>
 <span id="cb54-54"><a href="#cb54-54"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb54-55"><a href="#cb54-55"></a><span class="co"># Ncells  1965220 105.0    3717688 198.6  3717688 198.6</span></span>
-<span id="cb54-56"><a href="#cb54-56"></a><span class="co"># Vcells 20528687 156.7   72302159 551.7 72302156 551.7</span></span></code></pre></div>
+<span id="cb54-55"><a href="#cb54-55"></a><span class="co"># Ncells  1966508 105.1    3719727 198.7  3719727 198.7</span></span>
+<span id="cb54-56"><a href="#cb54-56"></a><span class="co"># Vcells 20530726 156.7   72304503 551.7 72304469 551.7</span></span></code></pre></div>
 </div>
 <div id="transformation" class="section level3">
 <h3>3.2 Transformation</h3>
@@ -2002,17 +1959,17 @@ pre[class] {
 <span id="cb55-4"><a href="#cb55-4"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb55-5"><a href="#cb55-5"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgGGDC10S, <span class="dt">TRA =</span> <span class="st">&quot;replace_fill&quot;</span>))</span>
 <span id="cb55-6"><a href="#cb55-6"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb55-7"><a href="#cb55-7"></a><span class="co">#      expr      min       lq      mean   median       uq       max neval cld</span></span>
-<span id="cb55-8"><a href="#cb55-8"></a><span class="co">#     dplyr 8737.087 9149.867 9878.1031 9567.778 9981.896 22892.517   100   b</span></span>
-<span id="cb55-9"><a href="#cb55-9"></a><span class="co">#  collapse  296.755  341.603  362.2688  356.775  373.287   514.524   100  a</span></span>
+<span id="cb55-7"><a href="#cb55-7"></a><span class="co">#      expr      min       lq      mean    median        uq       max neval cld</span></span>
+<span id="cb55-8"><a href="#cb55-8"></a><span class="co">#     dplyr 9045.883 9265.883 9924.1471 9391.0555 9862.5155 22245.884   100   b</span></span>
+<span id="cb55-9"><a href="#cb55-9"></a><span class="co">#  collapse  290.061  313.712  366.8871  345.6185  373.2865   960.771   100  a</span></span>
 <span id="cb55-10"><a href="#cb55-10"></a></span>
 <span id="cb55-11"><a href="#cb55-11"></a><span class="co"># Large</span></span>
 <span id="cb55-12"><a href="#cb55-12"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, sum, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>),</span>
 <span id="cb55-13"><a href="#cb55-13"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgdata, <span class="dt">TRA =</span> <span class="st">&quot;replace_fill&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb55-14"><a href="#cb55-14"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb55-15"><a href="#cb55-15"></a><span class="co">#      expr       min        lq     mean    median         uq       max neval cld</span></span>
-<span id="cb55-16"><a href="#cb55-16"></a><span class="co">#     dplyr 865.10150 908.00154 990.0571 955.10077 1070.63078 1210.0101    10   b</span></span>
-<span id="cb55-17"><a href="#cb55-17"></a><span class="co">#  collapse  52.86966  55.18569 108.0811  65.81353   83.25022  296.2899    10  a</span></span>
+<span id="cb55-15"><a href="#cb55-15"></a><span class="co">#      expr       min       lq     mean    median       uq       max neval cld</span></span>
+<span id="cb55-16"><a href="#cb55-16"></a><span class="co">#     dplyr 896.51298 900.1718 958.7575 926.60434 1000.205 1162.7375    10   b</span></span>
+<span id="cb55-17"><a href="#cb55-17"></a><span class="co">#  collapse  56.56008  58.6088 131.2743  82.82242  238.953  273.5265    10  a</span></span>
 <span id="cb55-18"><a href="#cb55-18"></a></span>
 <span id="cb55-19"><a href="#cb55-19"></a><span class="co">## Dividing by group sum</span></span>
 <span id="cb55-20"><a href="#cb55-20"></a><span class="co"># Small</span></span>
@@ -2020,50 +1977,50 @@ pre[class] {
 <span id="cb55-22"><a href="#cb55-22"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgGGDC10S, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>))</span>
 <span id="cb55-23"><a href="#cb55-23"></a><span class="co"># Unit: microseconds</span></span>
 <span id="cb55-24"><a href="#cb55-24"></a><span class="co">#      expr      min       lq       mean    median        uq       max neval cld</span></span>
-<span id="cb55-25"><a href="#cb55-25"></a><span class="co">#     dplyr 9015.546 9481.429 10103.7975 9736.9060 10344.695 22450.731   100   b</span></span>
-<span id="cb55-26"><a href="#cb55-26"></a><span class="co">#  collapse  556.918  584.585   621.4183  612.6985   649.291   778.702   100  a</span></span>
+<span id="cb55-25"><a href="#cb55-25"></a><span class="co">#     dplyr 9329.250 9668.398 10477.8064 9859.3920 10483.246 22776.918   100   b</span></span>
+<span id="cb55-26"><a href="#cb55-26"></a><span class="co">#  collapse  553.347  581.907   638.1073  606.6735   641.481  1286.978   100  a</span></span>
 <span id="cb55-27"><a href="#cb55-27"></a></span>
 <span id="cb55-28"><a href="#cb55-28"></a><span class="co"># Large</span></span>
 <span id="cb55-29"><a href="#cb55-29"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x<span class="op">/</span><span class="kw">sum</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb55-30"><a href="#cb55-30"></a>               <span class="dt">collapse =</span> <span class="kw">fsum</span>(cgdata, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb55-31"><a href="#cb55-31"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb55-32"><a href="#cb55-32"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb55-33"><a href="#cb55-33"></a><span class="co">#     dplyr 1096.4123 1297.9954 1425.3915 1494.1336 1549.1326 1562.5218    10   b</span></span>
-<span id="cb55-34"><a href="#cb55-34"></a><span class="co">#  collapse  102.6977  104.9513  119.0727  115.3647  136.1957  144.4036    10  a</span></span>
+<span id="cb55-33"><a href="#cb55-33"></a><span class="co">#     dplyr 1215.1863 1547.0044 1506.3561 1566.3318 1578.0806 1597.5896    10   b</span></span>
+<span id="cb55-34"><a href="#cb55-34"></a><span class="co">#  collapse  107.9999  116.2787  125.6823  121.5199  138.2086  147.9119    10  a</span></span>
 <span id="cb55-35"><a href="#cb55-35"></a></span>
 <span id="cb55-36"><a href="#cb55-36"></a><span class="co">## Centering</span></span>
 <span id="cb55-37"><a href="#cb55-37"></a><span class="co"># Small</span></span>
 <span id="cb55-38"><a href="#cb55-38"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb55-39"><a href="#cb55-39"></a>               <span class="dt">collapse =</span> <span class="kw">fwithin</span>(cgGGDC10S))</span>
 <span id="cb55-40"><a href="#cb55-40"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb55-41"><a href="#cb55-41"></a><span class="co">#      expr       min         lq       mean    median        uq      max neval cld</span></span>
-<span id="cb55-42"><a href="#cb55-42"></a><span class="co">#     dplyr 12090.640 12434.6970 13523.1362 12739.038 13131.960 46424.51   100   b</span></span>
-<span id="cb55-43"><a href="#cb55-43"></a><span class="co">#  collapse   320.406   347.1815   371.0375   370.609   383.104   593.51   100  a</span></span>
+<span id="cb55-41"><a href="#cb55-41"></a><span class="co">#      expr      min         lq       mean    median         uq       max neval cld</span></span>
+<span id="cb55-42"><a href="#cb55-42"></a><span class="co">#     dplyr 12383.81 12790.5690 14161.4231 13194.423 13759.5955 52222.559   100   b</span></span>
+<span id="cb55-43"><a href="#cb55-43"></a><span class="co">#  collapse   309.25   339.1485   361.0725   362.353   377.0795   438.661   100  a</span></span>
 <span id="cb55-44"><a href="#cb55-44"></a></span>
 <span id="cb55-45"><a href="#cb55-45"></a><span class="co"># Large</span></span>
 <span id="cb55-46"><a href="#cb55-46"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb55-47"><a href="#cb55-47"></a>               <span class="dt">collapse =</span> <span class="kw">fwithin</span>(cgdata), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb55-48"><a href="#cb55-48"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb55-49"><a href="#cb55-49"></a><span class="co">#      expr       min         lq       mean    median        uq       max neval cld</span></span>
-<span id="cb55-50"><a href="#cb55-50"></a><span class="co">#     dplyr 1958.9166 2646.70064 2589.65285 2668.9113 2728.9593 2767.7784    10   b</span></span>
-<span id="cb55-51"><a href="#cb55-51"></a><span class="co">#  collapse   63.8188   74.85987   87.06073   80.4431   97.5895  129.7327    10  a</span></span>
+<span id="cb55-49"><a href="#cb55-49"></a><span class="co">#      expr       min         lq       mean     median        uq       max neval cld</span></span>
+<span id="cb55-50"><a href="#cb55-50"></a><span class="co">#     dplyr 2062.3921 2745.81565 2687.54961 2796.63632 2828.0760 2835.9170    10   b</span></span>
+<span id="cb55-51"><a href="#cb55-51"></a><span class="co">#  collapse   65.8273   74.87274   87.88344   82.01895   95.5224  125.1305    10  a</span></span>
 <span id="cb55-52"><a href="#cb55-52"></a></span>
 <span id="cb55-53"><a href="#cb55-53"></a><span class="co">## Centering and Scaling (Standardizing)</span></span>
 <span id="cb55-54"><a href="#cb55-54"></a><span class="co"># Small</span></span>
 <span id="cb55-55"><a href="#cb55-55"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) (x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))<span class="op">/</span><span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb55-56"><a href="#cb55-56"></a>               <span class="dt">collapse =</span> <span class="kw">fscale</span>(cgGGDC10S))</span>
 <span id="cb55-57"><a href="#cb55-57"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb55-58"><a href="#cb55-58"></a><span class="co">#      expr       min        lq       mean    median        uq       max neval cld</span></span>
-<span id="cb55-59"><a href="#cb55-59"></a><span class="co">#     dplyr 29549.196 30809.177 34210.6659 31922.120 34752.223 60542.004   100   b</span></span>
-<span id="cb55-60"><a href="#cb55-60"></a><span class="co">#  collapse   498.012   528.804   582.1931   553.124   596.634   896.958   100  a</span></span>
+<span id="cb55-58"><a href="#cb55-58"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
+<span id="cb55-59"><a href="#cb55-59"></a><span class="co">#     dplyr 30501.908 32253.653 34446.165 33330.225 34562.315 53902.234   100   b</span></span>
+<span id="cb55-60"><a href="#cb55-60"></a><span class="co">#  collapse   495.335   531.258   565.543   545.761   580.345   908.114   100  a</span></span>
 <span id="cb55-61"><a href="#cb55-61"></a></span>
 <span id="cb55-62"><a href="#cb55-62"></a><span class="co"># Large</span></span>
 <span id="cb55-63"><a href="#cb55-63"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) (x<span class="op">-</span><span class="kw">mean.default</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))<span class="op">/</span><span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)),</span>
 <span id="cb55-64"><a href="#cb55-64"></a>               <span class="dt">collapse =</span> <span class="kw">fscale</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb55-65"><a href="#cb55-65"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb55-66"><a href="#cb55-66"></a><span class="co">#      expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb55-67"><a href="#cb55-67"></a><span class="co">#     dplyr 6215.2593 6215.2593 6445.2813 6445.2813 6675.3033 6675.3033     2   b</span></span>
-<span id="cb55-68"><a href="#cb55-68"></a><span class="co">#  collapse  103.7727  103.7727  107.9616  107.9616  112.1506  112.1506     2  a</span></span>
+<span id="cb55-67"><a href="#cb55-67"></a><span class="co">#     dplyr 6118.1886 6118.1886 6339.5573 6339.5573 6560.9259 6560.9259     2   b</span></span>
+<span id="cb55-68"><a href="#cb55-68"></a><span class="co">#  collapse  106.9115  106.9115  109.3924  109.3924  111.8734  111.8734     2  a</span></span>
 <span id="cb55-69"><a href="#cb55-69"></a></span>
 <span id="cb55-70"><a href="#cb55-70"></a><span class="co">## Lag</span></span>
 <span id="cb55-71"><a href="#cb55-71"></a><span class="co"># Small</span></span>
@@ -2073,10 +2030,10 @@ pre[class] {
 <span id="cb55-75"><a href="#cb55-75"></a>               <span class="dt">collapse_ordered =</span> <span class="kw">flag</span>(cgGGDC10S, <span class="dt">t =</span> Year))</span>
 <span id="cb55-76"><a href="#cb55-76"></a><span class="co"># Unit: microseconds</span></span>
 <span id="cb55-77"><a href="#cb55-77"></a><span class="co">#                expr        min          lq        mean      median          uq        max neval cld</span></span>
-<span id="cb55-78"><a href="#cb55-78"></a><span class="co">#     dplyr_unordered  43906.329  45347.4865  46894.3694  46259.1710  47563.7770  59132.307   100  b </span></span>
-<span id="cb55-79"><a href="#cb55-79"></a><span class="co">#  collapse_unordered    338.702    403.6315    435.3017    443.3475    469.4525    630.994   100 a  </span></span>
-<span id="cb55-80"><a href="#cb55-80"></a><span class="co">#       dplyr_ordered 107641.683 112130.4900 114552.2151 114408.5860 116274.5715 136275.178   100   c</span></span>
-<span id="cb55-81"><a href="#cb55-81"></a><span class="co">#    collapse_ordered    312.820    349.4125    373.1706    373.7330    387.5660    641.705   100 a</span></span>
+<span id="cb55-78"><a href="#cb55-78"></a><span class="co">#     dplyr_unordered  45760.002  47391.2590  50338.2022  49093.4705  52080.8745  94052.013   100  b </span></span>
+<span id="cb55-79"><a href="#cb55-79"></a><span class="co">#  collapse_unordered    351.644    415.0100    465.4855    449.3715    489.0875   1270.913   100 a  </span></span>
+<span id="cb55-80"><a href="#cb55-80"></a><span class="co">#       dplyr_ordered 110891.161 114772.1755 118616.0619 117788.5850 121807.9360 130781.304   100   c</span></span>
+<span id="cb55-81"><a href="#cb55-81"></a><span class="co">#    collapse_ordered    313.712    366.8155    380.7966    378.8640    399.8380    539.067   100 a</span></span>
 <span id="cb55-82"><a href="#cb55-82"></a></span>
 <span id="cb55-83"><a href="#cb55-83"></a><span class="co"># Large</span></span>
 <span id="cb55-84"><a href="#cb55-84"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gdata, dplyr<span class="op">::</span>lag),</span>
@@ -2085,10 +2042,10 @@ pre[class] {
 <span id="cb55-87"><a href="#cb55-87"></a>               <span class="dt">collapse_ordered =</span> <span class="kw">flag</span>(cgdata, <span class="dt">t =</span> Year), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb55-88"><a href="#cb55-88"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb55-89"><a href="#cb55-89"></a><span class="co">#                expr         min          lq        mean      median          uq         max neval</span></span>
-<span id="cb55-90"><a href="#cb55-90"></a><span class="co">#     dplyr_unordered  8486.05989  8486.05989  8627.22839  8627.22839  8768.39690  8768.39690     2</span></span>
-<span id="cb55-91"><a href="#cb55-91"></a><span class="co">#  collapse_unordered    28.62323    28.62323    34.22855    34.22855    39.83387    39.83387     2</span></span>
-<span id="cb55-92"><a href="#cb55-92"></a><span class="co">#       dplyr_ordered 21386.81079 21386.81079 21700.49069 21700.49069 22014.17060 22014.17060     2</span></span>
-<span id="cb55-93"><a href="#cb55-93"></a><span class="co">#    collapse_ordered    65.01832    65.01832    76.41236    76.41236    87.80641    87.80641     2</span></span>
+<span id="cb55-90"><a href="#cb55-90"></a><span class="co">#     dplyr_unordered  8870.14243  8870.14243  9001.75576  9001.75576  9133.36909  9133.36909     2</span></span>
+<span id="cb55-91"><a href="#cb55-91"></a><span class="co">#  collapse_unordered    37.08629    37.08629    43.02919    43.02919    48.97209    48.97209     2</span></span>
+<span id="cb55-92"><a href="#cb55-92"></a><span class="co">#       dplyr_ordered 22834.52429 22834.52429 23137.17759 23137.17759 23439.83089 23439.83089     2</span></span>
+<span id="cb55-93"><a href="#cb55-93"></a><span class="co">#    collapse_ordered    81.50532    81.50532    86.48700    86.48700    91.46869    91.46869     2</span></span>
 <span id="cb55-94"><a href="#cb55-94"></a><span class="co">#  cld</span></span>
 <span id="cb55-95"><a href="#cb55-95"></a><span class="co">#   b </span></span>
 <span id="cb55-96"><a href="#cb55-96"></a><span class="co">#  a  </span></span>
@@ -2100,71 +2057,71 @@ pre[class] {
 <span id="cb55-102"><a href="#cb55-102"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gGGDC10S, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">lag</span>(x)),</span>
 <span id="cb55-103"><a href="#cb55-103"></a>               <span class="dt">collapse_unordered =</span> <span class="kw">fdiff</span>(cgGGDC10S))</span>
 <span id="cb55-104"><a href="#cb55-104"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb55-105"><a href="#cb55-105"></a><span class="co">#                expr       min        lq       mean     median        uq       max neval cld</span></span>
-<span id="cb55-106"><a href="#cb55-106"></a><span class="co">#     dplyr_unordered 57758.310 59035.917 61826.3411 60604.7015 62783.730 99087.557   100   b</span></span>
-<span id="cb55-107"><a href="#cb55-107"></a><span class="co">#  collapse_unordered   376.187   402.962   461.1171   473.4695   495.558   631.887   100  a</span></span>
+<span id="cb55-105"><a href="#cb55-105"></a><span class="co">#                expr       min        lq       mean    median        uq       max neval cld</span></span>
+<span id="cb55-106"><a href="#cb55-106"></a><span class="co">#     dplyr_unordered 60427.711 61844.546 64663.4159 64135.582 67085.054 76104.831   100   b</span></span>
+<span id="cb55-107"><a href="#cb55-107"></a><span class="co">#  collapse_unordered   378.419   424.382   463.0803   469.453   498.682   586.369   100  a</span></span>
 <span id="cb55-108"><a href="#cb55-108"></a></span>
 <span id="cb55-109"><a href="#cb55-109"></a><span class="co"># Large</span></span>
 <span id="cb55-110"><a href="#cb55-110"></a><span class="kw">microbenchmark</span>(<span class="dt">dplyr_unordered =</span> <span class="kw">mutate_all</span>(gdata, <span class="cf">function</span>(x) x <span class="op">-</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">lag</span>(x)),</span>
 <span id="cb55-111"><a href="#cb55-111"></a>               <span class="dt">collapse_unordered =</span> <span class="kw">fdiff</span>(cgdata), <span class="dt">times =</span> <span class="dv">2</span>)</span>
 <span id="cb55-112"><a href="#cb55-112"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb55-113"><a href="#cb55-113"></a><span class="co">#                expr         min          lq        mean      median          uq         max neval</span></span>
-<span id="cb55-114"><a href="#cb55-114"></a><span class="co">#     dplyr_unordered 11651.41704 11651.41704 11826.30738 11826.30738 12001.19773 12001.19773     2</span></span>
-<span id="cb55-115"><a href="#cb55-115"></a><span class="co">#  collapse_unordered    29.34303    29.34303    46.95733    46.95733    64.57162    64.57162     2</span></span>
+<span id="cb55-114"><a href="#cb55-114"></a><span class="co">#     dplyr_unordered 12388.99348 12388.99348 12484.51231 12484.51231 12580.03114 12580.03114     2</span></span>
+<span id="cb55-115"><a href="#cb55-115"></a><span class="co">#  collapse_unordered    38.11266    38.11266    47.58404    47.58404    57.05542    57.05542     2</span></span>
 <span id="cb55-116"><a href="#cb55-116"></a><span class="co">#  cld</span></span>
 <span id="cb55-117"><a href="#cb55-117"></a><span class="co">#    b</span></span>
 <span id="cb55-118"><a href="#cb55-118"></a><span class="co">#   a</span></span>
 <span id="cb55-119"><a href="#cb55-119"></a></span>
 <span id="cb55-120"><a href="#cb55-120"></a><span class="kw">gc</span>()</span>
 <span id="cb55-121"><a href="#cb55-121"></a><span class="co">#            used  (Mb) gc trigger  (Mb) max used  (Mb)</span></span>
-<span id="cb55-122"><a href="#cb55-122"></a><span class="co"># Ncells  1967585 105.1    4756390 254.1  4756390 254.1</span></span>
-<span id="cb55-123"><a href="#cb55-123"></a><span class="co"># Vcells 21577603 164.7   72302159 551.7 72302159 551.7</span></span></code></pre></div>
+<span id="cb55-122"><a href="#cb55-122"></a><span class="co"># Ncells  1968851 105.2    4900079 261.7  4900079 261.7</span></span>
+<span id="cb55-123"><a href="#cb55-123"></a><span class="co"># Vcells 21579594 164.7   72304503 551.7 72304503 551.7</span></span></code></pre></div>
 <p>Below again some benchmarks for transformations not easily of efficiently performed with <em>dplyr</em>, such as centering on the overall mean, mean-preserving scaling, weighted scaling and centering, sequences of lags / leads, (iterated) panel-differences and growth rates.</p>
 <div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1"></a><span class="co"># Centering on overall mean</span></span>
 <span id="cb56-2"><a href="#cb56-2"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(cgdata, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-3"><a href="#cb56-3"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb56-4"><a href="#cb56-4"></a><span class="co">#                                    expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb56-5"><a href="#cb56-5"></a><span class="co">#  fwithin(cgdata, mean = &quot;overall.mean&quot;) 61.23413 66.18972 89.89963 96.50244 101.4866 117.7398    10</span></span>
+<span id="cb56-5"><a href="#cb56-5"></a><span class="co">#  fwithin(cgdata, mean = &quot;overall.mean&quot;) 64.69384 66.40832 85.50298 90.52019 98.16998 99.93355    10</span></span>
 <span id="cb56-6"><a href="#cb56-6"></a></span>
 <span id="cb56-7"><a href="#cb56-7"></a><span class="co"># Weighted Centering</span></span>
 <span id="cb56-8"><a href="#cb56-8"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-9"><a href="#cb56-9"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb56-10"><a href="#cb56-10"></a><span class="co">#                  expr      min       lq     mean   median     uq      max neval</span></span>
-<span id="cb56-11"><a href="#cb56-11"></a><span class="co">#  fwithin(cgdata, SUM) 66.09958 71.73078 87.59395 84.45821 106.51 111.4044    10</span></span>
+<span id="cb56-10"><a href="#cb56-10"></a><span class="co">#                  expr      min       lq    mean   median       uq      max neval</span></span>
+<span id="cb56-11"><a href="#cb56-11"></a><span class="co">#  fwithin(cgdata, SUM) 63.86069 64.36361 79.8376 77.94449 91.64005 102.8458    10</span></span>
 <span id="cb56-12"><a href="#cb56-12"></a><span class="kw">microbenchmark</span>(<span class="kw">fwithin</span>(cgdata, SUM, <span class="dt">mean =</span> <span class="st">&quot;overall.mean&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-13"><a href="#cb56-13"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb56-14"><a href="#cb56-14"></a><span class="co">#                                         expr      min       lq     mean   median       uq     max</span></span>
-<span id="cb56-15"><a href="#cb56-15"></a><span class="co">#  fwithin(cgdata, SUM, mean = &quot;overall.mean&quot;) 61.82943 65.92108 80.93767 83.51217 94.47782 100.267</span></span>
+<span id="cb56-14"><a href="#cb56-14"></a><span class="co">#                                         expr      min       lq     mean   median       uq      max</span></span>
+<span id="cb56-15"><a href="#cb56-15"></a><span class="co">#  fwithin(cgdata, SUM, mean = &quot;overall.mean&quot;) 64.35603 66.44223 80.77111 77.51877 95.81157 102.5918</span></span>
 <span id="cb56-16"><a href="#cb56-16"></a><span class="co">#  neval</span></span>
 <span id="cb56-17"><a href="#cb56-17"></a><span class="co">#     10</span></span>
 <span id="cb56-18"><a href="#cb56-18"></a></span>
 <span id="cb56-19"><a href="#cb56-19"></a><span class="co"># Weighted Scaling and Standardizing</span></span>
 <span id="cb56-20"><a href="#cb56-20"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(cgdata, SUM, <span class="dt">TRA =</span> <span class="st">&quot;/&quot;</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-21"><a href="#cb56-21"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb56-22"><a href="#cb56-22"></a><span class="co">#                         expr      min       lq    mean   median       uq      max neval</span></span>
-<span id="cb56-23"><a href="#cb56-23"></a><span class="co">#  fsd(cgdata, SUM, TRA = &quot;/&quot;) 132.0657 132.5013 159.288 160.8864 168.5987 204.8095    10</span></span>
+<span id="cb56-22"><a href="#cb56-22"></a><span class="co">#                         expr      min       lq     mean   median       uq      max neval</span></span>
+<span id="cb56-23"><a href="#cb56-23"></a><span class="co">#  fsd(cgdata, SUM, TRA = &quot;/&quot;) 138.2818 141.6938 154.3977 154.5516 167.5476 171.8869    10</span></span>
 <span id="cb56-24"><a href="#cb56-24"></a><span class="kw">microbenchmark</span>(<span class="kw">fscale</span>(cgdata, SUM), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-25"><a href="#cb56-25"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb56-26"><a href="#cb56-26"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb56-27"><a href="#cb56-27"></a><span class="co">#  fscale(cgdata, SUM) 92.93291 96.53502 114.9687 112.6562 126.1337 158.3511    10</span></span>
+<span id="cb56-27"><a href="#cb56-27"></a><span class="co">#  fscale(cgdata, SUM) 95.86155 98.98751 115.2392 110.6486 133.6547 137.2198    10</span></span>
 <span id="cb56-28"><a href="#cb56-28"></a></span>
 <span id="cb56-29"><a href="#cb56-29"></a><span class="co"># Sequence of lags and leads</span></span>
 <span id="cb56-30"><a href="#cb56-30"></a><span class="kw">microbenchmark</span>(<span class="kw">flag</span>(cgdata, <span class="dv">-1</span><span class="op">:</span><span class="dv">1</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-31"><a href="#cb56-31"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb56-32"><a href="#cb56-32"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb56-33"><a href="#cb56-33"></a><span class="co">#  flag(cgdata, -1:1) 46.03493 82.18324 117.1779 108.0114 141.2433 214.1945    10</span></span>
+<span id="cb56-33"><a href="#cb56-33"></a><span class="co">#  flag(cgdata, -1:1) 46.50702 81.19384 110.1539 101.9981 123.8694 221.8327    10</span></span>
 <span id="cb56-34"><a href="#cb56-34"></a></span>
 <span id="cb56-35"><a href="#cb56-35"></a><span class="co"># Iterated difference</span></span>
 <span id="cb56-36"><a href="#cb56-36"></a><span class="kw">microbenchmark</span>(<span class="kw">fdiff</span>(cgdata, <span class="dv">1</span>, <span class="dv">2</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-37"><a href="#cb56-37"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb56-38"><a href="#cb56-38"></a><span class="co">#                 expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb56-39"><a href="#cb56-39"></a><span class="co">#  fdiff(cgdata, 1, 2) 59.08768 76.45476 97.38677 106.7711 114.4867 122.7601    10</span></span>
+<span id="cb56-39"><a href="#cb56-39"></a><span class="co">#  fdiff(cgdata, 1, 2) 59.60617 63.15875 82.10061 84.60384 95.02885 99.92954    10</span></span>
 <span id="cb56-40"><a href="#cb56-40"></a></span>
 <span id="cb56-41"><a href="#cb56-41"></a><span class="co"># Growth Rate</span></span>
 <span id="cb56-42"><a href="#cb56-42"></a><span class="kw">microbenchmark</span>(<span class="kw">fgrowth</span>(cgdata,<span class="dv">1</span>), <span class="dt">times =</span> <span class="dv">10</span>)</span>
 <span id="cb56-43"><a href="#cb56-43"></a><span class="co"># Unit: milliseconds</span></span>
-<span id="cb56-44"><a href="#cb56-44"></a><span class="co">#                expr      min       lq     mean   median       uq      max neval</span></span>
-<span id="cb56-45"><a href="#cb56-45"></a><span class="co">#  fgrowth(cgdata, 1) 65.57345 70.42996 100.6642 94.74601 97.94427 228.3125    10</span></span></code></pre></div>
+<span id="cb56-44"><a href="#cb56-44"></a><span class="co">#                expr      min       lq     mean  median       uq      max neval</span></span>
+<span id="cb56-45"><a href="#cb56-45"></a><span class="co">#  fgrowth(cgdata, 1) 63.98653 67.43469 85.83798 91.3212 99.00268 102.5026    10</span></span></code></pre></div>
 <!-- Again the benchmarks show stunning performance gains using *collapse* functions. -->
 </div>
 </div>

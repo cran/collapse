@@ -73,7 +73,7 @@ class(group_by(GGDC10S, Variable, Country))
 class(fgroup_by(GGDC10S, Variable, Country))
 
 ## -------------------------------------------------------------------------------------------------
-head(fgroup_by(GGDC10S, Variable, Country))
+fgroup_by(GGDC10S, Variable, Country)
 
 ## -------------------------------------------------------------------------------------------------
 GGDC10S %>% group_by(Variable, Country) %>% select_at(6:16) %>% tail(3)
