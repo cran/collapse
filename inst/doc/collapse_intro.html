@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2020-11-04" />
+<meta name="date" content="2020-11-10" />
 
 <title>Introduction to collapse</title>
 
@@ -368,7 +368,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to <em>collapse</em></h1>
 <h3 class="subtitle">Advanced and Fast Data Transformation in R</h3>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2020-11-04</h4>
+<h4 class="date">2020-11-10</h4>
 
 
 <div id="TOC">
@@ -1251,9 +1251,9 @@ pre[class] {
 <span id="cb19-13"><a href="#cb19-13"></a><span class="kw">microbenchmark</span>(<span class="dt">fselect =</span> collapse<span class="op">::</span><span class="kw">fselect</span>(wlddev, country, year, PCGDP<span class="op">:</span>ODA),</span>
 <span id="cb19-14"><a href="#cb19-14"></a>               <span class="dt">select =</span> dplyr<span class="op">::</span><span class="kw">select</span>(wlddev, country, year, PCGDP<span class="op">:</span>ODA))</span>
 <span id="cb19-15"><a href="#cb19-15"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb19-16"><a href="#cb19-16"></a><span class="co">#     expr      min        lq       mean    median        uq      max neval cld</span></span>
-<span id="cb19-17"><a href="#cb19-17"></a><span class="co">#  fselect   20.974   25.8825   38.74347   35.9235   49.3105   91.927   100  a </span></span>
-<span id="cb19-18"><a href="#cb19-18"></a><span class="co">#   select 2924.706 3008.3780 3245.87056 3100.0810 3307.1405 6784.747   100   b</span></span></code></pre></div>
+<span id="cb19-16"><a href="#cb19-16"></a><span class="co">#     expr      min       lq       mean    median       uq      max neval cld</span></span>
+<span id="cb19-17"><a href="#cb19-17"></a><span class="co">#  fselect   19.635   25.437   38.10091   33.0225   50.426   80.771   100  a </span></span>
+<span id="cb19-18"><a href="#cb19-18"></a><span class="co">#   select 2818.950 2944.346 3215.83044 3252.7035 3330.351 3977.411   100   b</span></span></code></pre></div>
 <p>in contrast to <code>dplyr::select</code>, <code>fselect</code> has a replacement method</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># Computing the log of columns</span></span>
 <span id="cb20-2"><a href="#cb20-2"></a><span class="kw">fselect</span>(wlddev, PCGDP<span class="op">:</span>ODA) &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="kw">fselect</span>(wlddev, PCGDP<span class="op">:</span>ODA), log)</span>
@@ -1375,15 +1375,15 @@ pre[class] {
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="kw">microbenchmark</span>(<span class="dt">base =</span> <span class="kw">subset</span>(GGDC10S, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span> <span class="op">&amp;</span><span class="st"> </span>Year <span class="op">&gt;</span><span class="st"> </span><span class="dv">1990</span>, AGR<span class="op">:</span>SUM), </span>
 <span id="cb27-2"><a href="#cb27-2"></a>               <span class="dt">collapse =</span> <span class="kw">fsubset</span>(GGDC10S, Variable <span class="op">==</span><span class="st"> &quot;VA&quot;</span> <span class="op">&amp;</span><span class="st"> </span>Year <span class="op">&gt;</span><span class="st"> </span><span class="dv">1990</span>, AGR<span class="op">:</span>SUM))</span>
 <span id="cb27-3"><a href="#cb27-3"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb27-4"><a href="#cb27-4"></a><span class="co">#      expr     min       lq     mean   median      uq      max neval cld</span></span>
-<span id="cb27-5"><a href="#cb27-5"></a><span class="co">#      base 356.552 379.0875 434.8908 404.5235 421.258 1396.755   100   b</span></span>
-<span id="cb27-6"><a href="#cb27-6"></a><span class="co">#  collapse 108.885 117.5865 143.4063 126.0650 141.015  576.552   100  a</span></span>
+<span id="cb27-4"><a href="#cb27-4"></a><span class="co">#      expr    min      lq     mean  median       uq     max neval cld</span></span>
+<span id="cb27-5"><a href="#cb27-5"></a><span class="co">#      base 352.09 365.924 400.3163 399.393 412.3335 693.024   100   b</span></span>
+<span id="cb27-6"><a href="#cb27-6"></a><span class="co">#  collapse 110.67 117.363 131.5854 127.181 134.0980 265.518   100  a</span></span>
 <span id="cb27-7"><a href="#cb27-7"></a></span>
 <span id="cb27-8"><a href="#cb27-8"></a><span class="kw">microbenchmark</span>(GGDC10S[<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>], <span class="kw">ss</span>(GGDC10S, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>))</span>
 <span id="cb27-9"><a href="#cb27-9"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb27-10"><a href="#cb27-10"></a><span class="co">#                     expr     min       lq      mean  median       uq     max neval cld</span></span>
-<span id="cb27-11"><a href="#cb27-11"></a><span class="co">#      GGDC10S[1:10, 1:10] 118.256 133.6515 140.89397 136.106 139.6755 259.270   100   b</span></span>
-<span id="cb27-12"><a href="#cb27-12"></a><span class="co">#  ss(GGDC10S, 1:10, 1:10)   8.032  10.2635  11.89275  11.157  12.4950  34.362   100  a</span></span></code></pre></div>
+<span id="cb27-10"><a href="#cb27-10"></a><span class="co">#                     expr     min       lq      mean   median      uq     max neval cld</span></span>
+<span id="cb27-11"><a href="#cb27-11"></a><span class="co">#      GGDC10S[1:10, 1:10] 118.702 126.2885 137.69464 133.8750 136.106 300.325   100   b</span></span>
+<span id="cb27-12"><a href="#cb27-12"></a><span class="co">#  ss(GGDC10S, 1:10, 1:10)   7.140   9.8175  11.84808  11.3795  12.272  38.378   100  a</span></span></code></pre></div>
 <p>like <code>base::subset</code>, <code>fsubset</code> is S3 generic with methods for vectors, matrices and data frames. For certain classes such as factors, <code>fsubset.default</code> also improves upon <code>[</code>, but the largest improvements are with the data frame method.</p>
 </div>
 <div id="reordering-rows-and-columns" class="section level3">
@@ -1397,9 +1397,9 @@ pre[class] {
 <span id="cb28-6"><a href="#cb28-6"></a><span class="kw">microbenchmark</span>(<span class="dt">collapse =</span> collapse<span class="op">::</span><span class="kw">roworder</span>(GGDC10S, <span class="op">-</span>Variable, Country), </span>
 <span id="cb28-7"><a href="#cb28-7"></a>               <span class="dt">dplyr =</span> dplyr<span class="op">::</span><span class="kw">arrange</span>(GGDC10S, <span class="kw">desc</span>(Variable), Country))</span>
 <span id="cb28-8"><a href="#cb28-8"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb28-9"><a href="#cb28-9"></a><span class="co">#      expr      min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb28-10"><a href="#cb28-10"></a><span class="co">#  collapse  394.037  449.5945  484.5491  471.2375   505.822  1066.086   100  a </span></span>
-<span id="cb28-11"><a href="#cb28-11"></a><span class="co">#     dplyr 9140.487 9439.0270 9927.7617 9771.4810 10265.924 13122.800   100   b</span></span></code></pre></div>
+<span id="cb28-9"><a href="#cb28-9"></a><span class="co">#      expr      min        lq      mean    median       uq       max neval cld</span></span>
+<span id="cb28-10"><a href="#cb28-10"></a><span class="co">#  collapse  373.957  398.0535  460.3098  448.2565  478.155   938.014   100  a </span></span>
+<span id="cb28-11"><a href="#cb28-11"></a><span class="co">#     dplyr 8999.043 9233.9925 9626.5796 9493.9320 9778.862 13541.850   100   b</span></span></code></pre></div>
 <p>In contrast to <code>data.table::setorder</code>, <code>roworder</code> creates a copy of the data frame (unless data are already sorted). If this copy is not required, <code>data.table::setorder</code> is faster. The function <code>roworderv</code> is a standard evaluation analogue to <code>roworder</code>:</p>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a><span class="co"># Same as above</span></span>
 <span id="cb29-2"><a href="#cb29-2"></a><span class="kw">roworderv</span>(GGDC10S, <span class="kw">c</span>(<span class="st">&quot;Variable&quot;</span>, <span class="st">&quot;Country&quot;</span>), <span class="dt">decreasing =</span> <span class="kw">c</span>(<span class="ot">TRUE</span>, <span class="ot">FALSE</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">ss</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>, <span class="dv">1</span><span class="op">:</span><span class="dv">8</span>)</span>
@@ -1584,9 +1584,9 @@ pre[class] {
 <span id="cb39-21"><a href="#cb39-21"></a><span class="co"># [1] TRUE</span></span>
 <span id="cb39-22"><a href="#cb39-22"></a><span class="kw">microbenchmark</span>(<span class="kw">cbind</span>(wlddev, wlddev), <span class="kw">add_vars</span>(wlddev, wlddev))</span>
 <span id="cb39-23"><a href="#cb39-23"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb39-24"><a href="#cb39-24"></a><span class="co">#                      expr    min     lq     mean median     uq     max neval cld</span></span>
-<span id="cb39-25"><a href="#cb39-25"></a><span class="co">#     cbind(wlddev, wlddev) 51.319 53.104 57.09315 54.443 55.781 153.509   100   b</span></span>
-<span id="cb39-26"><a href="#cb39-26"></a><span class="co">#  add_vars(wlddev, wlddev)  8.032  9.371 11.33938 11.156 12.049  32.130   100  a</span></span></code></pre></div>
+<span id="cb39-24"><a href="#cb39-24"></a><span class="co">#                      expr    min     lq     mean median      uq     max neval cld</span></span>
+<span id="cb39-25"><a href="#cb39-25"></a><span class="co">#     cbind(wlddev, wlddev) 50.872 52.211 55.31276 53.104 54.4425 158.864   100   b</span></span>
+<span id="cb39-26"><a href="#cb39-26"></a><span class="co">#  add_vars(wlddev, wlddev)  8.033  8.926 10.83515 10.710 11.8260  31.684   100  a</span></span></code></pre></div>
 </div>
 <div id="renaming-columns" class="section level3">
 <h3>2.6 Renaming Columns</h3>
@@ -1624,18 +1624,18 @@ pre[class] {
 <div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a><span class="kw">microbenchmark</span>(<span class="dt">standard =</span> <span class="kw">tfm</span>(<span class="kw">gv</span>(wlddev, <span class="dv">9</span><span class="op">:</span><span class="dv">12</span>), <span class="dt">ODA_GDP =</span> ODA<span class="op">/</span>PCGDP),</span>
 <span id="cb42-2"><a href="#cb42-2"></a>               <span class="dt">piped =</span> <span class="kw">get_vars</span>(wlddev, <span class="dv">9</span><span class="op">:</span><span class="dv">12</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">ftransform</span>(<span class="dt">ODA_GDP =</span> ODA<span class="op">/</span>PCGDP))</span>
 <span id="cb42-3"><a href="#cb42-3"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb42-4"><a href="#cb42-4"></a><span class="co">#      expr     min       lq      mean   median       uq     max neval cld</span></span>
-<span id="cb42-5"><a href="#cb42-5"></a><span class="co">#  standard  65.599  67.8295  73.26516  69.1680  71.1765 327.546   100  a </span></span>
-<span id="cb42-6"><a href="#cb42-6"></a><span class="co">#     piped 186.531 190.1020 198.16091 193.4485 199.0260 428.844   100   b</span></span></code></pre></div>
+<span id="cb42-4"><a href="#cb42-4"></a><span class="co">#      expr     min      lq      mean  median      uq     max neval cld</span></span>
+<span id="cb42-5"><a href="#cb42-5"></a><span class="co">#  standard  57.566  59.798  66.37971  60.913  62.029 311.035   100  a </span></span>
+<span id="cb42-6"><a href="#cb42-6"></a><span class="co">#     piped 166.451 170.244 185.79572 172.252 176.492 447.587   100   b</span></span></code></pre></div>
 </div>
 <div id="missing-values-rows" class="section level3">
 <h3>2.8 Missing Values / Rows</h3>
 <p>The function <code>na_omit</code> is a much faster alternative to <code>stats::na.omit</code> for vectors, matrices and data frames. By default the ‘na.action’ attribute containing the removed cases is omitted, but it can be added with the option <code>na.attr = TRUE</code>. Like <code>fsubset</code>, <code>na_omit</code> preserves all column attributes as well as attributes of the data frame itself.</p>
 <div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a><span class="kw">microbenchmark</span>(<span class="kw">na_omit</span>(wlddev, <span class="dt">na.attr =</span> <span class="ot">TRUE</span>), <span class="kw">na.omit</span>(wlddev))</span>
 <span id="cb43-2"><a href="#cb43-2"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb43-3"><a href="#cb43-3"></a><span class="co">#                             expr      min       lq      mean   median        uq      max neval cld</span></span>
-<span id="cb43-4"><a href="#cb43-4"></a><span class="co">#  na_omit(wlddev, na.attr = TRUE)  353.875  370.609  400.3512  385.558  407.4245  858.134   100  a </span></span>
-<span id="cb43-5"><a href="#cb43-5"></a><span class="co">#                  na.omit(wlddev) 1453.429 1490.021 1561.3488 1513.671 1567.6675 3017.526   100   b</span></span></code></pre></div>
+<span id="cb43-3"><a href="#cb43-3"></a><span class="co">#                             expr      min        lq      mean   median       uq      max neval cld</span></span>
+<span id="cb43-4"><a href="#cb43-4"></a><span class="co">#  na_omit(wlddev, na.attr = TRUE)  355.660  365.2545  390.5567  379.311  397.607  608.683   100  a </span></span>
+<span id="cb43-5"><a href="#cb43-5"></a><span class="co">#                  na.omit(wlddev) 1422.193 1460.1250 1553.6404 1493.593 1633.046 1882.722   100   b</span></span></code></pre></div>
 <p>Another added feature is the removal of cases missing on certain columns only:</p>
 <div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a><span class="kw">na_omit</span>(wlddev, <span class="dt">cols =</span> <span class="kw">.c</span>(PCGDP, LIFEEX)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">2</span>)</span>
 <span id="cb44-2"><a href="#cb44-2"></a><span class="co">#       country iso3c       date year decade     region     income  OECD    PCGDP LIFEEX GINI</span></span>
@@ -1690,8 +1690,8 @@ pre[class] {
 <div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a><span class="co"># Efficient replacing missing values with NA</span></span>
 <span id="cb46-2"><a href="#cb46-2"></a><span class="kw">microbenchmark</span>(<span class="kw">replace_NA</span>(GGDC10S, <span class="dv">0</span>))</span>
 <span id="cb46-3"><a href="#cb46-3"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb46-4"><a href="#cb46-4"></a><span class="co">#                    expr     min     lq     mean  median       uq     max neval</span></span>
-<span id="cb46-5"><a href="#cb46-5"></a><span class="co">#  replace_NA(GGDC10S, 0) 356.552 369.27 394.4072 388.682 410.1015 585.924   100</span></span>
+<span id="cb46-4"><a href="#cb46-4"></a><span class="co">#                    expr     min      lq     mean   median       uq    max neval</span></span>
+<span id="cb46-5"><a href="#cb46-5"></a><span class="co">#  replace_NA(GGDC10S, 0) 354.321 364.585 385.3356 368.3785 373.9565 757.73   100</span></span>
 <span id="cb46-6"><a href="#cb46-6"></a></span>
 <span id="cb46-7"><a href="#cb46-7"></a><span class="co"># Adding log-transformed sectoral data: Some NaN and Inf values generated</span></span>
 <span id="cb46-8"><a href="#cb46-8"></a><span class="kw">add_vars</span>(GGDC10S, <span class="dv">6</span><span class="op">:</span><span class="dv">16</span><span class="op">*</span><span class="dv">2-5</span>) &lt;-<span class="st"> </span><span class="kw">fselect</span>(GGDC10S, AGR<span class="op">:</span>SUM) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">lapply</span>(log) <span class="op">%&gt;%</span><span class="st"> </span>replace_Inf <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">add_stub</span>(<span class="st">&quot;log.&quot;</span>) </span>
@@ -1752,11 +1752,11 @@ pre[class] {
 <span id="cb49-6"><a href="#cb49-6"></a><span class="co"># Efficient Conversion of data frames and matrices to data.table</span></span>
 <span id="cb49-7"><a href="#cb49-7"></a><span class="kw">microbenchmark</span>(<span class="kw">qDT</span>(wlddev), <span class="kw">qDT</span>(EuStockMarkets), <span class="kw">as.data.table</span>(wlddev), <span class="kw">as.data.frame</span>(EuStockMarkets))</span>
 <span id="cb49-8"><a href="#cb49-8"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb49-9"><a href="#cb49-9"></a><span class="co">#                           expr     min      lq      mean  median       uq      max neval cld</span></span>
-<span id="cb49-10"><a href="#cb49-10"></a><span class="co">#                    qDT(wlddev)   5.355   8.032  13.47241  12.495  17.4035   44.179   100 a  </span></span>
-<span id="cb49-11"><a href="#cb49-11"></a><span class="co">#            qDT(EuStockMarkets)  17.850  23.205  37.02091  34.138  39.7160  188.317   100 a  </span></span>
-<span id="cb49-12"><a href="#cb49-12"></a><span class="co">#          as.data.table(wlddev) 302.110 348.520 415.14425 366.146 415.9025 1315.984   100   c</span></span>
-<span id="cb49-13"><a href="#cb49-13"></a><span class="co">#  as.data.frame(EuStockMarkets) 248.560 290.507 337.30084 311.035 372.3940  719.352   100  b</span></span>
+<span id="cb49-9"><a href="#cb49-9"></a><span class="co">#                           expr     min      lq      mean   median      uq     max neval  cld</span></span>
+<span id="cb49-10"><a href="#cb49-10"></a><span class="co">#                    qDT(wlddev)   6.694   8.479  14.10169  13.8340  16.958  89.696   100 a   </span></span>
+<span id="cb49-11"><a href="#cb49-11"></a><span class="co">#            qDT(EuStockMarkets)  18.296  24.544  34.14273  34.5850  40.608  84.787   100  b  </span></span>
+<span id="cb49-12"><a href="#cb49-12"></a><span class="co">#          as.data.table(wlddev) 333.348 360.123 391.52959 378.4190 389.129 648.846   100    d</span></span>
+<span id="cb49-13"><a href="#cb49-13"></a><span class="co">#  as.data.frame(EuStockMarkets) 251.238 294.970 332.99065 321.2995 359.899 569.859   100   c</span></span>
 <span id="cb49-14"><a href="#cb49-14"></a></span>
 <span id="cb49-15"><a href="#cb49-15"></a><span class="co"># Converting a time series to data.frame</span></span>
 <span id="cb49-16"><a href="#cb49-16"></a><span class="kw">head</span>(<span class="kw">qDF</span>(AirPassengers))</span>
@@ -1797,14 +1797,14 @@ pre[class] {
 <div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1"></a><span class="co"># This converts the matrix to a list of 1860 row-vectors of length 4.</span></span>
 <span id="cb51-2"><a href="#cb51-2"></a><span class="kw">microbenchmark</span>(<span class="kw">mrtl</span>(EuStockMarkets))</span>
 <span id="cb51-3"><a href="#cb51-3"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb51-4"><a href="#cb51-4"></a><span class="co">#                  expr     min       lq     mean   median      uq     max neval</span></span>
-<span id="cb51-5"><a href="#cb51-5"></a><span class="co">#  mrtl(EuStockMarkets) 153.509 165.1115 171.1495 167.5665 172.252 297.647   100</span></span></code></pre></div>
+<span id="cb51-4"><a href="#cb51-4"></a><span class="co">#                  expr     min       lq     mean  median      uq      max neval</span></span>
+<span id="cb51-5"><a href="#cb51-5"></a><span class="co">#  mrtl(EuStockMarkets) 155.294 166.2275 191.8647 168.459 173.591 1625.683   100</span></span></code></pre></div>
 <p>For the reverse operation, <code>qM</code> converts vectors, higher-dimensional arrays, data frames and suitable lists to matrix. For example probably the most efficient way to calculate row-sums from a data frame is:</p>
 <div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1"></a><span class="kw">microbenchmark</span>(<span class="kw">rowSums</span>(<span class="kw">qM</span>(mtcars)), <span class="kw">rowSums</span>(mtcars))</span>
 <span id="cb52-2"><a href="#cb52-2"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb52-3"><a href="#cb52-3"></a><span class="co">#                 expr     min       lq      mean   median      uq     max neval cld</span></span>
-<span id="cb52-4"><a href="#cb52-4"></a><span class="co">#  rowSums(qM(mtcars))  17.850  18.7430  24.86515  21.4200  22.759 369.939   100  a </span></span>
-<span id="cb52-5"><a href="#cb52-5"></a><span class="co">#      rowSums(mtcars) 119.148 121.6025 130.30455 123.1645 127.404 260.163   100   b</span></span></code></pre></div>
+<span id="cb52-3"><a href="#cb52-3"></a><span class="co">#                 expr     min      lq      mean  median      uq     max neval cld</span></span>
+<span id="cb52-4"><a href="#cb52-4"></a><span class="co">#  rowSums(qM(mtcars))  17.404  18.742  24.65551  20.974  22.313 376.634   100  a </span></span>
+<span id="cb52-5"><a href="#cb52-5"></a><span class="co">#      rowSums(mtcars) 117.809 119.595 126.94895 120.933 126.288 270.873   100   b</span></span></code></pre></div>
 <p>At last, <code>qF</code> converts vectors to factor and is quite a bit faster than <code>as.factor</code>:</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1"></a><span class="co"># Converting from character</span></span>
 <span id="cb53-2"><a href="#cb53-2"></a><span class="kw">str</span>(wlddev<span class="op">$</span>country)</span>
@@ -1814,9 +1814,9 @@ pre[class] {
 <span id="cb53-6"><a href="#cb53-6"></a><span class="co"># [1] 216</span></span>
 <span id="cb53-7"><a href="#cb53-7"></a><span class="kw">microbenchmark</span>(<span class="kw">qF</span>(wlddev<span class="op">$</span>country), <span class="kw">as.factor</span>(wlddev<span class="op">$</span>country))</span>
 <span id="cb53-8"><a href="#cb53-8"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb53-9"><a href="#cb53-9"></a><span class="co">#                       expr     min      lq     mean   median       uq     max neval cld</span></span>
-<span id="cb53-10"><a href="#cb53-10"></a><span class="co">#         qF(wlddev$country) 181.177 186.531 199.8299 198.3570 211.2985 255.700   100  a </span></span>
-<span id="cb53-11"><a href="#cb53-11"></a><span class="co">#  as.factor(wlddev$country) 413.225 442.009 465.7755 464.0975 485.5175 585.031   100   b</span></span>
+<span id="cb53-9"><a href="#cb53-9"></a><span class="co">#                       expr     min       lq     mean  median       uq     max neval cld</span></span>
+<span id="cb53-10"><a href="#cb53-10"></a><span class="co">#         qF(wlddev$country) 181.623 184.9705 200.2631 189.879 205.4980 349.413   100  a </span></span>
+<span id="cb53-11"><a href="#cb53-11"></a><span class="co">#  as.factor(wlddev$country) 429.737 442.2320 464.2278 447.587 459.4125 631.887   100   b</span></span>
 <span id="cb53-12"><a href="#cb53-12"></a></span>
 <span id="cb53-13"><a href="#cb53-13"></a><span class="co"># Converting from numeric</span></span>
 <span id="cb53-14"><a href="#cb53-14"></a><span class="kw">str</span>(wlddev<span class="op">$</span>PCGDP)</span>
@@ -1827,8 +1827,8 @@ pre[class] {
 <span id="cb53-19"><a href="#cb53-19"></a><span class="kw">microbenchmark</span>(<span class="kw">qF</span>(wlddev<span class="op">$</span>PCGDP), <span class="kw">as.factor</span>(wlddev<span class="op">$</span>PCGDP))</span>
 <span id="cb53-20"><a href="#cb53-20"></a><span class="co"># Unit: milliseconds</span></span>
 <span id="cb53-21"><a href="#cb53-21"></a><span class="co">#                     expr       min        lq      mean    median        uq       max neval cld</span></span>
-<span id="cb53-22"><a href="#cb53-22"></a><span class="co">#         qF(wlddev$PCGDP)  1.256633  1.338296  1.406019  1.386715  1.456774  2.013916   100  a </span></span>
-<span id="cb53-23"><a href="#cb53-23"></a><span class="co">#  as.factor(wlddev$PCGDP) 33.598419 34.600245 35.969100 35.937426 37.141402 39.138136   100   b</span></span></code></pre></div>
+<span id="cb53-22"><a href="#cb53-22"></a><span class="co">#         qF(wlddev$PCGDP)  1.216919  1.264444  1.364561  1.322904  1.425763  2.037569   100  a </span></span>
+<span id="cb53-23"><a href="#cb53-23"></a><span class="co">#  as.factor(wlddev$PCGDP) 33.410162 34.015498 35.375824 34.837041 36.101486 54.791257   100   b</span></span></code></pre></div>
 <!-- by default `qF` converts vectors to ordered factor, regulated by the default argument `ordered = TRUE`. This behavior is the same as `as.factor`, but `as.factor` does not attach a class 'ordered'. `qF(x, ordered = FALSE)` will not sort the levels and is slightly faster. Another difference to `as.factor` is that `qF` always adds a `NA` level for missing values, however by default an integer missing value (`NA_integer_`) is provided as the value for that level (thus `qF` behaves identical to `as.factor` with exception of the added level). a slight modification of this behavior can be achieved with `qF(x, na.exclude = FALSE)`, which will still have the `NA` level but now also assigns a positive integer value to the level (implying that missing values can no longer be detected using `is.na`), and attaches an additional class 'na.included'. Factor generation using `qF(x, na.exclude = FALSE)` is advised when using factors to carry out grouped computations with *collapse*'s fast functions, as the class 'na.included' prevents *collapse* functions to execute a missing value check on the factor, and thus yields a performance improvement. -->
 </div>
 <div id="advanced-statistical-programming" class="section level2">
@@ -1937,9 +1937,9 @@ pre[class] {
 <span id="cb58-20"><a href="#cb58-20"></a>f2 &lt;-<span class="st"> </span><span class="kw">qF</span>(mtcars<span class="op">$</span>cyl)</span>
 <span id="cb58-21"><a href="#cb58-21"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(dat, f), <span class="kw">fsd</span>(dat, f2))</span>
 <span id="cb58-22"><a href="#cb58-22"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb58-23"><a href="#cb58-23"></a><span class="co">#          expr    min     lq     mean median     uq    max neval cld</span></span>
-<span id="cb58-24"><a href="#cb58-24"></a><span class="co">#   fsd(dat, f) 14.280 14.726 16.01164 15.172 15.173 58.012   100   a</span></span>
-<span id="cb58-25"><a href="#cb58-25"></a><span class="co">#  fsd(dat, f2) 14.726 15.173 15.91787 15.619 16.065 26.775   100   a</span></span></code></pre></div>
+<span id="cb58-23"><a href="#cb58-23"></a><span class="co">#          expr    min     lq     mean  median     uq    max neval cld</span></span>
+<span id="cb58-24"><a href="#cb58-24"></a><span class="co">#   fsd(dat, f) 13.834 14.726 15.57437 15.1725 15.173 64.260   100   a</span></span>
+<span id="cb58-25"><a href="#cb58-25"></a><span class="co">#  fsd(dat, f2) 14.726 15.173 15.85987 15.6190 16.065 30.791   100   a</span></span></code></pre></div>
 <p>For programming purposes <em>GRP</em> objects are preferable over factors because they never require further checks and they provide additional information about the grouping (such as group sizes and the original unique values in each group). The <code>GRP</code> function creates grouping objects (of class <em>GRP</em>) from vectors or lists of columns. Grouping is done very efficiently via radix ordering in C (using the <code>radixorder</code> function):</p>
 <div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1"></a><span class="co"># This creates a &#39;GRP&#39; object. </span></span>
 <span id="cb59-2"><a href="#cb59-2"></a>g &lt;-<span class="st"> </span><span class="kw">GRP</span>(mtcars, <span class="op">~</span><span class="st"> </span>cyl <span class="op">+</span><span class="st"> </span>vs <span class="op">+</span><span class="st"> </span>am) <span class="co"># Using the formula interface, could also use c(&quot;cyl&quot;,&quot;vs&quot;,&quot;am&quot;) or c(2,8:9)</span></span>
@@ -1987,9 +1987,9 @@ pre[class] {
 <span id="cb61-11"><a href="#cb61-11"></a><span class="co"># Grouped computation with and without prior grouping</span></span>
 <span id="cb61-12"><a href="#cb61-12"></a><span class="kw">microbenchmark</span>(<span class="kw">fsd</span>(dat, g), <span class="kw">fsd</span>(dat, <span class="kw">get_vars</span>(mtcars, ind)))</span>
 <span id="cb61-13"><a href="#cb61-13"></a><span class="co"># Unit: microseconds</span></span>
-<span id="cb61-14"><a href="#cb61-14"></a><span class="co">#                             expr     min       lq      mean  median       uq     max neval cld</span></span>
-<span id="cb61-15"><a href="#cb61-15"></a><span class="co">#                      fsd(dat, g)  58.905  60.6900  64.93819  62.028  63.8135  94.158   100  a </span></span>
-<span id="cb61-16"><a href="#cb61-16"></a><span class="co">#  fsd(dat, get_vars(mtcars, ind)) 100.852 102.8605 110.54012 104.422 109.5540 237.404   100   b</span></span></code></pre></div>
+<span id="cb61-14"><a href="#cb61-14"></a><span class="co">#                             expr     min      lq      mean  median      uq     max neval cld</span></span>
+<span id="cb61-15"><a href="#cb61-15"></a><span class="co">#                      fsd(dat, g)  59.352  62.921  68.79389  68.276  69.615 144.138   100  a </span></span>
+<span id="cb61-16"><a href="#cb61-16"></a><span class="co">#  fsd(dat, get_vars(mtcars, ind)) 100.406 103.530 117.61351 114.240 116.471 299.879   100   b</span></span></code></pre></div>
 <!-- Note at this point that by default (`sort = TRUE`, `order = 1L`), groups are sorted in ascending order, corresponding to *data.table* grouping with `keyby`. The ordering can be reversed (`order = -1L`), or set individually for each of the 3 grouping columns (i.e. `order = c(1L, -1L, -1L)`). If `sort = FALSE`, the grouping is unordered corresponding to *data.table* grouping with `by`.  -->
 <p>Yet another possibility is creating a grouped data frame (class <em>grouped_df</em>). This can either be done using <code>dplyr::group_by</code>, which creates a grouped tibble and requires a conversion of the grouping object using <code>GRP.grouped_df</code>, or using the more efficient <code>fgroup_by</code> provided in <em>collapse</em>:</p>
 <div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1"></a>gmtcars &lt;-<span class="st"> </span><span class="kw">fgroup_by</span>(mtcars, cyl, vs, am)</span>
@@ -2102,7 +2102,7 @@ pre[class] {
 <span id="cb65-5"><a href="#cb65-5"></a>         <span class="kw">add_stub</span>(<span class="kw">fmax</span>(dat, g, <span class="dt">use.g.names =</span> <span class="ot">FALSE</span>), <span class="st">&quot;max_&quot;</span>)))</span>
 <span id="cb65-6"><a href="#cb65-6"></a><span class="co"># Unit: microseconds</span></span>
 <span id="cb65-7"><a href="#cb65-7"></a><span class="co">#  expr     min      lq     mean  median      uq     max neval</span></span>
-<span id="cb65-8"><a href="#cb65-8"></a><span class="co">#  call 103.084 105.315 116.6315 115.579 117.363 255.254   100</span></span></code></pre></div>
+<span id="cb65-8"><a href="#cb65-8"></a><span class="co">#  call 112.902 114.686 121.6788 115.579 117.364 281.583   100</span></span></code></pre></div>
 </div>
 <div id="transformations-using-the-tra-argument" class="section level3">
 <h3>4.4 Transformations Using the <code>TRA</code> Argument</h3>

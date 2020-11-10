@@ -507,6 +507,7 @@ importFrom("stats", "as.formula", "complete.cases", "cor", "cov", "var", "pt",
  S3method(print, pwcov)
  S3method(print, fFtest)
  S3method(print, psmat)
+ S3method(print, invisible)
  S3method(aperm, psmat)
  S3method(aperm, qsu)
  S3method('[', psmat)

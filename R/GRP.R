@@ -276,13 +276,45 @@ print.GRP_df <- function(x, ...) {
   }
 }
 
+print.invisible <- function(x, ...) cat("")
+
+# Still solve this properly for data.table...
 `[.GRP_df` <- function(x, ...) {
-  res <- `[`(fungroup(x), ...)
-  if(!(is.list(res) && fnrow2(res) == fnrow2(x))) return(res)
-  attr(res, "groups") <- attr(x, "groups")
-  oldClass(res) <- oldClass(x)
+  clx <- oldClass(x)
+  if(any(clx == "data.table")) {
+    res <- NextMethod()
+    if(any(clx == "invisible")) { # for chaining...
+      clx <- clx[clx != "invisible"]
+      oldClass(res) <- clx # in case of early return (reduced rows)...
+    }
+    if(any(grepl(":=", .c(...)))) {
+      eval.parent(substitute(x <- res))
+      oldClass(res) <- c("invisible", clx) # return(invisible(res)) -> doesn't work here for some reason
+    } else {
+      if(!(is.list(res) && fnrow2(res) == fnrow2(x))) return(fungroup(res))
+      if(is.null(attr(res, "groups"))) attr(res, "groups") <- attr(x, "groups")
+      oldClass(res) <- clx
+    }
+  } else {
+    res <- `[`(fungroup(x), ...) # does not respect data.table properties, but better for sf data frame and others which check validity of "groups" attribute
+    if(!(is.list(res) && fnrow2(res) == fnrow2(x))) return(res)
+    attr(res, "groups") <- attr(x, "groups")
+    oldClass(res) <- clx
+  }
   res
 }
+
+# missing doesn't work, its invidible return...
+# `[.GRP_df` <- function(x, ...) {
+#   tstop <- function(x) if(missing(x)) NULL else x
+#   res <- tstop(NextMethod()) # better than above (problems with data.table method, but do further checks...)
+#   if(is.null(res)) return(NULL)
+#   if(!(is.list(res) && fnrow2(res) == fnrow2(x))) return(fungroup(res))
+#   if(is.null(g <- attr(res, "groups"))) attr(res, "groups") <- g
+#   oldClass(res) <- oldClass(x)
+#   return(res)
+# }
+
 
 # Produce errors...
 # print_GRP_df_core <- function(x) {
