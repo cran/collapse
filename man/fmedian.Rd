@@ -25,7 +25,7 @@ fmedian(x, \dots)
         use.g.names = FALSE, keep.group_vars = TRUE, keep.w = TRUE, \dots)
 }
 \arguments{
-\item{x}{a numeric vector, matrix, data frame or grouped tibble (\code{dplyr::grouped_df}).}
+\item{x}{a numeric vector, matrix, data frame or grouped data frame (class 'grouped_df').}
 
 \item{g}{a factor, \code{\link{GRP}} object, atomic vector (internally converted to factor) or a list of vectors / factors (internally converted to a \code{\link{GRP}} object) used to group \code{x}.}
 
@@ -95,7 +95,7 @@ m <- qM(mtcars)
 fmedian(m)
 head(fmedian(m, TRA = "-"))
 fmedian(m, g) # etc..
-
+\donttest{ % No code relying on suggested package
 library(dplyr)
 # grouped_df method
 mtcars \%>\% group_by(cyl,vs,am) \%>\% fmedian
@@ -104,6 +104,7 @@ mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fmedian                # Faster grouping
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fmedian(TRA = "-")     # De-median
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fselect(mpg, hp) \%>\%   # Faster selecting
       fmedian(hp, "-")  # Weighted de-median mpg, using hp as weights
+}
 }
 \keyword{univar}
 \keyword{manip}

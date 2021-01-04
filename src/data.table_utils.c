@@ -49,6 +49,11 @@ bool allNA(SEXP x, bool errorForBadType) {
   //   https://github.com/Rdatatable/data.table/pull/3909#discussion_r329065950
 }
 
+SEXP allNAv(SEXP x, SEXP errorForBadType) {
+  return ScalarLogical(allNA(x, asLogical(errorForBadType)));
+}
+
+
 inline bool INHERITS(SEXP x, SEXP char_) {
   // Thread safe inherits() by pre-calling install() in init.c and then
   // passing those char_* in here for simple and fast non-API pointer compare.
@@ -328,7 +333,7 @@ SEXP setcolorder(SEXP x, SEXP o)
 {
   SEXP names = getAttrib(x, R_NamesSymbol);
   const int *od = INTEGER(o), ncol=LENGTH(x);
-  if (isNull(names)) error("dt passed to setcolorder has no names");
+  if (isNull(names)) error("list passed to setcolorder has no names");
   if (ncol != LENGTH(names))
     error("Internal error: dt passed to setcolorder has %d columns but %d names", ncol, LENGTH(names));  // # nocov
 

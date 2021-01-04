@@ -27,7 +27,7 @@ fnth(x, n = 0.5, \dots)
      ties = "mean", \dots)
 }
 \arguments{
-\item{x}{a numeric vector, matrix, data frame or grouped tibble (\code{dplyr::grouped_df}).}
+\item{x}{a numeric vector, matrix, data frame or grouped data frame (class 'grouped_df').}
 
 \item{n}{the element to return using a single integer index such that \code{1 < n < NROW(x)}, or a probability \code{0 < n < 1}. See Details. }
 
@@ -112,7 +112,7 @@ m <- qM(mtcars)
 fnth(m, 0.75)
 head(fnth(m, 0.75, TRA = "-"))
 fnth(m, 0.75, g) # etc..
-
+\donttest{ % No code relying on suggested package
 library(dplyr)
 ## grouped_df method
 mtcars \%>\% group_by(cyl,vs,am) \%>\% fnth(0.75)
@@ -121,6 +121,7 @@ mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fnth(0.75)              # Faster groupin
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fnth(0.75, TRA = "/")   # Divide by third quartile
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fselect(mpg, hp) \%>\%    # Faster selecting
       fnth(0.75, hp, "/")  # Divide mpg by its third weighted group-quartile, using hp as weights
+}
 }
 \keyword{univar}
 \keyword{manip}

@@ -6,6 +6,7 @@ using namespace Rcpp;
 RcppExport void multi_yw(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 RcppExport SEXP collapse_init(SEXP);
 RcppExport SEXP dt_na(SEXP, SEXP);
+RcppExport SEXP allNAv(SEXP, SEXP);
 RcppExport SEXP Cradixsort(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP frankds(SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP pacf1(SEXP, SEXP);
@@ -23,6 +24,9 @@ RcppExport SEXP cond_duplAttributes(SEXP x, SEXP y);
 RcppExport SEXP CsetAttrib(SEXP object, SEXP a);
 RcppExport SEXP CcopyAttrib(SEXP to, SEXP from);
 RcppExport SEXP CcopyMostAttrib(SEXP to, SEXP from);
+RcppExport SEXP lassign(SEXP x, SEXP s, SEXP rows, SEXP fill);
+RcppExport SEXP groups2GRP(SEXP x, SEXP lx, SEXP gs);
+RcppExport SEXP Cna_rm(SEXP x);
 
 static const R_CMethodDef CEntries[]  = {
   {"C_multi_yw", (DL_FUNC) &multi_yw, 10},
@@ -55,9 +59,9 @@ static const R_CallMethodDef CallEntries[] = {
   {"Cpp_fdiffgrowth", (DL_FUNC) &_collapse_fdiffgrowthCpp, 12},
   {"Cpp_fdiffgrowthm", (DL_FUNC) &_collapse_fdiffgrowthmCpp, 12},
   {"Cpp_fdiffgrowthl", (DL_FUNC) &_collapse_fdiffgrowthlCpp, 12},
-  {"Cpp_flaglead", (DL_FUNC) &_collapse_flagleadCpp, 8},
-  {"Cpp_flagleadm", (DL_FUNC) &_collapse_flagleadmCpp, 8},
-  {"Cpp_flagleadl", (DL_FUNC) &_collapse_flagleadlCpp, 8},
+  {"Cpp_flaglead", (DL_FUNC) &_collapse_flagleadCpp, 7},
+  {"Cpp_flagleadm", (DL_FUNC) &_collapse_flagleadmCpp, 7},
+  {"Cpp_flagleadl", (DL_FUNC) &_collapse_flagleadlCpp, 7},
   {"Cpp_flast", (DL_FUNC) &_collapse_flastCpp, 4},
   {"Cpp_flastm", (DL_FUNC) &_collapse_flastmCpp, 5},
   {"Cpp_flastl", (DL_FUNC) &_collapse_flastlCpp, 4},
@@ -106,12 +110,14 @@ static const R_CallMethodDef CallEntries[] = {
   {"C_setAttrib", (DL_FUNC) &CsetAttrib, 2},
   {"C_copyAttrib", (DL_FUNC) &CcopyAttrib, 2},
   {"C_copyMostAttrib", (DL_FUNC) &CcopyMostAttrib, 2},
-  {"Cpp_groups2GRP", (DL_FUNC) &_collapse_groups2GRPCpp, 3},
-  {"Cpp_lassign", (DL_FUNC) &_collapse_lassignCpp, 4},
+  {"C_groups2GRP", (DL_FUNC) &groups2GRP, 3},
+  {"C_lassign", (DL_FUNC) &lassign, 4},
   {"Cpp_seqid", (DL_FUNC) &_collapse_seqid, 7},
   {"Cpp_groupid", (DL_FUNC) &_collapse_groupid, 5},
   {"C_collapse_init", (DL_FUNC) &collapse_init, 1},
   {"C_dt_na",         (DL_FUNC) &dt_na,         2},
+  {"C_allNA",         (DL_FUNC) &allNAv,        2},
+  {"C_na_rm",         (DL_FUNC) &Cna_rm,        1},
   {"C_radixsort",     (DL_FUNC) &Cradixsort,    6},
   {"C_frankds",       (DL_FUNC) &frankds,       4},
   {"C_pacf1",         (DL_FUNC) &pacf1,         2},

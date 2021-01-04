@@ -29,7 +29,7 @@
 Fast (Quasi-, Log-) Differences for Time Series and Panel Data
 }
 \description{
-\code{fdiff} is a S3 generic to compute (sequences of) suitably lagged / leaded and iterated differences, quasi-differences, log-differences or quasi-log-differences. The difference and log-difference operators \code{D} and \code{Dlog} also exists as parsimonious wrappers around \code{fdiff}. Apart from being more parsimonious, they provide more flexibility than \code{fdiff} when applied to data frames.
+\code{fdiff} is a S3 generic to compute (sequences of) suitably lagged / leaded and iterated differences, quasi-differences, log-differences or quasi-log-differences. The difference and log-difference operators \code{D} and \code{Dlog} also exists as parsimonious wrappers around \code{fdiff}, providing more flexibility than \code{fdiff} when applied to data frames.
 
 }
 \usage{
@@ -69,7 +69,7 @@ Fast (Quasi-, Log-) Differences for Time Series and Panel Data
 \method{Dlog}{pdata.frame}(x, n = 1, diff = 1, cols = is.numeric, fill = NA, rho = 1, stubs = TRUE,
      keep.ids = TRUE, \dots)
 
-# Methods for compatibility with dplyr:
+# Methods for grouped data frame / compatibility with dplyr:
 
 \method{fdiff}{grouped_df}(x, n = 1, diff = 1, t = NULL, fill = NA, log = FALSE, rho = 1,
       stubs = length(n) + length(diff) > 2L, keep.ids = TRUE, \dots)
@@ -80,18 +80,18 @@ Fast (Quasi-, Log-) Differences for Time Series and Panel Data
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{a numeric vector / time series, (time series) matrix, data frame, panel series (\code{plm::pseries}), panel data frame (\code{plm::pdata.frame}) or grouped tibble (\code{dplyr::grouped_df}).}
+  \item{x}{a numeric vector / time series, (time series) matrix, data frame, panel series (\code{plm::pseries}), panel data frame (\code{plm::pdata.frame}) or grouped data frame (class 'grouped_df').}
   \item{n}{integer. A vector indicating the number of lags or leads.}
   \item{diff}{integer. A vector of integers > 1 indicating the order of differencing / log-differencing.}
   \item{g}{a factor, \code{\link{GRP}} object, atomic vector (internally converted to factor) or a list of vectors / factors (internally converted to a \code{\link{GRP}} object) used to group \code{x}.}
   \item{by}{\emph{data.frame method}: Same as \code{g}, but also allows one- or two-sided formulas i.e. \code{~ group1} or \code{var1 + var2 ~ group1 + group2}. See Examples.}
-  \item{t}{same input as \code{g/by}, to indicate the time-variable. For safe computation of differences on unordered time series and panels. Data Frame method also allows one-sided formula i.e. \code{~time}. grouped_df method supports lazy-evaluation i.e. \code{time} (no quotes).}
+  \item{t}{same input as \code{g/by}, to indicate the time-variable(s). For safe computation of differences on unordered time series and panels. Data Frame method also allows one-sided formula i.e. \code{~time}. grouped_df method supports lazy-evaluation i.e. \code{time} (no quotes).}
   \item{cols}{\emph{data.frame method}: Select columns to difference using a function, column names, indices or a logical vector. Default: All numeric variables. \emph{Note}: \code{cols} is ignored if a two-sided formula is passed to \code{by}.}
   \item{fill}{value to insert when vectors are shifted. Default is \code{NA}. }
-  \item{log}{logical. \code{TRUE} Computes log-differences instead. See Details.}
-  \item{rho}{double. Autocorrelation parameter. Set to a value between 0 and 1 for quasi-differencing. However any numeric value can be supplied. }
+  \item{log}{logical. \code{TRUE} computes log-differences instead. See Details.}
+  \item{rho}{double. Autocorrelation parameter. Set to a value between 0 and 1 for quasi-differencing. Any numeric value can be supplied. }
   \item{stubs}{logical. \code{TRUE} will rename all differenced columns by adding prefixes "L\code{n}D\code{diff}." / "F\code{n}D\code{diff}." for differences "L\code{n}Dlog\code{diff}." / "F\code{n}Dlog\code{diff}." for log-differences and replacing "D" / "Dlog" with "QD" / "QDlog" for quasi-differences. }
-  \item{keep.ids}{\emph{data.frame / pdata.frame / grouped_df methods}: Logical. Drop all panel-identifiers from the output (which includes all variables passed to \code{by} or \code{t}). \emph{Note}: For panel data frames and grouped tibbles identifiers are dropped, but the 'index' / 'groups' attributes are kept.}
+  \item{keep.ids}{\emph{data.frame / pdata.frame / grouped_df methods}: Logical. Drop all panel-identifiers from the output (which includes all variables passed to \code{by} or \code{t}). \emph{Note}: For grouped / panel data frames identifiers are dropped, but the 'groups' / 'index' attributes are kept.}
   \item{\dots}{arguments to be passed to or from other methods.}
 }
 \details{
@@ -99,11 +99,13 @@ By default, \code{fdiff/D/Dlog} return \code{x} with all columns differenced / l
 
 If more than one value is passed to \code{n} and/or \code{diff}, the data is expanded-wide as follows: If \code{x} is an atomic vector or time series, a (time series) matrix is returned with columns ordered first by lag, then by difference. If \code{x} is a matrix or data frame, each column is expanded in like manor such that the output has \code{ncol(x)*length(n)*length(diff)} columns ordered first by column name, then by lag, then by difference.
 
-With groups/panel-identifiers supplied to \code{g/by}, \code{fdiff/D/Dlog} efficiently compute panel-differences. If \code{t} is left empty, the data needs to be ordered such that all values belonging to a group are consecutive and in the right order. It is not necessary that the groups themselves occur in the right order. If time-variable(s) are supplied to \code{t}, the panel is fully identified and differences can be securely computed even if the data is completely unordered.
+With groups/panel-identifiers supplied to \code{g/by}, \code{fdiff/D/Dlog} efficiently compute panel-differences. If \code{t} is left empty, the data needs to be ordered such that all values belonging to a group are consecutive and in the right order. It is not necessary that the groups themselves occur in the right order. If time-variable(s) are supplied to \code{t}, the panel is fully identified and differences can be securely computed even if the data is unordered.
 
-\code{fdiff/D/Dlog} supports balanced panels and unbalanced panels where various individuals are observed for different time-sequences (both start, end and duration of observation can differ for each individual), but does not natively support irregularly spaced time series and panels. For computational details and efficiency considerations see the help page for \code{\link{flag}}. A work-around for differencing irregular panels is easily achieved with the help of \code{\link{seqid}}.
+\code{fdiff/D/Dlog} supports balanced panels and unbalanced panels where various individuals are observed for different time-sequences.
+% (both start, end and duration of observation can differ for each individual), but does not natively support irregularly spaced time series and panels.
+For computational details and efficiency considerations see the help page for \code{\link{flag}}. %A work-around for differencing irregular panels is easily achieved with the help of \code{\link{seqid}}.
 
-It is also possible to compute differences on unordered vectors / time series (thus utilizing \code{t} but leaving \code{g/by} empty).
+It is also possible to compute differences on unordered vectors or irregular time series (thus utilizing \code{t} but leaving \code{g/by} empty).
 
 The methods applying to \emph{plm} objects (panel series and panel data frames) automatically utilize the panel-identifiers attached to these objects and thus securely compute fully identified panel-differences. If these objects have > 2 panel-identifiers attached to them, the last identifier is assumed to be the time-variable, and the others are taken as grouping-variables and interacted.
 }
@@ -184,7 +186,7 @@ summary(lm(D(PCGDP,1,1,g) ~ L(PCGDP,1,g) +              # a bit more parsimoniou
 summary(lm(D1.PCGDP ~.,                                 # Now adding level and lagged level of
 L(D(wlddev,0:1,1, ~ country, ~year,9:10),0:1,           # LIFEEX and lagged differences rates
   ~ country, ~year, keep.ids = FALSE)[-1]))
-
+\donttest{ % No code relying on suggested package
 ## Using plm can make things easier, but avoid attaching or 'with' calls:
 pwlddev <- plm::pdata.frame(wlddev, index = c("country","year"))
 head(D(pwlddev, 0:1, 1, 9:10))                          # Again differences of LIFEEX and PCGDP
@@ -210,7 +212,7 @@ wlddev \%>\% group_by(country) \%>\%
              select(year,PCGDP,LIFEEX) \%>\% D(0:1,1:2,year) # Also using t (safer)
 wlddev \%>\% group_by(country) \%>\%                           # Dropping id's
              select(year,PCGDP,LIFEEX) \%>\% D(0:1,1:2,year, keep.ids = FALSE)
-
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

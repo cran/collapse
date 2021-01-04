@@ -20,19 +20,19 @@ It performs simple aggregations, multi-type data aggregations applying different
 # Main function: allows formula and data input to `by` and `w` arguments
 collap(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum,
        custom = NULL, keep.by = TRUE, keep.w = TRUE, keep.col.order = TRUE,
-       sort = TRUE, decreasing = FALSE, na.last = TRUE, parallel = FALSE, mc.cores = 1L,
+       sort = TRUE, decreasing = FALSE, na.last = TRUE, parallel = FALSE, mc.cores = 2L,
        return = c("wide","list","long","long_dupl"), give.names = "auto", sort.row, \dots)
 
 # Programmer function: allows column names and indices input to `by` and `w` arguments
 collapv(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum,
         custom = NULL, keep.by = TRUE, keep.w = TRUE, keep.col.order = TRUE,
-        sort = TRUE, decreasing = FALSE, na.last = TRUE, parallel = FALSE, mc.cores = 1L,
+        sort = TRUE, decreasing = FALSE, na.last = TRUE, parallel = FALSE, mc.cores = 2L,
         return = c("wide","list","long","long_dupl"), give.names = "auto", sort.row, \dots)
 
 # Auxiliary function: for grouped data ('grouped_df') input + non-standard evaluation
 collapg(X, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum, custom = NULL,
         keep.group_vars = TRUE, keep.w = TRUE, keep.col.order = TRUE,
-        parallel = FALSE, mc.cores = 1L,
+        parallel = FALSE, mc.cores = 2L,
         return = c("wide","list","long","long_dupl"), give.names = "auto", sort.row, \dots)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -50,16 +50,19 @@ collapg(X, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum, cust
 \item{keep.w}{logical. \code{FALSE} will omit weight variable from the output i.e. no aggregation of the weights. \code{TRUE} aggregates and adds weights, even if passed externally as a vector (unlike other \emph{collapse} functions).}
 \item{keep.col.order}{logical. Retain original column order post-aggregation.}
 \item{sort, decreasing, na.last}{logical. Arguments passed to \code{\link{GRP.default}} and affecting the row-order in the aggregated data frame.}
-\item{parallel}{logical. Use \code{parallel::mclapply} instead of \code{lapply} for multi-function or custom aggregation.}
-\item{mc.cores}{integer. Argument to \code{parallel::mclapply} setting the number of cores to use.}
+\item{parallel}{logical. Use \code{\link{mclapply}} instead of \code{lapply} to parallelize the computation at the column level. Not available for Windows.}
+\item{mc.cores}{integer. Argument to \code{\link{mclapply}} setting the number of cores to use, default is 2.}
 \item{return}{character. Control the output format when aggregating with multiple functions or performing custom aggregation. "wide" (default) returns a wider data frame with added columns for each additional function. "list" returns a list of data frames - one for each function. "long" adds a column "Function" and row-binds the results from different functions using \code{data.table::rbindlist}. "long.dupl" is a special option for aggregating multi-type data using multiple \code{FUN} but only one \code{catFUN} or vice-versa. In that case the format is long and data aggregated using only one function is duplicated. See Examples.}
-\item{give.names}{logical. Create unique names of aggregated columns by adding a prefix 'FUN.'. 'auto' will automatically create such prefixes whenever multiple functions are applied to a column or \code{custom} is used.}
+\item{give.names}{logical. Create unique names of aggregated columns by adding a prefix 'FUN.var'. \code{'auto'} will automatically create such prefixes whenever multiple functions are applied to a column. % By default \code{"."} is used as a separator between 'FUN' and 'var'. It is also possible to choose a different separator by specifying \code{give.names = "_"}, for example.
+}
 \item{sort.row}{depreciated, renamed to \code{sort}.}
 \item{\dots}{additional arguments passed to all functions supplied to \code{FUN}, \code{catFUN}, \code{wFUN} or \code{custom}. The behavior of \link[=A1-fast-statistical-functions]{Fast Statistical Functions} is regulated by \code{option("collapse_unused_arg_action")} and defaults to \code{"warning"}. }
 }
 
 \details{
-\code{collap} automatically checks each function passed to it whether it is a \link[=A1-fast-statistical-functions]{Fast Statistical Function} (i.e. whether the function name is contained in \code{.FAST_STAT_FUN}). If the function is a fast statistical function, \code{collap} only does the grouping and then calls the function to carry out the grouped computations. If the function is not one of \code{.FAST_STAT_FUN}, \code{\link{BY}} is called internally to perform the computation. The resulting computations from each function are put into a list and recombined to produce the desired output format as controlled by the \code{return} argument. When multiple functions are used with \code{collap}, setting \code{parallel = TRUE} and the number of cores with \code{mc.cores} will instruct \code{collap} to execute these function calls in parallel using \code{parallel::mclapply}. If only a single function is used which is not a \code{.FAST_STAT_FUN}, the \code{parallel} and \code{mc.cores} arguments are handed down to \code{\link{BY}}. See Examples.
+\code{collap} automatically checks each function passed to it whether it is a \link[=A1-fast-statistical-functions]{Fast Statistical Function} (i.e. whether the function name is contained in \code{.FAST_STAT_FUN}). If the function is a fast statistical function, \code{collap} only does the grouping and then calls the function to carry out the grouped computations. If the function is not one of \code{.FAST_STAT_FUN}, \code{\link{BY}} is called internally to perform the computation. The resulting computations from each function are put into a list and recombined to produce the desired output format as controlled by the \code{return} argument.
+
+When setting \code{parallel = TRUE} on a non-windows computer, aggregations will efficiently be parallelized at the column level using \code{\link{mclapply}} utilizing \code{mc.cores} cores.
 }
 \value{
 \code{X} aggregated. If \code{X} is not a data frame it is coerced to one using \code{\link{qDF}} and then aggregated.
@@ -71,9 +74,13 @@ collapg(X, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum, cust
 %%  ~~who you are~~
  %}
 \note{
-Since \code{\link{BY}} does not check and split additional arguments passed to it, it is presently not possible to create a weighted function in R and apply it to data by groups with \code{collap}. Weighted aggregations only work with \link[=A1-fast-statistical-functions]{Fast Statistical Functions} supporting weights. User written weighted functions can be applied using the \emph{data.table} package.
+(1) Since \code{\link{BY}} does not check and split additional arguments passed to it, it is presently not possible to create a weighted function in R and apply it to data by groups with \code{collap}. Weighted aggregations only work with \link[=A1-fast-statistical-functions]{Fast Statistical Functions} supporting weights. User written weighted functions can be applied using the \emph{data.table} package.
 
-The dispatch between using optimized \code{collapse} functions performing grouped computations internally or calling \code{BY} to perform split-apply-combine computing is done by matching the function name against \code{.FAST_STAT_FUN}. Thus code like \code{collapse::collap(data, ~ id, collapse::fmedian)} does not yield an optimized computation, as \code{"collapse::fmedian" \%!in\% .FAST_STAT_FUN}. If you want to perform optimized computations with \code{collap} without loading the pacckage, load the functions beforehand as well, e.g. \code{fmedian <- collapse::fmedian; data, ~ id, fmedian)}. Alternatively it is of course also possible to use \code{collapse::fmedian(collapse::fgroup_by(data, id))}, or something similar...
+(2) When the \code{w} argument is used, the weights are passed to all \link[=A1-fast-statistical-functions]{Fast Statistical Functions}. This may be undesirable in settings like \code{collapse::collap(data, ~ id, custom = list(fsum = ..., fmean = ...), w = ~ weights)} where some columns are to be aggregated using the weighted mean, and others using a simple sum or another unweighted statistic. Since many \link[=A1-fast-statistical-functions]{Fast Statistical Functions} including \code{\link{fsum}} support weights, the above computes a weighted mean and a weighted sum. A couple of workarounds were outlined \href{https://github.com/SebKrantz/collapse/issues/96}{here}, but \emph{collapse} 1.5.0 incorporates an easy solution into \code{collap}: It is now possible to simply append \link[=A1-fast-statistical-functions]{Fast Statistical Functions} by \code{_uw} to yield an unweighted computation. So for the above example we can write: \code{collapse::collap(data, ~ id, custom = list(fsum_uw = ..., fmean = ...), w = ~ weights)} to get the weighted mean and the simple sum. \emph{Note} that the \code{_uw} functions are not available for use outside collap. Thus one also needs to quote them when passed to the \code{FUN} or \code{catFUN} arguments, e.g. use \code{collap(data, ~ id, fmean, "fmode_uw", w = ~ weighs)}, since \code{collap(data, ~ id, fmean, fmode_uw, w = ~ weighs)} gives an error stating that \code{fmode_uw} was not found. \emph{Note} also that it is never necessary for functions passed to \code{wFUN} to be appended like this, as the weights are never used to aggregate themselves.
+
+(3) The dispatch between using optimized \link[=A1-fast-statistical-functions]{Fast Statistical Functions} performing grouped computations internally or calling \code{BY} to perform split-apply-combine computing is done by matching the function name against \code{.FAST_STAT_FUN}. Thus code like \code{collapse::collap(data, ~ id, collapse::fmedian)} does not yield an optimized computation, as \code{"collapse::fmedian" \%!in\% .FAST_STAT_FUN}. It is sufficient to write \code{collapse::collap(data, ~ id, "fmedian")} to get the desired result when the \emph{collapse} namespace is not attached.
+
+%If you want to perform optimized computations with \code{collap} without loading the pacckage, load the functions beforehand as well, e.g. \code{fmedian <- collapse::fmedian; data, ~ id, fmedian)}. Alternatively it is of course also possible to use \code{collapse::fmedian(collapse::fgroup_by(data, id))}, or something similar...
 
 % \code{collap} by default (\code{keep.by = TRUE, keep.w = TRUE}) preserves all arguments passed to the \code{by} or \code{w} arguments, whether passed in a formula or externally. The names of externally passed vectors and lists are intelligently extracted. So it is possible to write \code{collap(iris, iris$Species)}, and obtain an aggregated data frame with two \code{Species} columns, whereas \code{collap(iris, ~ Species)} only has one \code{Species} column. Similarly for weight vectors passed to \code{w}. In this regard \code{collap} is more sophisticated than other \emph{collapse} functions where preservation of grouping and weight variables is restricted to formula use. For example \code{STD(iris, iris$Species)} does not preserve \code{Species} in the output, whereas \code{STD(iris, ~ Species)} does. This \code{collap} feature is there simply for convenience, for example sometimes a survey is disaggregated into several datasets, and this now allows easy pulling of identifiers or weights from other datasets for aggregations. If all information is available in one dataset, just using formulas is highly recommended.
 }
@@ -105,9 +112,10 @@ collap(iris, ~ Species, w = weights)                           # Some random wei
 collap(iris, iris$Species, w = weights)                        # Note this behavior..
 collap(iris, iris$Species, w = weights,
        keep.by = FALSE, keep.w = FALSE)
+\donttest{ % No code relying on suggested package
 library(dplyr) # Needed for "\%>\%"
 iris \%>\% fgroup_by(Species) \%>\% collapg                        # dplyr style, but faster
-
+}
 ## Multi-Type Aggregation --------------------------------------
 head(wlddev)                                                    # World Development Panel Data
 head(collap(wlddev, ~ country + decade))                        # Aggregate by country and decade
@@ -192,14 +200,14 @@ head(collap(wlddev, ~ country + decade,                         # No column reor
             wFUN = list(fsum, fmax),
             parallel = TRUE, mc.cores = 1L, keep.col.order = FALSE))
 
-
+\donttest{ % No code relying on suggested package
 ## Piped Use --------------------------------------------------
-wlddev \%>\% fgroup_by(country, decade) \%>\% collapg
-wlddev \%>\% fgroup_by(country, decade) \%>\% collapg(w = ODA)
-wlddev \%>\% fgroup_by(country, decade) \%>\% collapg(fmedian, flast)
+wlddev \%>\% fgroup_by(country, decade) \%>\% collapg \%>\% head
+wlddev \%>\% fgroup_by(country, decade) \%>\% collapg(w = ODA) \%>\% head
+wlddev \%>\% fgroup_by(country, decade) \%>\% collapg(fmedian, flast) \%>\% head
 wlddev \%>\% fgroup_by(country, decade) \%>\%
-  collapg(custom = list(fmean = 9:12, fmode = 5:7, flast = 3))
-
+  collapg(custom = list(fmean = 9:12, fmode = 5:7, flast = 3)) \%>\% head
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

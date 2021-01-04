@@ -1,7 +1,90 @@
+# Need generic version for column-parallel apply and aggregating weights..
+fsum_uw <- function(x, g, w, ...) fsum(x, g, ...)
+fprod_uw <- function(x, g, w, ...) fsum(x, g, ...)
+fmean_uw <- function(x, g, w, ...) fmean(x, g, ...)
+fmedian_uw <- function(x, g, w, ...) fmedian(x, g, ...)
+fvar_uw <- function(x, g, w, ...) fvar(x, g, ...)
+fsd_uw <- function(x, g, w, ...) fsd(x, g, ...)
+fmode_uw <- function(x, g, w, ...) fmode(x, g, ...)
+fnth_uw <- function(x, n, g, w, ...) fmode(x, n, g, ...)
+
+fmin_uw <- function(x, g, w, ...) fmin(x, g, ...)
+fmax_uw <- function(x, g, w, ...) fmax(x, g, ...)
+ffirst_uw <- function(x, g, w, ...) ffirst(x, g, ...)
+flast_uw <- function(x, g, w, ...) flast(x, g, ...)
+fNobs_uw <- function(x, g, w, ...) fNobs(x, g, ...)
+fNdistinct_uw <- function(x, g, w, ...) fNdistinct(x, g, ...)
+
+FSF <- c("fmean","fmedian","fmode","fsum","fprod","fsd","fvar",
+         "fmin","fmax","fnth","ffirst","flast","fNobs","fNdistinct")
+
+.FAST_STAT_FUN_EXT <- c(FSF, paste0(FSF, "_uw"))
+
+mymatchfun <- function(FUN) {
+  if(is.function(FUN)) return(FUN)
+  switch(tochar(FUN),
+         # cat(paste0(FSF, " = ", FSF, ",\n"))
+         fmean = fmean,
+         fmedian = fmedian,
+         fmode = fmode,
+         fsum = fsum,
+         fprod = fprod,
+         fsd = fsd,
+         fvar = fvar,
+         fmin = fmin,
+         fmax = fmax,
+         fnth = fnth,
+         ffirst = ffirst,
+         flast = flast,
+         fNobs = fNobs,
+         fNdistinct = fNdistinct,
+         # cat(paste0(paste0(FSF, "_uw"), " = ", paste0(FSF, "_uw"), ",\n"))
+         fmean_uw = fmean_uw,
+         fmedian_uw = fmedian_uw,
+         fmode_uw = fmode_uw,
+         fsum_uw = fsum_uw,
+         fprod_uw = fprod_uw,
+         fsd_uw = fsd_uw,
+         fvar_uw = fvar_uw,
+         fmin_uw = fmin_uw,
+         fmax_uw = fmax_uw,
+         fnth_uw = fnth_uw,
+         ffirst_uw = ffirst_uw,
+         flast_uw = flast_uw,
+         fNobs_uw = fNobs_uw,
+         fNdistinct_uw = fNdistinct_uw,
+         match.fun(FUN)) # get(FUN, mode = "function", envir = parent.frame(2)) -> no error message
+}
+
+# Column-level parallel implementation
+applyfuns_internal <- function(data, by, FUN, fFUN, parallel, cores, ...) {
+  if(is.list(FUN)) {
+    if(parallel) return(lapply(seq_along(FUN), function(i)
+            if(fFUN[i]) mclapply(data, FUN[[i]], g = by, ..., use.g.names = FALSE, mc.cores = cores) else
+                        BY.data.frame(data, by, FUN[[i]], ..., use.g.names = FALSE, parallel = parallel, mc.cores = cores)))
+
+      return(lapply(seq_along(FUN), function(i)
+              if(fFUN[i]) FUN[[i]](data, g = by, ..., use.g.names = FALSE) else
+                BY.data.frame(data, by, FUN[[i]], ..., use.g.names = FALSE)))
+  }
+
+  if(parallel) if(fFUN) return(list(mclapply(data, FUN, g = by, ..., use.g.names = FALSE, mc.cores = cores))) else
+        return(list(BY.data.frame(data, by, FUN, ..., use.g.names = FALSE, parallel = parallel, mc.cores = cores)))
+
+  if(fFUN) return(list(FUN(data, g = by, ..., use.g.names = FALSE)))
+  list(BY.data.frame(data, by, FUN, ..., use.g.names = FALSE))
+}
+
+
+# CHeck this :
+# X = wlddev; by = ~ iso3c; wFUN = .c(fmean, fsd); w = ~ ODA
+
+# NOTE: CUSTOM SEPARATOR doesn't work because of unlist() !!!!!!!!!!!!
+
 # keep.w toggle w being kept even if passed externally ? -> Also not done with W, B , etc !! -> but they also don't keep by ..
 collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum, custom = NULL,
                    keep.by = TRUE, keep.w = TRUE, keep.col.order = TRUE, sort = TRUE, decreasing = FALSE,
-                   na.last = TRUE, parallel = FALSE, mc.cores = 1L,
+                   na.last = TRUE, parallel = FALSE, mc.cores = 2L,
                    return = c("wide","list","long","long_dupl"), give.names = "auto", sort.row, ...) {
 
   if(!missing(sort.row)) {
@@ -11,6 +94,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
   return <- switch(return[1L], wide = 1L, list = 2L, long = 3L, long_dupl = 4L, stop("Unknown return output option"))
   widel <- return == 1L
   ncustoml <- is.null(custom)
+  autorn <- is.character(give.names) && give.names == "auto"
   nwl <- is.null(w)
   if(!inherits(X, "data.frame")) X <- qDF(X)
   ax <- attributes(X)
@@ -19,7 +103,8 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
   # attributes(X) <- NULL
   # attr(X, "class") <- "data.frame" # class needed for method dispatch of fast functions, not for BY !
 
-  aplyfun <- if(parallel) function(...) mclapply(..., mc.cores = mc.cores) else lapply
+  # cl <- if(parallel) makeCluster(mc.cores) else NULL
+  # aplyfun <- if(parallel) function(...) mclapply(..., mc.cores = mc.cores) else lapply
 
   # identifying by and cols
   vl <- TRUE
@@ -60,12 +145,12 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
         namwFUN <- l1orn(as.character(substitute(wFUN)), "wFUN")
       } else if(is.character(wFUN)) {
         namwFUN <- wFUN
-        wFUN <- if(length(wFUN) > 1L) lapply(wFUN, match.fun, descend = FALSE) else match.fun(wFUN, descend = FALSE)
+        wFUN <- if(length(wFUN) > 1L) lapply(wFUN, mymatchfun) else mymatchfun(wFUN)
       } else if(is.list(wFUN)) {
         namwFUN <- names(wFUN)
         if(is.null(namwFUN)) namwFUN <- all.vars(substitute(wFUN))
       } else stop("wFUN needs to be a function, character vector of function names or list of functions!")
-      if(!all(namwFUN %in% .FAST_STAT_FUN)) stop("wFUN needs to be fast statistical functions, see print(.FAST_STAT_FUN)")
+      if(!all(namwFUN %in% .FAST_STAT_FUN_EXT)) stop("wFUN needs to be fast statistical functions, see print(.FAST_STAT_FUN)")
       if(is.list(wFUN)) {
         namw <- paste(namwFUN, namw, sep = ".")
         by[[4L]] <- c(if(keep.by) by[[4L]], `names<-`(lapply(wFUN, function(f) f(w, g = by, ..., use.g.names = FALSE)), namw))
@@ -101,7 +186,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
     } else if(is.character(FUN)) {
       # FUN <- unlist(strsplit(FUN,",",fixed = TRUE), use.names = FALSE)
       namFUN <- FUN
-      FUN <- if(length(FUN) > 1L) lapply(FUN, match.fun, descend = FALSE) else match.fun(FUN, descend = FALSE)
+      FUN <- if(length(FUN) > 1L) lapply(FUN, mymatchfun) else mymatchfun(FUN)
     } else if(is.list(FUN)) {
       namFUN <- names(FUN)
       if(is.null(namFUN)) namFUN <- all.vars(substitute(FUN))
@@ -112,13 +197,13 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
     } else if(is.character(catFUN)) {
       # catFUN <- unlist(strsplit(catFUN,",",fixed = TRUE), use.names = FALSE)
       namcatFUN <- catFUN
-      catFUN <- if(length(catFUN) > 1L) lapply(catFUN, match.fun, descend = FALSE) else match.fun(catFUN, descend = FALSE)
+      catFUN <- if(length(catFUN) > 1L) lapply(catFUN, mymatchfun) else mymatchfun(catFUN)
     } else if(is.list(catFUN)) {
       namcatFUN <- names(catFUN)
       if(is.null(namcatFUN)) namcatFUN <- all.vars(substitute(catFUN))
     } else stop("FUN needs to be a function, character vector of function names or list of functions!")
 
-    if(give.names == "auto") give.names <- !widel || length(FUN) > 1L || length(catFUN) > 1L
+    if(autorn) give.names <- !widel || length(FUN) > 1L || length(catFUN) > 1L
 
     # Aggregator function # drop level of nesting i.e. make rest length(by)+length(FUN)+length(catFUN)  ?
     agg <- function(xnu, xnnu, ...) { # by, FUN, namFUN, catFUN, namcatFUN, drop.by
@@ -128,31 +213,19 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
         res[[1L]] <- list(by[[4L]]) # could add later using "c" ?
         ind <- 2L
       } else ind <- 1L
-      if(nul) {
-        fFUN <- namFUN %in% .FAST_STAT_FUN
-        if(is.list(FUN))
-          res[[ind]] <- condsetn(aplyfun(seq_along(namFUN), function(i)
-            if(fFUN[i]) FUN[[i]](xnu, g = by, ..., use.g.names = FALSE) else
-              BY.data.frame(xnu, by, FUN[[i]], ..., use.g.names = FALSE)), namFUN, give.names) else
-                res[[ind]] <- if(fFUN) condsetn(list(FUN(xnu, g = by, ..., use.g.names = FALSE)), namFUN, give.names) else # give.names || !widel
-                  condsetn(list(BY.data.frame(xnu, by, FUN, ..., use.g.names = FALSE, parallel = parallel, mc.cores = mc.cores)), namFUN, give.names) # give.names || !widel
-      }
-      if(nnul) {
-        fcatFUN <- namcatFUN %in% .FAST_STAT_FUN
-        if(is.list(catFUN))
-          res[[lr]] <- condsetn(aplyfun(seq_along(namcatFUN), function(i)
-            if(fcatFUN[i]) catFUN[[i]](xnnu, g = by, ..., use.g.names = FALSE) else
-              BY.data.frame(xnnu, by, catFUN[[i]], ..., use.g.names = FALSE)), namcatFUN, give.names) else
-                res[[lr]] <- if(fcatFUN) condsetn(list(catFUN(xnnu, g = by, ..., use.g.names = FALSE)), namcatFUN, give.names) else # give.names || !widel
-                  condsetn(list(BY.data.frame(xnnu, by, catFUN, ..., use.g.names = FALSE, parallel = parallel, mc.cores = mc.cores)), namcatFUN, give.names) # give.names || !widel
-      }
+      if(nul) res[[ind]] <- condsetn(applyfuns_internal(xnu, by, FUN, namFUN %in% .FAST_STAT_FUN_EXT,
+                                     parallel, mc.cores, ...), namFUN, give.names)
+      if(nnul) res[[lr]] <- condsetn(applyfuns_internal(xnnu, by, catFUN, namcatFUN %in% .FAST_STAT_FUN_EXT,
+                                     parallel, mc.cores, ...), namcatFUN, give.names)
       return(res)
     } # fastest using res list ?? or better combine at the end ??
 
     if(nwl) {
-      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL, if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, ...)
+      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL,
+                 if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, ...)
     } else {
-      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL, if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, w = w, ...)
+      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL,
+                 if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, w = w, ...)
     }
 
 
@@ -162,10 +235,9 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
 
   } else { # custom aggregation:
 
-    if(give.names == "auto") give.names <- TRUE
     namFUN <- names(custom)
     if(!is.list(custom) || is.null(namFUN)) stop("custom needs to be a named list, see ?collap")
-    fFUN <- namFUN %in% .FAST_STAT_FUN
+    fFUN <- namFUN %in% .FAST_STAT_FUN_EXT
     if(!keep.by) {
       res <- vector("list", 1L)
       ind <- 1L
@@ -175,20 +247,22 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
       ind <- 2L
     }
     custom <- lapply(custom, cols2int, X, nam) # could integrate below, but then reorder doesn't work !
+
+    if(autorn) give.names <- fanyDuplicated(unlist(custom, FALSE, FALSE))
     #lx <- length(X)
     # custom <- lapply(custom, function(x) if(is.numeric(x) && max(abs(x)) <= lx)
     #                          x else if(is.character(x)) ckmatch(x, nam) else
     #                          stop("custom list content must be variable names or suitable column indices"))
 
     if(nwl) {
-      res[[ind]] <- condsetn(aplyfun(seq_along(namFUN), function(i)
-        if(fFUN[i]) match.fun(namFUN[i])(`oldClass<-`(X[custom[[i]]], "data.frame"), g = by, ..., use.g.names = FALSE) else
-          BY.data.frame(X[custom[[i]]], by, namFUN[i], ..., use.g.names = FALSE)), namFUN, give.names)
+      res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
+                      applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+                                         fFUN[i], parallel, mc.cores, ...)[[1L]]), namFUN, give.names)
     } else {
       if(!all(fFUN)) warning("collap can only perform weighted aggregations with the fast statistical functions (see .FAST_STAT_FUN): Ignoring weights argument to other functions")
-      res[[ind]] <- condsetn(aplyfun(seq_along(namFUN), function(i)
-        if(fFUN[i]) match.fun(namFUN[i])(`oldClass<-`(X[custom[[i]]], "data.frame"), g = by, w = w, ..., use.g.names = FALSE) else
-          BY.data.frame(X[custom[[i]]], by, namFUN[i], ..., use.g.names = FALSE)), namFUN, give.names)
+      res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
+                      applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+                                         fFUN[i], parallel, mc.cores, w = w, ...)[[1L]]), namFUN, give.names)
     }
 
     if(keep.col.order && return != 2L) { # && widel
@@ -197,6 +271,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
     }
   }
 
+  # if(parallel) stopCluster(cl)
   if(widel) res <- unlist(unlist(res, FALSE), FALSE) else {
     if(length(FUN) > 1L || length(catFUN) > 1L || length(custom) > 1L) {
       res <- unlist(res, FALSE)
@@ -239,7 +314,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
 # collapv: allows vector input to by and w
 collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum, custom = NULL,
                     keep.by = TRUE, keep.w = TRUE, keep.col.order = TRUE, sort = TRUE, decreasing = FALSE,
-                    na.last = TRUE, parallel = FALSE, mc.cores = 1L,
+                    na.last = TRUE, parallel = FALSE, mc.cores = 2L,
                     return = c("wide","list","long","long_dupl"), give.names = "auto", sort.row, ...) {
 
   if(!missing(sort.row)) {
@@ -249,6 +324,7 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
   return <- switch(return[1L], wide = 1L, list = 2L, long = 3L, long_dupl = 4L, stop("Unknown return output option"))
   widel <- return == 1L
   ncustoml <- is.null(custom)
+  autorn <- is.character(give.names) && give.names == "auto"
   nwl <- is.null(w)
   if(!inherits(X, "data.frame")) X <- qDF(X)
   ax <- attributes(X)
@@ -278,12 +354,12 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
         namwFUN <- l1orn(as.character(substitute(wFUN)), "wFUN")
       } else if(is.character(wFUN)) {
         namwFUN <- wFUN
-        wFUN <- if(length(wFUN) > 1L) lapply(wFUN, match.fun, descend = FALSE) else match.fun(wFUN, descend = FALSE)
+        wFUN <- if(length(wFUN) > 1L) lapply(wFUN, mymatchfun) else mymatchfun(wFUN)
       } else if(is.list(wFUN)) {
         namwFUN <- names(wFUN)
         if(is.null(namwFUN)) namwFUN <- all.vars(substitute(wFUN))
       } else stop("wFUN needs to be a function, character vector of function names or list of functions!")
-      if(!all(namwFUN %in% .FAST_STAT_FUN)) stop("wFUN needs to be fast statistical functions, see print(.FAST_STAT_FUN)")
+      if(!all(namwFUN %in% .FAST_STAT_FUN_EXT)) stop("wFUN needs to be fast statistical functions, see print(.FAST_STAT_FUN)")
       if(is.list(wFUN)) {
         namw <- paste(namwFUN, namw, sep = ".")
         by[[4L]] <- c(if(keep.by) by[[4L]], `names<-`(lapply(wFUN, function(f) f(w, g = by, ..., use.g.names = FALSE)), namw))
@@ -313,8 +389,7 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
       namFUN <- l1orn(as.character(substitute(FUN)), "FUN")
     } else if(is.character(FUN)) {
       namFUN <- FUN
-      FUN <- if(length(FUN) > 1L) lapply(FUN, match.fun, descend = FALSE) else
-        match.fun(FUN, descend = FALSE)
+      FUN <- if(length(FUN) > 1L) lapply(FUN, mymatchfun) else mymatchfun(FUN)
     } else if(is.list(FUN)) {
       namFUN <- names(FUN)
       if(is.null(namFUN)) namFUN <- all.vars(substitute(FUN))
@@ -324,14 +399,13 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
       namcatFUN <- l1orn(as.character(substitute(catFUN)), "catFUN")
     } else if(is.character(catFUN)) {
       namcatFUN <- catFUN
-      catFUN <- if(length(catFUN) > 1L) lapply(catFUN, match.fun, descend = FALSE) else
-        match.fun(catFUN, descend = FALSE)
+      catFUN <- if(length(catFUN) > 1L) lapply(catFUN, mymatchfun) else mymatchfun(catFUN)
     } else if(is.list(catFUN)) {
       namcatFUN <- names(catFUN)
       if(is.null(namcatFUN)) namcatFUN <- all.vars(substitute(catFUN))
     } else stop("FUN needs to be a function, character vector of function names or list of functions!")
 
-    if(give.names == "auto") give.names <- !widel || length(FUN) > 1L || length(catFUN) > 1L
+    if(autorn) give.names <- !widel || length(FUN) > 1L || length(catFUN) > 1L
 
     # Aggregator function
     agg <- function(xnu, xnnu, ...) {
@@ -341,31 +415,19 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
         res[[1L]] <- list(by[[4L]])
         ind <- 2L
       } else ind <- 1L
-      if(nul) {
-        fFUN <- namFUN %in% .FAST_STAT_FUN
-        if(is.list(FUN))
-          res[[ind]] <- condsetn(aplyfun(seq_along(namFUN), function(i)
-            if(fFUN[i]) FUN[[i]](xnu, g = by, ..., use.g.names = FALSE) else
-              BY.data.frame(xnu, by, FUN[[i]], ..., use.g.names = FALSE)), namFUN, give.names) else
-                res[[ind]] <- if(fFUN) condsetn(list(FUN(xnu, g = by, ..., use.g.names = FALSE)), namFUN, give.names) else # give.names || !widel
-                  condsetn(list(BY.data.frame(xnu, by, FUN, ..., use.g.names = FALSE, parallel = parallel, mc.cores = mc.cores)), namFUN, give.names) # give.names || !widel
-      }
-      if(nnul) {
-        fcatFUN <- namcatFUN %in% .FAST_STAT_FUN
-        if(is.list(catFUN))
-          res[[lr]] <- condsetn(aplyfun(seq_along(namcatFUN), function(i)
-            if(fcatFUN[i]) catFUN[[i]](xnnu, g = by, ..., use.g.names = FALSE) else
-              BY.data.frame(xnnu, by, catFUN[[i]], ..., use.g.names = FALSE)), namcatFUN, give.names) else
-                res[[lr]] <- if(fcatFUN) condsetn(list(catFUN(xnnu, g = by, ..., use.g.names = FALSE)), namcatFUN, give.names) else # give.names || !widel
-                  condsetn(list(BY.data.frame(xnnu, by, catFUN, ..., use.g.names = FALSE, parallel = parallel, mc.cores = mc.cores)), namcatFUN, give.names) # give.names || !widel
-      }
+      if(nul) res[[ind]] <- condsetn(applyfuns_internal(xnu, by, FUN, namFUN %in% .FAST_STAT_FUN_EXT,
+                                                        parallel, mc.cores, ...), namFUN, give.names)
+      if(nnul) res[[lr]] <- condsetn(applyfuns_internal(xnnu, by, catFUN, namcatFUN %in% .FAST_STAT_FUN_EXT,
+                                                        parallel, mc.cores, ...), namcatFUN, give.names)
       return(res)
     }
 
     if(nwl) {
-      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL, if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, ...)
+      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL,
+                 if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, ...)
     } else {
-      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL, if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, w = w, ...)
+      res <- agg(if(nul) `oldClass<-`(X[nu], "data.frame") else NULL,
+                 if(nnul) `oldClass<-`(X[nnu], "data.frame") else NULL, w = w, ...)
     }
 
     if(keep.col.order && widel) o <- forder.int(c(if(!keep.by) NULL else numby,
@@ -374,10 +436,9 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
 
   } else { # custom aggregation:
 
-    if(give.names == "auto") give.names <- TRUE
     namFUN <- names(custom)
     if(!is.list(custom) || is.null(namFUN)) stop("custom needs to be a named list, see ?collap")
-    fFUN <- namFUN %in% .FAST_STAT_FUN
+    fFUN <- namFUN %in% .FAST_STAT_FUN_EXT
     if(!keep.by) {
       res <- vector("list", 1L)
       ind <- 1L
@@ -389,15 +450,17 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
 
     custom <- lapply(custom, cols2int, X, nam)
 
+    if(autorn) give.names <- fanyDuplicated(unlist(custom, FALSE, FALSE))
+
     if(nwl) {
-      res[[ind]] <- condsetn(aplyfun(seq_along(namFUN), function(i)
-        if(fFUN[i]) match.fun(namFUN[i])(`oldClass<-`(X[custom[[i]]], "data.frame"), g = by, ..., use.g.names = FALSE) else
-          BY.data.frame(X[custom[[i]]], by, namFUN[i], ..., use.g.names = FALSE)), namFUN, give.names)
+      res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
+        applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+                           fFUN[i], parallel, mc.cores, ...)[[1L]]), namFUN, give.names)
     } else {
-      if(!all(fFUN)) warning("collapv can only perform weighted aggregations with the fast statistical functions (see .FAST_STAT_FUN): Ignoring weights argument to other functions")
-      res[[ind]] <- condsetn(aplyfun(seq_along(namFUN), function(i)
-        if(fFUN[i]) match.fun(namFUN[i])(`oldClass<-`(X[custom[[i]]], "data.frame"), g = by, w = w, ..., use.g.names = FALSE) else
-          BY.data.frame(X[custom[[i]]], by, namFUN[i], ..., use.g.names = FALSE)), namFUN, give.names)
+      if(!all(fFUN)) warning("collap can only perform weighted aggregations with the fast statistical functions (see .FAST_STAT_FUN): Ignoring weights argument to other functions")
+      res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
+        applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+                           fFUN[i], parallel, mc.cores, w = w, ...)[[1L]]), namFUN, give.names)
     }
 
     if(keep.col.order && return != 2L) {
@@ -447,7 +510,7 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
 
 # For dplyr integration: takes grouped_df as input
 collapg <- function(X, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN = fsum, custom = NULL,
-                    keep.group_vars = TRUE, keep.w = TRUE, keep.col.order = TRUE, parallel = FALSE, mc.cores = 1L,
+                    keep.group_vars = TRUE, keep.w = TRUE, keep.col.order = TRUE, parallel = FALSE, mc.cores = 2L,
                     return = c("wide","list","long","long_dupl"), give.names = "auto", sort.row, ...) {
   by <- GRP.grouped_df(X, return.groups = keep.group_vars, call = FALSE)
   if(is.null(custom)) ngn <- attr(X, "names") %!in% by[[5L]] # Note: this always leaves grouping columns on the left still !

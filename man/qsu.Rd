@@ -67,7 +67,7 @@ More formally, let \bold{\code{x}} (bold) be a panel vector of data for \code{N}
 
 'Within' statistics are always computed on the vector \bold{\code{x - xi. + x..}}, where \bold{\code{x..}} is simply the 'Overall' mean computed from \bold{\code{x}}, which is added back to preserve the level of the data. The 'Within' mean computed on this data will always be identical to the 'Overall' mean. In the summary output, \code{qsu} reports not 'N', which would be identical to the 'Overall-N', but 'T', the average number of time-periods of data available for each individual obtained as 'T' = 'Overall-N / 'Between-N'. See Examples.
 
-Apart from 'N/T' and the extrema, the standard-deviations ('SD') computed on between- and within- transformed data are extremely valuable because they indicate how much of the variation in a panel-variable is between-individuals and how much of the variation is within-individuals (over time). At the extremes, variables that have common values across individuals (such as the time-variable 't' in a balanced panel), can readily be identified as individual-invariant because the 'Between-SD' on this variable is 0 and the 'Within-SD' is equal to the 'Overall-SD'. Analogous, time-invariant individual characteristics (such as the individual-id 'i') have a 0 'Within-SD' and a 'Between-SD' equal to the 'Overall-SD'.
+Apart from 'N/T' and the extrema, the standard-deviations ('SD') computed on between- and within- transformed data are extremely valuable because they indicate how much of the variation in a panel-variable is between-individuals and how much of the variation is within-individuals (over time). At the extremes, variables that have common values across individuals (such as the time-variable(s) 't' in a balanced panel), can readily be identified as individual-invariant because the 'Between-SD' on this variable is 0 and the 'Within-SD' is equal to the 'Overall-SD'. Analogous, time-invariant individual characteristics (such as the individual-id 'i') have a 0 'Within-SD' and a 'Between-SD' equal to the 'Overall-SD'.
 
 \code{qsu} comes with it's own print method which by default writes out up to 9 digits at 4 decimal places. Larger numbers are printed in scientific format. for numbers between 7 and 9 digits, a comma ',' is placed after the 6th digit to designate the millions. Missing values are printed using '-'.
 
@@ -111,7 +111,7 @@ qsu(wlddev, pid = ~ iso3c, vlabels = TRUE)   # Adding between and within countri
 # that we have GINI-data on only 161 countries, with only 8.42 observations per country on average,
 # and that GDP, LIFEEX and GINI vary more between-countries, but ODA received varies more within
 # countries over time.
-
+\donttest{ % No code relying on suggested package
 # Using plm:
 pwlddev <- plm::pdata.frame(wlddev,         # Creating a Panel Data Frame frame from this data
                   index = c("iso3c","year"))
@@ -130,6 +130,7 @@ print.qsu(psr[,"SD",,])                     # Considering only standard deviatio
 # -> In all regions variations in inequality (GINI) between countries are greater than variations
 # in inequality within countries. The opposite is true for Life-Expectancy in all regions apart
 # from Europe, etc..
+}
 psrl <- qsu(wlddev, ~ region, ~ iso3c,      # Same, but output as nested list
             cols = 9:12, array = FALSE)
 psrl                                        # We can use unlist2d to create a tidy data.frame

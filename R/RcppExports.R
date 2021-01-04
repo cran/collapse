@@ -85,16 +85,16 @@ ffirstlCpp <- function(x, ng = 0L, g = 0L, narm = TRUE) {
     .Call(`_collapse_ffirstlCpp`, x, ng, g, narm)
 }
 
-flagleadCpp <- function(x, n = 1L, fill = NULL, ng = 0L, g = 0L, gs = NULL, t = NULL, names = TRUE) {
-    .Call(`_collapse_flagleadCpp`, x, n, fill, ng, g, gs, t, names)
+flagleadCpp <- function(x, n = 1L, fill = NULL, ng = 0L, g = 0L, t = NULL, names = TRUE) {
+    .Call(`_collapse_flagleadCpp`, x, n, fill, ng, g, t, names)
 }
 
-flagleadmCpp <- function(x, n = 1L, fill = NULL, ng = 0L, g = 0L, gs = NULL, t = NULL, names = TRUE) {
-    .Call(`_collapse_flagleadmCpp`, x, n, fill, ng, g, gs, t, names)
+flagleadmCpp <- function(x, n = 1L, fill = NULL, ng = 0L, g = 0L, t = NULL, names = TRUE) {
+    .Call(`_collapse_flagleadmCpp`, x, n, fill, ng, g, t, names)
 }
 
-flagleadlCpp <- function(x, n = 1L, fill = NULL, ng = 0L, g = 0L, gs = NULL, t = NULL, names = TRUE) {
-    .Call(`_collapse_flagleadlCpp`, x, n, fill, ng, g, gs, t, names)
+flagleadlCpp <- function(x, n = 1L, fill = NULL, ng = 0L, g = 0L, t = NULL, names = TRUE) {
+    .Call(`_collapse_flagleadlCpp`, x, n, fill, ng, g, t, names)
 }
 
 flastCpp <- function(x, ng = 0L, g = 0L, narm = TRUE) {
@@ -239,14 +239,6 @@ seqid <- function(x, o = NULL, del = 1L, start = 1L, na_skip = FALSE, skip_seq =
 
 groupid <- function(x, o = NULL, start = 1L, na_skip = FALSE, check_o = TRUE) {
     .Call(`_collapse_groupid`, x, o, start, na_skip, check_o)
-}
-
-groups2GRPCpp <- function(x, lx, gs) {
-    .Call(`_collapse_groups2GRPCpp`, x, lx, gs)
-}
-
-lassignCpp <- function(x, s, rows = NULL, fill = NA_real_) {
-    .Call(`_collapse_lassignCpp`, x, s, rows, fill)
 }
 
 varyingCpp <- function(x, ng = 0L, g = 0L, any_group = TRUE) {

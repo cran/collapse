@@ -363,8 +363,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // flagleadCpp
-SEXP flagleadCpp(SEXP x, IntegerVector n, SEXP fill, int ng, IntegerVector g, SEXP gs, SEXP t, bool names);
-RcppExport SEXP _collapse_flagleadCpp(SEXP xSEXP, SEXP nSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP namesSEXP) {
+SEXP flagleadCpp(SEXP x, IntegerVector n, SEXP fill, int ng, IntegerVector g, SEXP t, bool names);
+RcppExport SEXP _collapse_flagleadCpp(SEXP xSEXP, SEXP nSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP tSEXP, SEXP namesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -373,16 +373,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type fill(fillSEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type g(gSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type gs(gsSEXP);
     Rcpp::traits::input_parameter< SEXP >::type t(tSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(flagleadCpp(x, n, fill, ng, g, gs, t, names));
+    rcpp_result_gen = Rcpp::wrap(flagleadCpp(x, n, fill, ng, g, t, names));
     return rcpp_result_gen;
 END_RCPP
 }
 // flagleadmCpp
-SEXP flagleadmCpp(SEXP x, IntegerVector n, SEXP fill, int ng, IntegerVector g, SEXP gs, SEXP t, bool names);
-RcppExport SEXP _collapse_flagleadmCpp(SEXP xSEXP, SEXP nSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP namesSEXP) {
+SEXP flagleadmCpp(SEXP x, IntegerVector n, SEXP fill, int ng, IntegerVector g, SEXP t, bool names);
+RcppExport SEXP _collapse_flagleadmCpp(SEXP xSEXP, SEXP nSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP tSEXP, SEXP namesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -391,16 +390,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type fill(fillSEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type g(gSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type gs(gsSEXP);
     Rcpp::traits::input_parameter< SEXP >::type t(tSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(flagleadmCpp(x, n, fill, ng, g, gs, t, names));
+    rcpp_result_gen = Rcpp::wrap(flagleadmCpp(x, n, fill, ng, g, t, names));
     return rcpp_result_gen;
 END_RCPP
 }
 // flagleadlCpp
-List flagleadlCpp(const List& x, const IntegerVector& n, const SEXP& fill, int ng, const IntegerVector& g, const SEXP& gs, const SEXP& t, bool names);
-RcppExport SEXP _collapse_flagleadlCpp(SEXP xSEXP, SEXP nSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP gsSEXP, SEXP tSEXP, SEXP namesSEXP) {
+List flagleadlCpp(const List& x, const IntegerVector& n, const SEXP& fill, int ng, const IntegerVector& g, const SEXP& t, bool names);
+RcppExport SEXP _collapse_flagleadlCpp(SEXP xSEXP, SEXP nSEXP, SEXP fillSEXP, SEXP ngSEXP, SEXP gSEXP, SEXP tSEXP, SEXP namesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -409,10 +407,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const SEXP& >::type fill(fillSEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
     Rcpp::traits::input_parameter< const IntegerVector& >::type g(gSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type gs(gsSEXP);
     Rcpp::traits::input_parameter< const SEXP& >::type t(tSEXP);
     Rcpp::traits::input_parameter< bool >::type names(namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(flagleadlCpp(x, n, fill, ng, g, gs, t, names));
+    rcpp_result_gen = Rcpp::wrap(flagleadlCpp(x, n, fill, ng, g, t, names));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -985,33 +982,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type na_skip(na_skipSEXP);
     Rcpp::traits::input_parameter< bool >::type check_o(check_oSEXP);
     rcpp_result_gen = Rcpp::wrap(groupid(x, o, start, na_skip, check_o));
-    return rcpp_result_gen;
-END_RCPP
-}
-// groups2GRPCpp
-IntegerVector groups2GRPCpp(const List& x, int lx, const IntegerVector& gs);
-RcppExport SEXP _collapse_groups2GRPCpp(SEXP xSEXP, SEXP lxSEXP, SEXP gsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const List& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type lx(lxSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector& >::type gs(gsSEXP);
-    rcpp_result_gen = Rcpp::wrap(groups2GRPCpp(x, lx, gs));
-    return rcpp_result_gen;
-END_RCPP
-}
-// lassignCpp
-List lassignCpp(const List& x, int s, const SEXP& rows, double fill);
-RcppExport SEXP _collapse_lassignCpp(SEXP xSEXP, SEXP sSEXP, SEXP rowsSEXP, SEXP fillSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const List& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type s(sSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type rows(rowsSEXP);
-    Rcpp::traits::input_parameter< double >::type fill(fillSEXP);
-    rcpp_result_gen = Rcpp::wrap(lassignCpp(x, s, rows, fill));
     return rcpp_result_gen;
 END_RCPP
 }
