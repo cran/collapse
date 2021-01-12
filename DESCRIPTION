@@ -1,7 +1,7 @@
 Package: collapse
 Title: Advanced and Fast Data Transformation
-Version: 1.5.0
-Date: 2021-01-04
+Version: 1.5.1
+Date: 2021-01-12
 Authors@R: c(
            person("Sebastian", "Krantz", role = c("aut", "cre"), 
                   email = "sebastian.krantz@graduateinstitute.ch"),
@@ -55,12 +55,12 @@ LazyData: true
 Depends: R (>= 2.10)
 Imports: Rcpp (>= 1.0.1)
 LinkingTo: Rcpp
-Suggests: dplyr, plm, data.table, matrixStats, magrittr, fixest, vars,
-        weights, RcppArmadillo, RcppEigen, ggplot2, scales,
+Suggests: dplyr, plm, data.table, matrixStats, magrittr, fixest, lfe,
+        vars, weights, kit, RcppArmadillo, RcppEigen, ggplot2, scales,
         microbenchmark, testthat, covr
 SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2021-01-04 13:00:48 UTC; Sebastian Krantz
+Packaged: 2021-01-12 14:30:29 UTC; Sebastian Krantz
 Author: Sebastian Krantz [aut, cre],
   Matt Dowle [ctb],
   Arun Srinivasan [ctb],
@@ -73,4 +73,4 @@ Author: Sebastian Krantz [aut, cre],
   1999-2016 The R Core Team [cph]
 Maintainer: Sebastian Krantz <sebastian.krantz@graduateinstitute.ch>
 Repository: CRAN
-Date/Publication: 2021-01-04 17:00:03 UTC
+Date/Publication: 2021-01-12 15:10:02 UTC
