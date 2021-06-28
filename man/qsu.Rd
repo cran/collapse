@@ -5,6 +5,7 @@
 \alias{qsu.data.frame}
 \alias{qsu.pseries}
 \alias{qsu.pdata.frame}
+\alias{qsu.sf}
 \alias{print.qsu}
 % - Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -32,6 +33,11 @@ qsu(x, \dots)
 \method{qsu}{pdata.frame}(x, by = NULL, w = NULL, cols = NULL, effect = 1L,
     higher = FALSE, array = TRUE, vlabels = FALSE, \dots)
 
+# Methods for compatibility with sf:
+
+\method{qsu}{sf}(x, by = NULL, pid = NULL, w = NULL, cols = NULL,
+    higher = FALSE, array = TRUE, vlabels = FALSE, \dots)
+
 
 \method{print}{qsu}(x, digits = 4, nonsci.digits = 9, na.print = "-",
       return = FALSE, print.gap = 2, \dots)
@@ -43,7 +49,7 @@ qsu(x, \dots)
   \item{by}{\emph{(p)data.frame method}: Same as \code{g}, but also allows one- or two-sided formulas i.e. \code{~ group1 + group2} or \code{var1 + var2 ~ group1 + group2}. See Examples.}
   \item{pid}{same input as \code{g/by}: Specify a panel-identifier to also compute statistics on between- and within- transformed data. Data frame method also supports one- or two-sided formulas. Transformations are taken independently from grouping with \code{g/by} (grouped statistics are computed on the transformed data if \code{g/by} is also used). However, passing any LHS variables to \code{pid} will overwrite any \code{LHS} variables passed to \code{by}.}
   \item{w}{a vector of (non-negative) weights. Adding weights will compute the weighted mean, sd, skewness and kurtosis, and transform the data using weighted individual means if \code{pid} is used.}
-  \item{cols}{select columns to summarize using column names, indices, a logical vector or a function (i.e. \code{is.numeric}). Two-sided formulas passed to \code{by} or \code{pid} overwrite \code{cols}.}
+  \item{cols}{select columns to summarize using column names, indices, a logical vector or a function (e.g. \code{is.numeric}). Two-sided formulas passed to \code{by} or \code{pid} overwrite \code{cols}.}
 
   \item{higher}{logical. Add higher moments (skewness and kurtosis).}
   \item{array}{logical. If computations have more than 2 dimensions (up to a maximum of 4D: variables, statistics, groups and panel-decomposition) output to array, else output (nested) list of matrices.}
@@ -71,6 +77,7 @@ Apart from 'N/T' and the extrema, the standard-deviations ('SD') computed on bet
 
 \code{qsu} comes with it's own print method which by default writes out up to 9 digits at 4 decimal places. Larger numbers are printed in scientific format. for numbers between 7 and 9 digits, a comma ',' is placed after the 6th digit to designate the millions. Missing values are printed using '-'.
 
+The \emph{sf} method simply ignores the geometry column.
 }
 \value{
 A vector, matrix, array or list of matrices of summary statistics. All matrices and arrays have a class 'qsu' and a class 'table' attached.

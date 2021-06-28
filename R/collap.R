@@ -12,11 +12,13 @@ fmin_uw <- function(x, g, w, ...) fmin(x, g, ...)
 fmax_uw <- function(x, g, w, ...) fmax(x, g, ...)
 ffirst_uw <- function(x, g, w, ...) ffirst(x, g, ...)
 flast_uw <- function(x, g, w, ...) flast(x, g, ...)
-fNobs_uw <- function(x, g, w, ...) fNobs(x, g, ...)
-fNdistinct_uw <- function(x, g, w, ...) fNdistinct(x, g, ...)
+fnobs_uw <- function(x, g, w, ...) fnobs(x, g, ...)
+fndistinct_uw <- function(x, g, w, ...) fndistinct(x, g, ...)
+fNobs_uw <- function(x, g, w, ...) fnobs(x, g, ...)
+fNdistinct_uw <- function(x, g, w, ...) fndistinct(x, g, ...)
 
 FSF <- c("fmean","fmedian","fmode","fsum","fprod","fsd","fvar",
-         "fmin","fmax","fnth","ffirst","flast","fNobs","fNdistinct")
+         "fmin","fmax","fnth","ffirst","flast","fnobs","fndistinct", "fNobs","fNdistinct")
 
 .FAST_STAT_FUN_EXT <- c(FSF, paste0(FSF, "_uw"))
 
@@ -36,8 +38,10 @@ mymatchfun <- function(FUN) {
          fnth = fnth,
          ffirst = ffirst,
          flast = flast,
-         fNobs = fNobs,
-         fNdistinct = fNdistinct,
+         fnobs = fnobs,
+         fndistinct = fndistinct,
+         fNobs = fnobs,
+         fNdistinct = fndistinct,
          # cat(paste0(paste0(FSF, "_uw"), " = ", paste0(FSF, "_uw"), ",\n"))
          fmean_uw = fmean_uw,
          fmedian_uw = fmedian_uw,
@@ -51,8 +55,10 @@ mymatchfun <- function(FUN) {
          fnth_uw = fnth_uw,
          ffirst_uw = ffirst_uw,
          flast_uw = flast_uw,
-         fNobs_uw = fNobs_uw,
-         fNdistinct_uw = fNdistinct_uw,
+         fnobs_uw = fnobs_uw,
+         fndistinct_uw = fndistinct_uw,
+         fNobs_uw = fnobs_uw,
+         fNdistinct_uw = fndistinct_uw,
          match.fun(FUN)) # get(FUN, mode = "function", envir = parent.frame(2)) -> no error message
 }
 
@@ -96,9 +102,13 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
   ncustoml <- is.null(custom)
   autorn <- is.character(give.names) && give.names == "auto"
   nwl <- is.null(w)
-  if(!inherits(X, "data.frame")) X <- qDF(X)
+  if(inherits(X, "data.frame")) DTl <- inherits(X, "data.table") else {
+    X <- qDF(X)
+    DTl <- FALSE
+  }
   ax <- attributes(X)
   oldClass(X) <- NULL
+  if(length(X[[1L]]) == 0L) stop("data passed to collap() has 0 rows.") #160, 0 rows can cause segfault...
   nam <- names(X)
   # attributes(X) <- NULL
   # attr(X, "class") <- "data.frame" # class needed for method dispatch of fast functions, not for BY !
@@ -124,7 +134,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
     by <- GRP.default(`names<-`(list(by), l1orlst(as.character(substitute(by)))), NULL, sort, decreasing, na.last, keep.by, call = FALSE)
   } else {
     if(ncustoml) if(is.null(cols)) vl <- FALSE else v <- cols2int(cols, X, nam)
-    if(!is.GRP(by)) {
+    if(!is_GRP(by)) {
       numby <- seq_along(unclass(by))
       by <- GRP.default(by, numby, sort, decreasing, na.last, keep.by, call = FALSE)
     } else numby <- seq_along(by[[5L]])
@@ -246,6 +256,8 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
       res[[1L]] <- list(by[[4L]]) # could add later using "c" ?
       ind <- 2L
     }
+
+    custom_names <- lapply(custom, names)
     custom <- lapply(custom, cols2int, X, nam) # could integrate below, but then reorder doesn't work !
 
     if(autorn) give.names <- fanyDuplicated(unlist(custom, FALSE, FALSE))
@@ -256,12 +268,12 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
 
     if(nwl) {
       res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
-                      applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+                      applyfuns_internal(`oldClass<-`(setnck(X[custom[[i]]], custom_names[[i]]), "data.frame"), by, mymatchfun(namFUN[i]),
                                          fFUN[i], parallel, mc.cores, ...)[[1L]]), namFUN, give.names)
     } else {
       if(!all(fFUN)) warning("collap can only perform weighted aggregations with the fast statistical functions (see .FAST_STAT_FUN): Ignoring weights argument to other functions")
       res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
-                      applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+                      applyfuns_internal(`oldClass<-`(setnck(X[custom[[i]]], custom_names[[i]]), "data.frame"), by, mymatchfun(namFUN[i]),
                                          fFUN[i], parallel, mc.cores, w = w, ...)[[1L]]), namFUN, give.names)
     }
 
@@ -279,11 +291,11 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
         ax[["row.names"]] <- .set_row_names(by[[1L]])
         if(!keep.by) return(lapply(res, function(e) {
                             ax[["names"]] <- names(e)
-                            setAttributes(e, ax) }))
+                            condalcSA(e, ax, DTl) }))
         namby <- attr(res[[1L]], "names") # always works ??
         return(lapply(res[-1L], function(e) {
           ax[["names"]] <- c(namby, names(e))
-          setAttributes(c(res[[1L]], e), ax) }))
+          condalcSA(c(res[[1L]], e), ax, DTl) }))
       } else {
         if(return != 4L) {
           res <- if(!keep.by) .Call(C_rbindlist, res, TRUE, TRUE, "Function") else # data.table:::Crbindlist
@@ -307,7 +319,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
   if(keep.col.order) .Call(C_setcolorder, res, o) # data.table:::Csetcolorder
   ax[["names"]] <- names(res)
   ax[["row.names"]] <- .set_row_names(length(res[[1L]]))
-  setAttributes(res, ax)
+  return(condalcSA(res, ax, DTl))
 }
 
 
@@ -326,9 +338,13 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
   ncustoml <- is.null(custom)
   autorn <- is.character(give.names) && give.names == "auto"
   nwl <- is.null(w)
-  if(!inherits(X, "data.frame")) X <- qDF(X)
+  if(inherits(X, "data.frame")) DTl <- inherits(X, "data.table") else {
+    X <- qDF(X)
+    DTl <- FALSE
+  }
   ax <- attributes(X)
   oldClass(X) <- NULL
+  if(length(X[[1L]]) == 0L) stop("data passed to collapv() has 0 rows.") #160, 0 rows can cause segfault...
   nam <- names(X)
 
   aplyfun <- if(parallel) function(...) mclapply(..., mc.cores = mc.cores) else lapply
@@ -448,18 +464,19 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
       ind <- 2L
     }
 
+    custom_names <- lapply(custom, names)
     custom <- lapply(custom, cols2int, X, nam)
 
     if(autorn) give.names <- fanyDuplicated(unlist(custom, FALSE, FALSE))
 
     if(nwl) {
       res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
-        applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+        applyfuns_internal(`oldClass<-`(setnck(X[custom[[i]]], custom_names[[i]]), "data.frame"), by, mymatchfun(namFUN[i]),
                            fFUN[i], parallel, mc.cores, ...)[[1L]]), namFUN, give.names)
     } else {
       if(!all(fFUN)) warning("collap can only perform weighted aggregations with the fast statistical functions (see .FAST_STAT_FUN): Ignoring weights argument to other functions")
       res[[ind]] <- condsetn(lapply(seq_along(namFUN), function(i)
-        applyfuns_internal(`oldClass<-`(X[custom[[i]]], "data.frame"), by, mymatchfun(namFUN[i]),
+        applyfuns_internal(`oldClass<-`(setnck(X[custom[[i]]], custom_names[[i]]), "data.frame"), by, mymatchfun(namFUN[i]),
                            fFUN[i], parallel, mc.cores, w = w, ...)[[1L]]), namFUN, give.names)
     }
 
@@ -476,11 +493,11 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
         ax[["row.names"]] <- .set_row_names(by[[1L]])
         if(!keep.by) return(lapply(res, function(e) {
                             ax[["names"]] <- names(e)
-                            setAttributes(e, ax) }))
+                            condalcSA(e, ax, DTl) }))
         namby <- attr(res[[1L]], "names") # always works ??
         return(lapply(res[-1L], function(e) {
           ax[["names"]] <- c(namby, names(e))
-          setAttributes(c(res[[1L]], e), ax) }))
+          condalcSA(c(res[[1L]], e), ax, DTl) }))
       } else {
         if(return != 4L) {
           res <- if(!keep.by) .Call(C_rbindlist, res, TRUE, TRUE, "Function") else # data.table:::Crbindlist
@@ -504,7 +521,7 @@ collapv <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, w
   if(keep.col.order) .Call(C_setcolorder, res, o) # data.table:::Csetcolorder
   ax[["names"]] <- names(res)
   ax[["row.names"]] <- .set_row_names(length(res[[1L]]))
-  setAttributes(res, ax)
+  return(condalcSA(res, ax, DTl))
 }
 
 
@@ -529,7 +546,7 @@ collapg <- function(X, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wFUN 
     }
   }
   if(is.null(custom)) X <- fcolsubset(X, ngn) # else X <- X # because of non-standard eval.. X is "."
-  eval(substitute(collap(X, by, FUN, catFUN, cols, w, wFUN, custom,
-       keep.group_vars, keep.w, keep.col.order, TRUE, FALSE, TRUE, parallel,
-       mc.cores, return, give.names, sort.row, ...)))
+  return(eval(substitute(collap(X, by, FUN, catFUN, cols, w, wFUN, custom,
+         keep.group_vars, keep.w, keep.col.order, TRUE, FALSE, TRUE, parallel,
+         mc.cores, return, give.names, sort.row, ...))))
 }
