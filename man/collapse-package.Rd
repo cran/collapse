@@ -12,12 +12,11 @@ Advanced and Fast Data Transformation
 \item To help make R code fast, flexible, parsimonious and programmer friendly. % \emph{collapse} is a fast  %to facilitate (advanced) data manipulation in R   % To achieve the latter,
 % collapse provides a broad set.. -> Nah, it's not a misc package
 }
-It is made compatible with \emph{dplyr}, \emph{data.table} and the \emph{plm} approach to panel data, and non-destructively handles other classes.
+It is made compatible with \emph{dplyr}, \emph{data.table}, \emph{sf} and the \emph{plm} approach to panel data, and non-destructively handles other classes such as \emph{xts}.
 
 }
 \section{Getting Started}{
-See \link[=collapse-documentation]{Collapse Documentation & Overview}, or read the \href{https://sebkrantz.github.io/collapse/articles/collapse_intro.html}{introductory vignette}. All vignettes can be accessed on the \href{https://sebkrantz.github.io/collapse/}{package website}. A cheatsheet is available at \href{https://raw.githubusercontent.com/rstudio/cheatsheets/master/collapse.pdf}{Rstudio}.
-A compact introduction for quick-starters is provided in the examples section below.
+See \link[=collapse-documentation]{Collapse Documentation & Overview}, or read the \href{https://sebkrantz.github.io/collapse/articles/collapse_intro.html}{introductory vignette}. All vignettes can be accessed on the \href{https://sebkrantz.github.io/collapse/}{package website}. A cheatsheet is available at \href{https://raw.githubusercontent.com/SebKrantz/cheatsheets/master/collapse.pdf}{here}. A compact introduction for quick-starters is provided in the examples section below.
 }
 
 
@@ -81,16 +80,16 @@ To facilitate efficient programming, core S3 methods, grouping and ordering func
 
 % attributes of atomic objects are preserved if the dimensions are unaltered by the computation, and data frame attributes are always preserved,
 
- Additional (hidden) S3 methods provide broad based compatibility with \emph{dplyr} (grouped tibble), \emph{data.table} and \emph{plm} panel data classes. Functions and core methods also seek to preserve object attributes (including column attributes such as variable labels), ensuring flexibility and non-destructive workflows with a very broad range of R objects (including most time-series classes).
+ Additional (hidden) S3 methods and C-level features enable broad based compatibility with \emph{dplyr} (grouped tibble), \emph{data.table}, \emph{sf} and \emph{plm} panel data classes. Functions and core methods also seek to preserve object attributes (including column attributes such as variable labels), ensuring flexibility and effective workflows with a very broad range of R objects (including most time-series classes).
 
- Missing values are efficiently skipped at C/C++ level. The package default is \code{na.rm = TRUE}, whereas \code{na.rm = FALSE} also yields efficient checking and early termination. Missing weights are supported. Core functionality and all statistical functions / computations are tested with 10,000 unit tests for Base R equivalence, exempting some improvements (e.g. \code{fsum(NA, na.rm = TRUE)} evaluates to \code{NA}, not 0, similarly for \code{fmin} and \code{fmax}; no \code{NaN} values are generated from computations involving \code{NA} values). Generic functions provide some \link[=collapse-options]{security} against silent swallowing of arguments.
+ Missing values are efficiently skipped at C/C++ level. The package default is \code{na.rm = TRUE}, whereas \code{na.rm = FALSE} also yields efficient checking and early termination. Missing weights are supported. Core functionality and all statistical functions / computations are tested with 11,000 unit tests for Base R equivalence, exempting some improvements (e.g. \code{fsum(NA, na.rm = TRUE)} evaluates to \code{NA}, not 0, similarly for \code{fmin} and \code{fmax}; no \code{NaN} values are generated from computations involving \code{NA} values). Generic functions provide some \link[=collapse-options]{security} against silent swallowing of arguments.
 
  %Hence they also handle various date and time series classes etc., and can easily be integreated into most approaches to data transformation.
 
  %A global \code{option("collapse_unused_arg_action")} can be set to regulate the behavior when unused arguments are passed to a generic function. The default is to issue a warning.
 
 
-\emph{collapse} installs with a built-in hierarchical \link[=collapse-documentation]{documentation} facilitating the use of the package. The vignettes are complimentary and also follow a more structured approach. % and \code{base/stats}. % extra methods warrant, provide ?
+\emph{collapse} installs with a built-in hierarchical \link[=collapse-documentation]{documentation} facilitating the use of the package. The \href{https://sebkrantz.github.io/collapse/articles/index.html}{vignettes} are complimentary and also follow a more structured approach. % and \code{base/stats}. % extra methods warrant, provide ?
 
 %Apart from general performance considerations, \emph{collapse} excels at applications involving fast panel data transformations and techniques, fast weighted computations (e.g. weighted aggregation), fast programming and aggregation with categorical and mixed-type data, fast programming with (multivariate) time series, and programming with lists of data objects.
 
@@ -99,7 +98,7 @@ To facilitate efficient programming, core S3 methods, grouping and ordering func
 % The package largely avoids non-standard evaluation and exports core methods for maximum programmability.  % Most are S3 generic with methods for common \code{R} objects (vectors, matrices, data frames, \dots) % high computation  %(aggregation and transformations ~10x \emph{data.table} on data <1 Mio obs.).
 
 % Beyond speed, flexibility and parsimony in coding, a central objective of \emph{collapse} is to facilitate advanced / complex operations on data.
-The package is mainly coded in C++ and built with \emph{Rcpp}, but also uses C functions from \emph{data.table} (grouping, ordering, subsetting, row-binding), \emph{fixest} (centering on multiple factors), \emph{weights} (weighted pairwise correlations), \emph{stats} (ACF and PACF) and \emph{RcppArmadillo / RcppEigen} (fast linear fitting methods). For the moment \emph{collapse} does not utilize low-level parallelism (such as OpenMP).
+The package is coded both in C and C++ and built with \emph{Rcpp}, but also uses C/C++ functions from \emph{data.table} (grouping, ordering, subsetting, row-binding), \emph{fixest} (centering on multiple factors), \emph{weights} (weighted pairwise correlations), \emph{stats} (ACF and PACF) and \emph{RcppArmadillo / RcppEigen} (fast linear fitting methods). For the moment \emph{collapse} does not utilize low-level parallelism (such as OpenMP).
 % \emph{collapse} is built with \code{Rcpp} and imports \code{C} functions from \emph{data.table}, \emph{lfe} and \emph{stats}. %, and uses \code{ggplot2} visualizations.
 
 
@@ -117,11 +116,10 @@ Other contributors from packages \emph{collapse} utilizes:
 }
 I thank Ralf Stubner, Joseph Wood and Dirk Eddelbuettel for helpful answers on Stackoverflow, Joris Meys for encouraging me and helping to set up the \href{https://github.com/SebKrantz/collapse}{Github repository} for \emph{collapse}, Matthieu Stigler, Patrice Kiener, Zhiyi Xu and Kevin Tappe for feature requests and helpful suggestions.
 }
-\section{Developing / Feature Requests / Bug Reporting}{
+\section{Developing / Bug Reporting}{
 \itemize{
-\item If you are interested in extending or optimizing this package, see the source code at \url{https://github.com/SebKrantz/collapse/tree/master}, fork and send pull-requests, or e-mail me.
-\item Please send feature requests via e-mail.
-\item Please report issues at \url{https://github.com/SebKrantz/collapse/issues} or e-mail me.
+\item If you are interested in extending or optimizing this package, see the source code at \url{https://github.com/SebKrantz/collapse/tree/master}, fork and send pull-requests to the 'development' branch of the repository, or e-mail me.
+\item Please report issues at \url{https://github.com/SebKrantz/collapse/issues}.
 }
 }
 
@@ -256,7 +254,6 @@ head(mrtl(mtcarsM, TRUE, "data.frame"))    # data.frame from matrix rows, etc..
 head(qDT(mtcarsM, "cars"))                 # Saving row.names when converting matrix to data.table
 head(qDT(mtcars, "cars"))                  # Same use a data.frame
 
-\donttest{ % No code relying on suggested package
 ## Now let's get some real data and see how we can use this power for data manipulation
 library(magrittr)
 head(wlddev) # World Bank World Development Data: 216 countries, 61 years, 5 series (columns 9-13)
@@ -282,7 +279,7 @@ pwcor(fwithin(num_vars(wlddev), wlddev$country), P = TRUE)  # Within-country cor
 psacf(wlddev, ~country, ~year, cols = 9:12)                 # Panel-data Autocorrelation function
 pspacf(wlddev, ~country, ~year, cols = 9:12)                # Partial panel-autocorrelations
 psmat(wlddev, ~iso3c, ~year, cols = 9:12) \%>\% plot          # Convert panel to 3D array and plot
-}
+
 ## collapse offers a few very efficent functions for data manipulation:
 # Fast selecting and replacing columns
 series <- get_vars(wlddev, 9:12)     # Same as wlddev[9:12] but 2x faster
@@ -303,11 +300,11 @@ head(ftransformv(wlddev, 9:12, log))           # Can also transform with lists o
 head(ftransformv(wlddev, 9:12, fscale, apply = FALSE)) # apply = FALSE invokes fscale.data.frame
 settransformv(wlddev, 9:12, fscale, apply = FALSE)     # Changing the data by reference
 ftransform(wlddev) <- fscale(gv(wlddev, 9:12))         # Same thing (using replacement method)
-\donttest{ % No code relying on suggested package
+
 wlddev \%<>\% ftransformv(9:12, fscale, apply = FALSE) # Same thing, using magrittr
 wlddev \%>\% ftransform(gv(., 9:12) \%>\%              # With compound pipes: Scaling and lagging
                         fscale \%>\% flag(0:2, iso3c, year)) \%>\% head
-}
+
 # Fast reordering
 head(roworder(wlddev, -country, year))
 head(colorder(wlddev, country, year))
@@ -316,22 +313,22 @@ head(colorder(wlddev, country, year))
 head(frename(wlddev, country = Ctry, year = Yr))
 setrename(wlddev, country = Ctry, year = Yr)     # By reference
 head(frename(wlddev, tolower, cols = 9:12))
-\donttest{ % No code relying on suggested package
+
 # Fast grouping
 fgroup_by(wlddev, Ctry, decade) \%>\% fgroup_vars \%>\% head # fgroup_by is faster than dplyr::group_by
-}
+
 rm(wlddev)                                       # .. but only works with collapse functions
 
 ## Now lets start putting things together
-\donttest{ % No code relying on suggested package
+
 wlddev \%>\% fsubset(year > 1990, region, income, PCGDP:ODA) \%>\%
   fgroup_by(region, income) \%>\% fmean            # Fast aggregation using the mean
-
+\donttest{
 # Same thing using dplyr manipulation verbs
 library(dplyr)
 wlddev \%>\% filter(year > 1990) \%>\% select(region, income, PCGDP:ODA) \%>\%
   group_by(region,income) \%>\% fmean       # This is already a lot faster than summarize_all(mean)
-
+}
 wlddev \%>\% fsubset(year > 1990, region, income, PCGDP:POP) \%>\%
   fgroup_by(region, income) \%>\% fmean(POP)     # Weighted group means
 
@@ -378,13 +375,13 @@ wlddev \%>\% fselect(country, year, PCGDP:ODA) \%>\%
              ftransform(., fselect(., PCGDP:ODA) \%>\% fwithin \%>\% add_stub("W.")) \%>\%
                flag(0:2, year, keep.ids = FALSE))             # Sequence of lagged demeaned vars
   } \%>\% head
-}
+
 # With ftransform, can also easily do one or more grouped mutations on the fly..
 settransform(wlddev, median_ODA = fmedian(ODA, list(region, income), TRA = "replace_fill"))
 
 settransform(wlddev, sd_ODA = fsd(ODA, list(region, income), TRA = "replace_fill"),
                      mean_GDP = fmean(PCGDP, country, TRA = "replace_fill"))
-\donttest{ % No code relying on suggested package
+
 wlddev \%<>\% ftransform(fmedian(list(median_ODA = ODA, median_GDP = PCGDP),
                                list(region, income), TRA = "replace_fill"))
 
@@ -394,7 +391,7 @@ wlddev \%>\% fgroup_by(region, income) \%>\%
     ftransform(gmedian_GDP = fmedian(PCGDP, GRP(.), TRA = "replace"),
                omedian_GDP = fmedian(PCGDP, TRA = "replace"),  # "replace" preserves NA's
                omedian_GDP_fill = fmedian(PCGDP)) \%>\% tail
-}
+
 rm(wlddev)
 
 ## For multi-type data aggregation, the function collap offers ease and flexibility
@@ -412,13 +409,13 @@ head(collap(wlddev, ~ country + decade,
 # Customized Aggregation: Assign columns to functions
 head(collap(wlddev, ~ country + decade,
             custom = list(fmean = 9:10, fsd = 9:12, flast = 3, ffirst = 6:8)))
-\donttest{ % No code relying on suggested package
+
 # For grouped data frames use collapg
 wlddev \%>\% fsubset(year > 1990, country, region, income, PCGDP:ODA) \%>\%
   fgroup_by(country) \%>\% collapg(fmean, ffirst) \%>\%
   ftransform(AMGDP = PCGDP > fmedian(PCGDP, list(region, income), TRA = "replace_fill"),
              AMODA = ODA > fmedian(ODA, income, TRA = "replace_fill")) \%>\% head
-}
+
 ## Additional flexibility for data transformation tasks is offerend by tidy transformation operators
 # Within-transformation (centering on overall mean)
 head(W(wlddev, ~ country, cols = 9:12, mean = "overall.mean"))
