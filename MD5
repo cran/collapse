@@ -1,9 +1,9 @@
-54c5ad7b2dfd88a265ce35612edc6501 *DESCRIPTION
+62480286b3b62f209d3f04f3c267716f *DESCRIPTION
 3292c7ff0d3614cbcdebb9018d9bbc74 *LICENSE
 3e18efc931e37b295169acdd74180870 *NAMESPACE
-a597aa937f4866d4f0b28d3cf886779f *NEWS.md
+3aed01798239b0a514ef5db879f387a4 *NEWS.md
 6688ec8d8babb409cd08295d9ff02c3d *R/BY.R
-4218a39e758df6a442ce78d36b6f496a *R/GRP.R
+40c79ebe77c5834ca1b44c5b986ead97 *R/GRP.R
 9349971c3e641b8d59bdcf535ad28d1c *R/RcppExports.R
 e776247a6df925cdbda69061ae3c3de7 *R/TRA.R
 21994b12381a8f98888486efebc32c15 *R/collap.R
@@ -50,7 +50,7 @@ e6928a0085c8fc94c2f92e4488acc037 *build/vignette.rds
 a5742d7c7117d4198a262b7079ef3b58 *data/GGDC10S.rda
 c0728676845d1671c4342e712cad7673 *data/wlddev.rda
 35628b0f55e40ebad7bc3ee99e0e860e *inst/doc/collapse_documentation.Rmd
-2eeffe85334e37708d43e86ca1359702 *inst/doc/collapse_documentation.html
+fb715269339950eebb1289fb26a4d70f *inst/doc/collapse_documentation.html
 ea24dee7a5f0356d097660df71377b3f *man/BY.Rd
 4ff8ad3382426395fcd26eddc60190bf *man/GGDC10S.Rd
 53304e8f4b28885a9ee84489213b850a *man/GRP.Rd
@@ -68,7 +68,7 @@ f959ae207f848f09ad96b0f265e18f0e *man/data-transformations.Rd
 c35f30b04ef648ac97616d68ef6ccc83 *man/descr.Rd
 291b4d80bab878eb5161cc00ed63b84c *man/extract_list.Rd
 9441cb56956c9d82fc2e91e53fe273c8 *man/fFtest.Rd
-52531257d1dc06f6d608b3e424a54a72 *man/fast-data-manipulation.Rd
+30e9aa16e42c9fc5a8b68f34fd507dfc *man/fast-data-manipulation.Rd
 17f9b0d2088a0ae86009115292f700a0 *man/fast-grouping.Rd
 5fba144f1d9fda8330677046b6cc1f2e *man/fast-statistical-functions.Rd
 71879a0f20f50725af21a231cfaf9f64 *man/fbetween_fwithin.Rd
@@ -93,7 +93,7 @@ df1060b44427d1f6ae9c0bfff90e7619 *man/fscale.Rd
 f20e6dba5ce9ebd80906f5dcc2abce32 *man/fsubset.Rd
 82d82f0a5d372305a153cf640c3b2f70 *man/fsum.Rd
 80724033c93bd96eecd9432f35ee9a5e *man/fsummarise.Rd
-085218d7dea745345cddc030a36db6b1 *man/ftransform.Rd
+8eca6aad1df24c1bce4594ed7284fd20 *man/ftransform.Rd
 68e6eb6f1f52ab04bab698db801fbafb *man/funique.Rd
 8b8e356ecdd94cc61a78b267a7b5b086 *man/fvar_fsd.Rd
 acfbb8ee3da9df97fb417355ae7a4053 *man/groupid.Rd
@@ -138,9 +138,9 @@ dc2c7e968add18545e0e86aeb6fe8be9 *src/fbetween_fwithin.cpp
 5d51511761fdc4aad4add4adbaa50ff0 *src/fbstats.cpp
 790174ba9795846758e6ee82c7b99f9c *src/fcumsum.c
 9d1b063dd35189886a97508bb6345ba5 *src/fdiff_fgrowth.cpp
-73cf2b0d6651321b8f0e93c19caf99f7 *src/ffirst.c
+ddd95c6c7b6823b4ad51196950e0a4be *src/ffirst.c
 b120584410bebd36110985705cc985ff *src/flag.cpp
-718023f6c0c047eb58524e73cf0534ea *src/flast.c
+e2a046ea457cce899e856d13a4907e02 *src/flast.c
 470e929993b29a811d6da886e21927ef *src/fmean.cpp
 f11a99335fdae646bbc561802792d885 *src/fmin_fmax.c
 2ccc9a1a1766b5068f7b8edbf2ff1f6a *src/fmode.cpp
@@ -157,7 +157,7 @@ c8e1f01967ab74a7ba11c24796544713 *src/psmat.cpp
 2bb0170400947aeaef0ffb86bea0b78a *src/pwnobs.cpp
 7c37f89d83e4d60007ca0af477e431da *src/qF_qG.cpp
 5fbd1391bc25a718b3481fa03fb4989f *src/seqid_groupid.cpp
-b8c1a7c2c0241072ebf57a90db4f5aad *src/small_helper.c
+7f041723accfe170ec4aca228bd3584f *src/small_helper.c
 2d56b31f6f138ca3c90bd08ff7ddb4fe *src/stats_mAR.c
 1d321c8f41669b6a32a9263d06a369cd *src/stats_pacf.c
 c2817d82e966b08a283998100c7466ea *src/varying.cpp
