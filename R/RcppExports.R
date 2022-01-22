@@ -25,16 +25,16 @@ BWlCpp <- function(x, ng = 0L, g = 0L, gs = NULL, w = NULL, narm = TRUE, theta =
     .Call(`_collapse_BWlCpp`, x, ng, g, gs, w, narm, theta, set_mean, B, fill)
 }
 
-fbstatsCpp <- function(x, ext = FALSE, ng = 0L, g = 0L, npg = 0L, pg = 0L, w = NULL, array = TRUE, setn = TRUE, gn = NULL) {
-    .Call(`_collapse_fbstatsCpp`, x, ext, ng, g, npg, pg, w, array, setn, gn)
+fbstatsCpp <- function(x, ext = FALSE, ng = 0L, g = 0L, npg = 0L, pg = 0L, w = NULL, stable_algo = TRUE, array = TRUE, setn = TRUE, gn = NULL) {
+    .Call(`_collapse_fbstatsCpp`, x, ext, ng, g, npg, pg, w, stable_algo, array, setn, gn)
 }
 
-fbstatsmCpp <- function(x, ext = FALSE, ng = 0L, g = 0L, npg = 0L, pg = 0L, w = NULL, array = TRUE, gn = NULL) {
-    .Call(`_collapse_fbstatsmCpp`, x, ext, ng, g, npg, pg, w, array, gn)
+fbstatsmCpp <- function(x, ext = FALSE, ng = 0L, g = 0L, npg = 0L, pg = 0L, w = NULL, stable_algo = TRUE, array = TRUE, gn = NULL) {
+    .Call(`_collapse_fbstatsmCpp`, x, ext, ng, g, npg, pg, w, stable_algo, array, gn)
 }
 
-fbstatslCpp <- function(x, ext = FALSE, ng = 0L, g = 0L, npg = 0L, pg = 0L, w = NULL, array = TRUE, gn = NULL) {
-    .Call(`_collapse_fbstatslCpp`, x, ext, ng, g, npg, pg, w, array, gn)
+fbstatslCpp <- function(x, ext = FALSE, ng = 0L, g = 0L, npg = 0L, pg = 0L, w = NULL, stable_algo = TRUE, array = TRUE, gn = NULL) {
+    .Call(`_collapse_fbstatslCpp`, x, ext, ng, g, npg, pg, w, stable_algo, array, gn)
 }
 
 fdiffgrowthCpp <- function(x, n = 1L, diff = 1L, fill = NA_real_, ng = 0L, g = 0L, gs = NULL, t = NULL, ret = 1L, rho = 1, names = TRUE, power = 1) {

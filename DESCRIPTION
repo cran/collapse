@@ -1,7 +1,7 @@
 Package: collapse
 Title: Advanced and Fast Data Transformation
-Version: 1.7.0
-Date: 2022-01-14
+Version: 1.7.2
+Date: 2022-01-21
 Authors@R: c(
            person("Sebastian", "Krantz", role = c("aut", "cre"), 
                   email = "sebastian.krantz@graduateinstitute.ch"),
@@ -33,13 +33,13 @@ Description: A C/C++ based package for advanced data transformation and
         weighted, parallelized and fully custom data aggregation.
     (3) Advanced transformations: Fast row / column arithmetic, (grouped) replacing 
         and sweeping out of statistics, (grouped, weighted) scaling / standardizing, 
-        between (averaging) and (quasi-)within (centering / demeaning) transformations, 
-        higher-dimensional centering (i.e. multiple fixed effects transformations), 
-        linear prediction / partialling-out, linear model fitting and testing.
+        between (averaging) and (quasi-)within (demeaning) transformations, 
+        higher-dimensional centering (i.e. multiple fixed effects or polynomials), 
+        linear prediction, model fitting and testing exclusion restrictions.
     (4) Advanced time-computations: Fast (sequences of) lags / leads, and 
-        (lagged / leaded, iterated, quasi-, log-) differences, (compounded) 
-        growth rates, and cumulative sums on (unordered, irregular) time series and 
-        panel data. Multivariate auto-, partial- and cross-correlation functions for panel data. 
+        (lagged / leaded, iterated, quasi-, log-) differences and (compounded) 
+        growth rates on (irregular) time series and panel data. 
+        Multivariate auto-, partial- and cross-correlation functions for panel data. 
         Panel data to (ts-)array conversions.
     (5) List processing: (Recursive) list search, splitting, 
         extraction / subsetting, data-apply, and generalized recursive 
@@ -62,7 +62,7 @@ Suggests: data.table, sf, matrixStats, magrittr, kit, plm, fixest,
 SystemRequirements: C++11
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2022-01-14 10:35:53 UTC; Sebastian Krantz
+Packaged: 2022-01-21 17:25:18 UTC; Sebastian Krantz
 Author: Sebastian Krantz [aut, cre],
   Matt Dowle [ctb],
   Arun Srinivasan [ctb],
@@ -76,4 +76,4 @@ Author: Sebastian Krantz [aut, cre],
   1999-2016 The R Core Team [cph]
 Maintainer: Sebastian Krantz <sebastian.krantz@graduateinstitute.ch>
 Repository: CRAN
-Date/Publication: 2022-01-14 12:02:41 UTC
+Date/Publication: 2022-01-23 00:32:41 UTC
