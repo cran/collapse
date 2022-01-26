@@ -24,7 +24,7 @@ void matCopyAttr(SEXP out, SEXP x, SEXP Rdrop, int ng) {
 }
 
 void DFcopyAttr(SEXP out, SEXP x, int ng) {
-  DUPLICATE_ATTRIB(out, x);
+  SHALLOW_DUPLICATE_ATTRIB(out, x);
   if(ng == 0) {
     setAttrib(out, R_RowNamesSymbol, ScalarInteger(1));
   } else {
@@ -34,6 +34,10 @@ void DFcopyAttr(SEXP out, SEXP x, int ng) {
     setAttrib(out, R_RowNamesSymbol, rn);
     UNPROTECT(1);
   }
+}
+
+SEXP geteptr(SEXP x) {
+  return R_ExternalPtrProtected(x);
 }
 
 // Faster than rep_len(value, n) and slightly faster than matrix(value, n) (which in turn is faster than rep_len)...
@@ -196,46 +200,67 @@ SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
       }
     }
   } else { // Grouping not sorted
-    int *count = (int*)Calloc(ng+1, int);
+    int *count = (int*)Calloc(ng, int);
     // memset(count, 0, sizeof(int)*(ng+1)); // Needed here ??
     // int *count = (int *) R_alloc(ng+1, sizeof(int));
 
     const int l = length(g), *pg = INTEGER(g);
-    --pres;
+    // --pres;
     if(asLogical(toint)) {
-      for(int i = 0; i != l; ++i) INTEGER(pres[pg[i]])[count[pg[i]]++] = i+1;
+      for(int i = 0, gi; i != l; ++i) {
+        gi = pg[i]-1;
+        INTEGER(pres[gi])[count[gi]++] = i+1;
+      }
     } else {
       if(length(x) != l) error("length(x) must match length(g)");
       switch(tx) {
       case INTSXP:
       case LGLSXP: {
         const int *px = INTEGER(x);
-        for(int i = 0; i != l; ++i) INTEGER(pres[pg[i]])[count[pg[i]]++] = px[i];
+        for(int i = 0, gi; i != l; ++i) {
+          gi = pg[i]-1;
+          INTEGER(pres[gi])[count[gi]++] = px[i];
+        }
         break;
       }
       case REALSXP: {
         const double *px = REAL(x);
-        for(int i = 0; i != l; ++i) REAL(pres[pg[i]])[count[pg[i]]++] = px[i];
+        for(int i = 0, gi; i != l; ++i) {
+          gi = pg[i]-1;
+          REAL(pres[gi])[count[gi]++] = px[i];
+        }
         break;
       }
       case CPLXSXP: {
         const Rcomplex *px = COMPLEX(x);
-        for(int i = 0; i != l; ++i) COMPLEX(pres[pg[i]])[count[pg[i]]++] = px[i];
+        for(int i = 0, gi; i != l; ++i) {
+          gi = pg[i]-1;
+          COMPLEX(pres[gi])[count[gi]++] = px[i];
+        }
         break;
       }
       case STRSXP: {
         const SEXP *px = STRING_PTR(x);
-        for(int i = 0; i != l; ++i) STRING_PTR(pres[pg[i]])[count[pg[i]]++] = px[i];
+        for(int i = 0, gi; i != l; ++i) {
+          gi = pg[i]-1;
+          STRING_PTR(pres[gi])[count[gi]++] = px[i];
+        }
         break;
       }
       case VECSXP: {
         const SEXP *px = SEXPPTR(x);
-        for(int i = 0; i != l; ++i) SEXPPTR(pres[pg[i]])[count[pg[i]]++] = px[i];
+        for(int i = 0, gi; i != l; ++i) {
+          gi = pg[i]-1;
+          SEXPPTR(pres[gi])[count[gi]++] = px[i];
+        }
         break;
       }
       case RAWSXP: {
         const Rbyte *px = RAW(x);
-        for(int i = 0; i != l; ++i) RAW(pres[pg[i]])[count[pg[i]]++] = px[i];
+        for(int i = 0, gi; i != l; ++i) {
+          gi = pg[i]-1;
+          RAW(pres[gi])[count[gi]++] = px[i];
+        }
         break;
       }
       default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
@@ -298,7 +323,7 @@ SEXP greorder(SEXP x, SEXP gobj) {
   }
   default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
   }
-  DUPLICATE_ATTRIB(res, x);
+  SHALLOW_DUPLICATE_ATTRIB(res, x);
   UNPROTECT(1);
   return res;
 }
@@ -336,7 +361,7 @@ SEXP lassign(SEXP x, SEXP s, SEXP rows, SEXP fill) {
       SHALLOW_DUPLICATE_ATTRIB(outj, column);
     }
   } else error("rows must be positive integers or a logical vector");
-  DUPLICATE_ATTRIB(out, x);
+  SHALLOW_DUPLICATE_ATTRIB(out, x);
   UNPROTECT(1);
   return out;
 }

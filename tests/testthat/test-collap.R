@@ -66,6 +66,7 @@ test_that("collap preserves data attributes", {
   expect_identical(vclasses(collap(wlddev, ~country + decade, fmin)), vclasses(wlddev))
   expect_identical(vtypes(collap(wlddev, ~country + decade, fmax)), vtypes(wlddev))
 })
+
 if(Sys.getenv("NCRAN") == "TRUE")
 test_that("collap performs as intended in simple uses with base/stats functions", {
   expect_equal(oa(collap(mtcars, mtcars$cyl, bsum, keep.by = FALSE)),
@@ -399,6 +400,7 @@ test_that("collapv preserves data attributes", {
   expect_identical(vclasses(collapv(wlddev, v, flast)), vclasses(wlddev))
   expect_identical(vtypes(collapv(wlddev, v, ffirst)), vtypes(wlddev))
 })
+
 if(Sys.getenv("NCRAN") == "TRUE")
 test_that("collapv performs as intended in simple uses with base/stats functions", {
   expect_equal(oa(collapv(mtcars, "cyl", mean.default)),

@@ -80,6 +80,13 @@ getenvFUN <- function(nam, efmt1 = "For this method need to install.packages('%s
   FUN
 }
 
+getpix <- function(x) switch(typeof(x), externalptr = .Call(C_geteptr, x), x)
+
+# getplmindex <- function(x) {
+# ix <- getpix(attr(x, "index"))
+# if(is.list(ix)) return(ix)
+# .Call(C_geteptr, ix)
+# }
 
 # qM2 <- function(x) if(is.list(x)) do.call(cbind, x) else x
 
@@ -697,7 +704,7 @@ G_t <- function(x) { # , wm = 1L
     if(is.double(x) && !is.object(x)) return(as.integer(x))
     return(qG(x, na.exclude = FALSE, sort = TRUE, method = "hash")) # make sure it is sorted ! qG already checks factor !
   }
-  if(is_GRP(x)) return(x[[2L]])
+  # if(is_GRP(x)) return(x[[2L]]) # Not necessary because GRP.default also returns it..
   return(GRP.default(x, return.groups = FALSE, sort = TRUE, call = FALSE)[[2L]])
 }
 

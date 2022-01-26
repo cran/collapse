@@ -1,3 +1,14 @@
+# collapse 1.7.3
+
+* Removed tests involving the *weights* package (which is not available on R-devel CRAN checks).
+
+* `fgroup_by` is more flexible, supporting computing columns e.g. `fgroup_by(GGDC10S, Variable, Decade = floor(Year / 10) * 10)` and various programming options e.g. `fgroup_by(GGDC10S, 1:3)`, `fgroup_by(GGDC10S, c("Variable", "Country"))`, or `fgroup_by(GGDC10S, is.character)`. You can also use column sequences e.g. `fgroup_by(GGDC10S, Country:Variable, Year)`, but this should not be mixed with computing columns. Compute expressions may also not include the `:` function. 
+
+* More memory efficient attribute handling in C/C++ (using C-API macro `SHALLOW_DUPLICATE_ATTRIB` instead of `DUPLICATE_ATTRIB`) in most places.
+
+<!--
+* *plm* methods for 'pseries' were adjusted to allow fetching of 'index' attribute from an external pointer, to adjust for changes in *plm* which allow computations on 'pseries' to be conducted in data masking environments. 
+-->
 # collapse 1.7.2
 
 * Ensured that the base pipe `|>` is not used in tests or examples, to avoid errors on CRAN checks with older versions of R. 
@@ -239,8 +250,9 @@ This is done in a very careful manner, the others will stick around for a long w
 
 ### Bug Fixes
 
+<!-- 
 * For reasons of efficiency, most statistical and transformation functions used the C macro `SHALLOW_DUPLICATE_ATTRIB` to copy column attributes in a data frame. Since this macro does not copy S4 object bits, it caused some problems with S4 object columns such as POSIXct (e.g. computing lags/leads, first and last values on these columns). This is now fixed, all statistical functions (apart from `fvar` and `fsd`) now use `DUPLICATE_ATTRIB` and thus preserve S4 object columns (#91). 
-
+-->
 <!-- Also `BY` now handles POSIXct properly. -->
 
 * `unlist2d` produced a subsetting error if an empty list was present in the list-tree. This is now fixed, empty or `NULL` elements in the list-tree are simply ignored (#99).

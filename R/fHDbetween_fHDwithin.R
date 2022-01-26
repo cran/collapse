@@ -9,7 +9,7 @@ demean <- function(x, fl, weights, ..., means = FALSE) {
   }
   msg <- "For higher-dimensional centering and projecting out interactions need to install.packages('%s'), then unload [detach('package:collapse', unload = TRUE)] and reload [library(collapse)]."
   res <- getenvFUN("fixest_demean", msg)(x, fl, attr(fl, "slope.vars"), attr(fl, "slope.flag"),
-                                         weights = weights, ..., im_confident = TRUE)
+                                         weights = weights, ..., notes = FALSE, im_confident = TRUE)
   if(!means) return(duplAttributes(res, x))
     # if(!is.matrix(x)) dim(res) <- NULL # also need for flmres... e.g. with weights... intercept is no longer always added, so res needs to be a matrix...
     # Need matrix dimensions... for subset in variable.wise... do.call(cbind, fl[!fc]) needs to be preserved... # return(if(means) x - drop(res) else drop(res))
@@ -326,11 +326,14 @@ fhdwithin.default <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.me
     return(setAttributes(x, ax))
   } else return(setAttributes(demean(x, fl, w, ...), ax))
 }
-fhdwithin.pseries <- function(x, effect = seq_col(attr(x, "index")), w = NULL, na.rm = TRUE, fill = TRUE, ...) {
-  ix <- attr(x, "index")
+fhdwithin.pseries <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, ...) {
+  ix <- getpix(attr(x, "index"))
   namix <- attr(ix, "names")
-  effect <- cols2int(effect, ix, namix)
+  if(is.character(effect) && length(effect) == 1L && effect == "all") {
+    effect <- seq_along(namix)
+  } else effect <- cols2int(effect, ix, namix)
   g <- .subset(ix, effect)
+
   if(na.rm && length(cc <- whichv(x, NA, TRUE)) != length(x)) {
      g <- .Call(C_subsetDT, g, cc, seq_along(g), FALSE) # lapply(g, `[`, cc) -> slower !
     if(fill) {
@@ -408,10 +411,12 @@ fhdwithin.matrix <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.met
 }
 
 # x = collapse:::colsubset(pwlddev, is.numeric)
-fhdwithin.pdata.frame <- function(x, effect = seq_col(attr(x, "index")), w = NULL, na.rm = TRUE, fill = TRUE, variable.wise = TRUE, ...) {
-  ix <- attr(x, "index")
+fhdwithin.pdata.frame <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, variable.wise = TRUE, ...) {
+  ix <- getpix(attr(x, "index"))
   namix <- attr(ix, "names")
-  effect <- cols2int(effect, ix, namix)
+  if(is.character(effect) && length(effect) == 1L && effect == "all") {
+    effect <- seq_along(namix)
+  } else effect <- cols2int(effect, ix, namix)
   g <- .subset(ix, effect)
 
   if(na.rm && fill && variable.wise) {
@@ -524,7 +529,7 @@ HDW.default <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.method =
   fhdwithin.default(x, fl, w, na.rm, fill, lm.method, ...)
 }
 
-HDW.pseries <- function(x, effect = seq_col(attr(x, "index")), w = NULL, na.rm = TRUE, fill = TRUE, ...)
+HDW.pseries <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, ...)
   fhdwithin.pseries(x, effect, w, na.rm, fill, ...)
 
 HDW.matrix <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, stub = "HDW.", lm.method = "qr", ...)
@@ -593,7 +598,7 @@ HDW.data.frame <- function(x, fl, w = NULL, cols = is.numeric, na.rm = TRUE, fil
  add_stub(fhdwithin.data.frame(if(is.null(cols)) x else colsubset(x, cols), fl, w, na.rm, fill, variable.wise, lm.method, ...), stub)
 }
 
-HDW.pdata.frame <- function(x, effect = seq_col(attr(x, "index")), w = NULL, cols = is.numeric, na.rm = TRUE, fill = TRUE,
+HDW.pdata.frame <- function(x, effect = "all", w = NULL, cols = is.numeric, na.rm = TRUE, fill = TRUE,
                             variable.wise = TRUE, stub = "HDW.", ...)
 add_stub(fhdwithin.pdata.frame(if(is.null(cols)) x else colsubset(x, cols), effect, w, na.rm, fill, variable.wise, ...), stub)
 
@@ -674,7 +679,7 @@ fhdbetween.default <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.m
 }
 
 
-fhdbetween.pseries <- function(x, effect = seq_col(attr(x, "index")), w = NULL, na.rm = TRUE, fill = TRUE, ...)
+fhdbetween.pseries <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, ...)
   fhdwithin.pseries(x, effect, w, na.rm, fill, ..., means = TRUE)
 
 fhdbetween.matrix <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.method = "qr", ...) {
@@ -736,7 +741,7 @@ fhdbetween.matrix <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.me
   } else return(setAttributes(demean(x, fl, w, ..., means = TRUE), ax))
 }
 
-fhdbetween.pdata.frame <- function(x, effect = seq_col(attr(x, "index")), w = NULL, na.rm = TRUE, fill = TRUE, variable.wise = TRUE, ...)
+fhdbetween.pdata.frame <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, variable.wise = TRUE, ...)
   fhdwithin.pdata.frame(x, effect, w, na.rm, fill, variable.wise, ..., means = TRUE)
 
 
@@ -821,7 +826,7 @@ HDB.default <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.method =
   fhdbetween.default(x, fl, w, na.rm, fill, lm.method, ...)
 }
 
-HDB.pseries <- function(x, effect = seq_col(attr(x, "index")), w = NULL, na.rm = TRUE, fill = TRUE, ...)
+HDB.pseries <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, ...)
   fhdwithin.pseries(x, effect, w, na.rm, fill, ..., means = TRUE)
 
 
@@ -897,7 +902,7 @@ HDB.data.frame <- function(x, fl, w = NULL, cols = is.numeric, na.rm = TRUE, fil
 }
 
 
-HDB.pdata.frame <- function(x, effect = seq_col(attr(x, "index")), w = NULL, cols = is.numeric, na.rm = TRUE, fill = TRUE,
+HDB.pdata.frame <- function(x, effect = "all", w = NULL, cols = is.numeric, na.rm = TRUE, fill = TRUE,
                             variable.wise = TRUE, stub = "HDB.", ...)
   add_stub(fhdwithin.pdata.frame(if(is.null(cols)) x else colsubset(x, cols), effect, w, na.rm, fill, variable.wise, ..., means = TRUE), stub)
 

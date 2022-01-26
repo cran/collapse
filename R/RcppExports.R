@@ -13,6 +13,18 @@ TRAmCpp <- function(x, xAG, g = 0L, ret = 1L) {
     .Call(`_collapse_TRAmCpp`, x, xAG, g, ret)
 }
 
+fndistinctCpp <- function(x, ng = 0L, g = 0L, gs = NULL, narm = TRUE) {
+    .Call(`_collapse_fndistinctCpp`, x, ng, g, gs, narm)
+}
+
+fndistinctlCpp <- function(x, ng = 0L, g = 0L, gs = NULL, narm = TRUE, drop = TRUE) {
+    .Call(`_collapse_fndistinctlCpp`, x, ng, g, gs, narm, drop)
+}
+
+fndistinctmCpp <- function(x, ng = 0L, g = 0L, gs = NULL, narm = TRUE, drop = TRUE) {
+    .Call(`_collapse_fndistinctmCpp`, x, ng, g, gs, narm, drop)
+}
+
 BWCpp <- function(x, ng = 0L, g = 0L, gs = NULL, w = NULL, narm = TRUE, theta = 1, set_mean = 0, B = FALSE, fill = FALSE) {
     .Call(`_collapse_BWCpp`, x, ng, g, gs, w, narm, theta, set_mean, B, fill)
 }
@@ -83,18 +95,6 @@ fmodelCpp <- function(x, ng = 0L, g = 0L, gs = NULL, w = NULL, narm = TRUE, ret 
 
 fmodemCpp <- function(x, ng = 0L, g = 0L, gs = NULL, w = NULL, narm = TRUE, drop = TRUE, ret = 0L) {
     .Call(`_collapse_fmodemCpp`, x, ng, g, gs, w, narm, drop, ret)
-}
-
-fndistinctCpp <- function(x, ng = 0L, g = 0L, gs = NULL, narm = TRUE) {
-    .Call(`_collapse_fndistinctCpp`, x, ng, g, gs, narm)
-}
-
-fndistinctlCpp <- function(x, ng = 0L, g = 0L, gs = NULL, narm = TRUE, drop = TRUE) {
-    .Call(`_collapse_fndistinctlCpp`, x, ng, g, gs, narm, drop)
-}
-
-fndistinctmCpp <- function(x, ng = 0L, g = 0L, gs = NULL, narm = TRUE, drop = TRUE) {
-    .Call(`_collapse_fndistinctmCpp`, x, ng, g, gs, narm, drop)
 }
 
 fnthCpp <- function(x, Q = 0.5, ng = 0L, g = 0L, gs = NULL, w = NULL, narm = TRUE, ret = 1L) {
