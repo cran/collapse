@@ -106,8 +106,8 @@ SEXP groups2GRP(SEXP x, SEXP lx, SEXP gs) {
 SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
   if(TYPEOF(gobj) != VECSXP || !inherits(gobj, "GRP")) error("g needs to be an object of class 'GRP', see ?GRP");
   const SEXP g = VECTOR_ELT(gobj, 1), gs = VECTOR_ELT(gobj, 2),
-    ord = VECTOR_ELT(gobj, 5);
-  int ng = length(gs), *pgs = INTEGER(gs), tx = TYPEOF(x);
+    ord = VECTOR_ELT(gobj, 5), order = VECTOR_ELT(gobj, 6);
+  const int ng = length(gs), *pgs = INTEGER(gs), tx = TYPEOF(x), l = length(g);
   if(ng != INTEGER(VECTOR_ELT(gobj, 0))[0]) error("'GRP' object needs to have valid vector of group-sizes");
   SEXP res = PROTECT(allocVector(VECSXP, ng));
   SEXP *pres = SEXPPTR(res);
@@ -131,7 +131,7 @@ SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
       for(int i = 0; i != ng; ++i) pres[i] = allocVector(tx, pgs[i]);
     }
   }
-  // If grouping is sorted or not
+  // If grouping is sorted
   if(LOGICAL(ord)[1] == 1) { // This only works if data is already ordered in order of the groups
     int count = 0;
     if(asLogical(toint)) {
@@ -140,7 +140,7 @@ SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
         for(int i = 0; i != gsj; ++i) pgj[i] = ++count;
       }
     } else {
-      if(length(x) != length(g)) error("length(x) must match length(g)");
+      if(length(x) != l) error("length(x) must match length(g)");
       switch(tx) {
       case INTSXP:
       case LGLSXP: {
@@ -199,12 +199,79 @@ SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
       default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
       }
     }
-  } else { // Grouping not sorted
+  } else if(length(order) == l) { // Grouping not sorted but we have the ordering..
+
+    const SEXP starts = getAttrib(order, install("starts"));
+    if(length(starts) != ng) goto unsno;
+    const int *po = INTEGER(order), *ps = INTEGER(starts);
+
+    if(asLogical(toint)) {
+      for(int i = 0, *pri; i != ng; ++i) {
+        pri = INTEGER(pres[i]);
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; j++) pri[k++] = po[j];
+      }
+    } else {
+      if(length(x) != l) error("length(x) must match length(g)");
+      switch(tx) {
+      case INTSXP:
+      case LGLSXP: {
+        const int *px = INTEGER(x);
+        for(int i = 0, *pri; i != ng; ++i) {
+          pri = INTEGER(pres[i]);
+          for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; ++j) pri[k++] = px[po[j]-1];
+        }
+        break;
+      }
+      case REALSXP: {
+        double *px = REAL(x);
+        for(int i = 0; i != ng; ++i) {
+          double *pri = REAL(pres[i]);
+          for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; ++j) pri[k++] = px[po[j]-1];
+        }
+        break;
+      }
+      case CPLXSXP: {
+        Rcomplex *px = COMPLEX(x);
+        for(int i = 0; i != ng; ++i) {
+          Rcomplex *pri = COMPLEX(pres[i]);
+          for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; ++j) pri[k++] = px[po[j]-1];
+        }
+        break;
+      }
+      case STRSXP: {
+        SEXP *px = STRING_PTR(x);
+        for(int i = 0; i != ng; ++i) {
+          SEXP *pri = STRING_PTR(pres[i]);
+          for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; ++j) pri[k++] = px[po[j]-1];
+        }
+        break;
+      }
+      case VECSXP: {
+        SEXP *px = SEXPPTR(x);
+        for(int i = 0; i != ng; ++i) {
+          SEXP *pri = SEXPPTR(pres[i]);
+          for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; ++j) pri[k++] = px[po[j]-1];
+        }
+        break;
+      }
+      case RAWSXP: {
+        const Rbyte *px = RAW(x);
+        for(int i = 0; i != ng; ++i) {
+          Rbyte *pri = RAW(pres[i]);
+          for(int j = ps[i]-1, end = ps[i]+pgs[i]-1, k = 0; j < end; ++j) pri[k++] = px[po[j]-1];
+        }
+        break;
+      }
+      default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
+      }
+    }
+  } else { // Unsorted, without ordering
+    unsno:;
     int *count = (int*)Calloc(ng, int);
     // memset(count, 0, sizeof(int)*(ng+1)); // Needed here ??
     // int *count = (int *) R_alloc(ng+1, sizeof(int));
 
-    const int l = length(g), *pg = INTEGER(g);
+    const int *pg = INTEGER(g);
     // --pres;
     if(asLogical(toint)) {
       for(int i = 0, gi; i != l; ++i) {
@@ -276,52 +343,109 @@ SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
 SEXP greorder(SEXP x, SEXP gobj) {
   if(TYPEOF(gobj) != VECSXP || !inherits(gobj, "GRP")) error("g needs to be an object of class 'GRP', see ?GRP");
   if(LOGICAL(VECTOR_ELT(gobj, 5))[1] == 1) return x;
-  const SEXP g = VECTOR_ELT(gobj, 1), gs = VECTOR_ELT(gobj, 2);
+  const SEXP g = VECTOR_ELT(gobj, 1), gs = VECTOR_ELT(gobj, 2), order = VECTOR_ELT(gobj, 6);
   const int ng = length(gs), l = length(g), tx = TYPEOF(x),
             *pgs = INTEGER(gs), *pg = INTEGER(g);
   if(ng != INTEGER(VECTOR_ELT(gobj, 0))[0]) error("'GRP' object needs to have valid vector of group-sizes");
   if(l != length(x)) error("length(x) must match length(g)");
-  int *count = (int *) R_alloc(ng+1, sizeof(int));
-  int *cgs = (int *) R_alloc(ng+2, sizeof(int)); cgs[1] = 0;
-  for(int i = 0; i != ng; ++i) {
-    count[i+1] = 0;
-    cgs[i+2] = cgs[i+1] + pgs[i];
-  }
+
   SEXP res = PROTECT(allocVector(tx, l));
 
-  switch(tx) {
-  case INTSXP:
-  case LGLSXP: {
-    int *px = INTEGER(x), *pr = INTEGER(res);
-    for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
-    break;
-  }
-  case REALSXP: {
-    double *px = REAL(x), *pr = REAL(res);
-    for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
-    break;
-  }
-  case CPLXSXP: {
-    Rcomplex *px = COMPLEX(x), *pr = COMPLEX(res);
-    for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
-    break;
-  }
-  case STRSXP: {
-    SEXP *px = STRING_PTR(x), *pr = STRING_PTR(res);
-    for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
-    break;
-  }
-  case VECSXP: {
-    SEXP *px = SEXPPTR(x), *pr = SEXPPTR(res);
-    for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
-    break;
-  }
-  case RAWSXP: {
-    Rbyte *px = RAW(x), *pr = RAW(res);
-    for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
-    break;
-  }
-  default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
+  // Note: This is only faster for a large number of groups...
+  if(length(order) == l) { // Grouping not sorted but we have the ordering..
+    const SEXP starts = getAttrib(order, install("starts"));
+    if(length(starts) != ng) goto unsno2;
+    const int *po = INTEGER(order), *ps = INTEGER(starts);
+
+    switch(tx) {
+    case INTSXP:
+    case LGLSXP: {
+      int *px = INTEGER(x), *pr = INTEGER(res);
+      for(int i = 0, k = 0; i != ng; ++i) {
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1; j < end; ++j) pr[po[j]-1] = px[k++];
+      }
+      break;
+    }
+    case REALSXP: {
+      double *px = REAL(x), *pr = REAL(res);
+      for(int i = 0, k = 0; i != ng; ++i) {
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1; j < end; ++j) pr[po[j]-1] = px[k++];
+      }
+      break;
+    }
+    case CPLXSXP: {
+      Rcomplex *px = COMPLEX(x), *pr = COMPLEX(res);
+      for(int i = 0, k = 0; i != ng; ++i) {
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1; j < end; ++j) pr[po[j]-1] = px[k++];
+      }
+      break;
+    }
+    case STRSXP: {
+      SEXP *px = STRING_PTR(x), *pr = STRING_PTR(res);
+      for(int i = 0, k = 0; i != ng; ++i) {
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1; j < end; ++j) pr[po[j]-1] = px[k++];
+      }
+      break;
+    }
+    case VECSXP: {
+      SEXP *px = SEXPPTR(x), *pr = SEXPPTR(res);
+      for(int i = 0, k = 0; i != ng; ++i) {
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1; j < end; ++j) pr[po[j]-1] = px[k++];
+      }
+      break;
+    }
+    case RAWSXP: {
+      Rbyte *px = RAW(x), *pr = RAW(res);
+      for(int i = 0, k = 0; i != ng; ++i) {
+        for(int j = ps[i]-1, end = ps[i]+pgs[i]-1; j < end; ++j) pr[po[j]-1] = px[k++];
+      }
+      break;
+    }
+    default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
+    }
+
+  } else { // Unsorted, without ordering
+    unsno2:;
+    int *count = (int *) R_alloc(ng+1, sizeof(int));
+    int *cgs = (int *) R_alloc(ng+2, sizeof(int)); cgs[1] = 0;
+    for(int i = 0; i != ng; ++i) {
+      count[i+1] = 0;
+      cgs[i+2] = cgs[i+1] + pgs[i];
+    }
+    switch(tx) {
+    case INTSXP:
+    case LGLSXP: {
+      int *px = INTEGER(x), *pr = INTEGER(res);
+      for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
+      break;
+    }
+    case REALSXP: {
+      double *px = REAL(x), *pr = REAL(res);
+      for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
+      break;
+    }
+    case CPLXSXP: {
+      Rcomplex *px = COMPLEX(x), *pr = COMPLEX(res);
+      for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
+      break;
+    }
+    case STRSXP: {
+      SEXP *px = STRING_PTR(x), *pr = STRING_PTR(res);
+      for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
+      break;
+    }
+    case VECSXP: {
+      SEXP *px = SEXPPTR(x), *pr = SEXPPTR(res);
+      for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
+      break;
+    }
+    case RAWSXP: {
+      Rbyte *px = RAW(x), *pr = RAW(res);
+      for(int i = 0; i != l; ++i) pr[i] = px[cgs[pg[i]]+count[pg[i]]++];
+      break;
+    }
+    default: error("Unsupported type '%s' passed to gsplit", type2char(tx));
+    }
   }
   SHALLOW_DUPLICATE_ATTRIB(res, x);
   UNPROTECT(1);
@@ -918,39 +1042,39 @@ SEXP multiassign(SEXP lhs, SEXP rhs, SEXP envir) {
   if(TYPEOF(lhs) != STRSXP) error("lhs needs to be character");
   int n = length(lhs);
   if(n == 1) { // lazy_duplicate appears not necessary (copy-on modify is automatically implemented, and <- also does not use it).
-    defineVar(installTrChar(STRING_ELT(lhs, 0)), rhs, envir);
+    defineVar(installChar(STRING_ELT(lhs, 0)), rhs, envir);
     return R_NilValue;
   }
   if(length(rhs) != n) error("length(lhs) must be equal to length(rhs)");
   SEXP *plhs = STRING_PTR(lhs);
-  switch(TYPEOF(rhs)) { // installTrChar translates to native encoding, otherwise use installChar (no big performance difference, <- also uses installTrChar).
+  switch(TYPEOF(rhs)) { // installTrChar translates to native encoding, installChar does the same now, but also is available on older systems.
     case REALSXP: {
       double *prhs = REAL(rhs);
-      for(int i = 0; i < n; ++i) defineVar(installTrChar(plhs[i]), ScalarReal(prhs[i]), envir);
+      for(int i = 0; i < n; ++i) defineVar(installChar(plhs[i]), ScalarReal(prhs[i]), envir);
       break;
     }
     case INTSXP: {
       int *prhs = INTEGER(rhs);
-      for(int i = 0; i < n; ++i) defineVar(installTrChar(plhs[i]), ScalarInteger(prhs[i]), envir);
+      for(int i = 0; i < n; ++i) defineVar(installChar(plhs[i]), ScalarInteger(prhs[i]), envir);
       break;
     }
     case STRSXP: {
       SEXP *prhs = STRING_PTR(rhs);
-      for(int i = 0; i < n; ++i) defineVar(installTrChar(plhs[i]), ScalarString(prhs[i]), envir);
+      for(int i = 0; i < n; ++i) defineVar(installChar(plhs[i]), ScalarString(prhs[i]), envir);
       break;
     }
     case LGLSXP: {
       int *prhs = LOGICAL(rhs);
-      for(int i = 0; i < n; ++i) defineVar(installTrChar(plhs[i]), ScalarLogical(prhs[i]), envir);
+      for(int i = 0; i < n; ++i) defineVar(installChar(plhs[i]), ScalarLogical(prhs[i]), envir);
       break;
     }
     case VECSXP: { // lazy_duplicate appears not necessary (copy-on modify is automatically implemented, and <- also does not use it).
-      for(int i = 0; i < n; ++i) defineVar(installTrChar(plhs[i]), VECTOR_ELT(rhs, i), envir);
+      for(int i = 0; i < n; ++i) defineVar(installChar(plhs[i]), VECTOR_ELT(rhs, i), envir);
       break;
     }
     default: {
       SEXP rhsl = PROTECT(coerceVector(rhs, VECSXP));
-      for(int i = 0; i < n; ++i) defineVar(installTrChar(plhs[i]), VECTOR_ELT(rhsl, i), envir);
+      for(int i = 0; i < n; ++i) defineVar(installChar(plhs[i]), VECTOR_ELT(rhsl, i), envir);
       UNPROTECT(1);
     }
   }
@@ -961,7 +1085,7 @@ SEXP multiassign(SEXP lhs, SEXP rhs, SEXP envir) {
 SEXP vlabels(SEXP x, SEXP attrn, SEXP usenam) {
   if(!isString(attrn)) error("'attrn' must be of mode character");
   if(length(attrn) != 1) error("exactly one attribute 'attrn' must be given");
-  SEXP sym_attrn = PROTECT(installTrChar(STRING_ELT(attrn, 0)));
+  SEXP sym_attrn = PROTECT(installChar(STRING_ELT(attrn, 0)));
   int l = length(x);
   if(TYPEOF(x) != VECSXP) {
     SEXP labx = getAttrib(x, sym_attrn);
@@ -1008,7 +1132,7 @@ SEXP setvlabels(SEXP x, SEXP attrn, SEXP value, SEXP ind) { // , SEXP sc
     pv = SEXPPTR(vl); ++nprotect;
    }
  }
- SEXP sym_attrn = PROTECT(installTrChar(STRING_ELT(attrn, 0)));
+ SEXP sym_attrn = PROTECT(installChar(STRING_ELT(attrn, 0)));
  if(length(ind) == 0) {
    if(tv != NILSXP && l != length(value)) error("length(x) must match length(value)");
    if(tv == NILSXP) {
