@@ -1,6 +1,18 @@
+# collapse 1.7.6
+
+* Corrected a C-level bug in `gsplit` that could lead R to crash in some instances (`gsplit` is used internally in `fsummarise`, `fmutate`, `BY` and `collap` to perform computations with base R (non-optimized) functions). 
+
+* Ensured that `BY.grouped_df` always (by default) returns grouping columns in aggregations i.e. `iris |> gby(Species) |> nv() |> BY(sum)` now gives the same as `iris |> gby(Species) |> nv() |> fsum()`.
+
+* A `.` was added to the first argument of functions `fselect`, `fsubset`, `colorder` and `fgroup_by`, i.e. `fselect(x, ...) -> fselect(.x, ...)`. The reason for this is that over time I added the option to select-rename columns e.g. `fselect(mtcars, cylinders = cyl)`, which was not offered when these functions were created. This presents problems if columns should be renamed into `x`, e.g. `fselect(mtcars, x = cyl)` failed, see [#221](https://github.com/SebKrantz/collapse/issues/221). Renaming the first argument to `.x` somewhat guards against such situations. I think this change is worthwhile to implement, because it makes the package more robust going forward, and usually the first argument of these functions is never invoked explicitly. I really hope this breaks nobody's code. 
+
+* Added a function `GRPN` to make it easy to add a column of group sizes e.g. `mtcars %>% fgroup_by(cyl,vs,am) %>% ftransform(Sizes = GRPN(.))` or `mtcars %>% ftransform(Sizes = GRPN(list(cyl, vs, am)))` or `GRPN(mtcars, by = ~cyl+vs+am)`. 
+
+* Added `[.pwcor` and `[.pwcov`, to be able to subset correlation/covariance matrices without loosing the print formatting. 
+
 # collapse 1.7.5
 
-* Also ensuring tidyverse tests are in `\donttest{}` and building without the *dplyr* testing file to avoid issues with static code analysis on CRAN.
+* Also ensuring tidyverse examples are in `\donttest{}` and building without the *dplyr* testing file to avoid issues with static code analysis on CRAN.
 
 * 20-50% Speed improvement in `gsplit` (and therefore in `fsummarise`, `fmutate`, `collap` and `BY` *when invoked with base R functions*) when grouping with `GRP(..., sort = TRUE, return.order = TRUE)`. To enable this by default, the default for argument `return.order` in `GRP` was set to `sort`, which retains the ordering vector (needed for the optimization). Retaining the ordering vector uses up some memory which can possibly adversely affect computations with big data, but with big data `sort = FALSE` usually gives faster results anyway, and you can also always set `return.order = FALSE` (also in `fgroup_by`, `collap`), so this default gives the best of both worlds. 
 
