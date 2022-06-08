@@ -24,7 +24,7 @@ qsu.default <- function(x, g = NULL, pid = NULL, w = NULL, higher = FALSE, array
 
 qsu.pseries <- function(x, g = NULL, w = NULL, effect = 1L, higher = FALSE, array = TRUE, stable.algo = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
-  pid <- if(length(effect) == 1L) .subset2(getpix(attr(x, "index")), effect) else finteraction(.subset(getpix(attr(x, "index")), effect))
+  pid <- group_effect(x, effect)
   if(is.null(g)) return(fbstatsCpp(x,higher,0L,0L,fnlevels(pid),pid,w,stable.algo))
   if(is.atomic(g)) {
     if(!is.nmfactor(g)) g <- qF(g, na.exclude = FALSE)
@@ -82,7 +82,7 @@ qsu.data.frame <- function(x, by = NULL, pid = NULL, w = NULL, cols = NULL, high
     } else pidn <- NULL
     if(formw) {
       widn <- ckmatch(all.vars(w), nam)
-      w <- x[[widn]]
+      w <- eval(w[[2L]], x, attr(w, ".Environment")) # w <- x[[widn]]
     } else widn <- NULL
     if(is.null(v)) {
       x <- if(is.null(cols)) x[-c(byn, pidn, widn)] else x[cols2int(cols, x, nam, FALSE)]
@@ -90,7 +90,9 @@ qsu.data.frame <- function(x, by = NULL, pid = NULL, w = NULL, cols = NULL, high
   } else if(length(cols)) x <- .subset(x, cols2int(cols, x, attr(x, "names"), FALSE))
 
   # Get vlabels
-  if(vlabels) attr(x, "names") <- paste(attr(x, "names"), vlabels(x, use.names = FALSE), sep = ": ")
+  if(is.function(vlabels) || vlabels)
+    attr(x, "names") <- if(is.function(vlabels)) vlabels(x) else
+      paste(attr(x, "names"), setv(vlabels(x, use.names = FALSE), NA, ""), sep = ": ")
 
   # original code:
   if(is.null(by)) {
@@ -111,8 +113,7 @@ qsu.data.frame <- function(x, by = NULL, pid = NULL, w = NULL, cols = NULL, high
   drop(fbstatslCpp(x,higher,by[[1L]],by[[2L]],pid[[1L]],pid[[2L]],w,stable.algo,array,GRPnames(by)))
 }
 
-qsu.list <- function(x, by = NULL, pid = NULL, w = NULL, cols = NULL, higher = FALSE, array = TRUE, vlabels = FALSE, stable.algo = TRUE, ...)
-  qsu.data.frame(x, by, pid, w, cols, higher, array, vlabels, stable.algo, ...)
+qsu.list <- function(x, ...) qsu.data.frame(x, ...)
 
 qsu.sf <- function(x, by = NULL, pid = NULL, w = NULL, cols = NULL, higher = FALSE, array = TRUE, vlabels = FALSE, stable.algo = TRUE, ...) {
   oldClass(x) <- NULL
@@ -122,7 +123,8 @@ qsu.sf <- function(x, by = NULL, pid = NULL, w = NULL, cols = NULL, higher = FAL
 
 qsu.pdata.frame <- function(x, by = NULL, w = NULL, cols = NULL, effect = 1L, higher = FALSE, array = TRUE, vlabels = FALSE, stable.algo = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
-  pid <- if(length(effect) == 1L) .subset2(getpix(attr(x, "index")), effect) else finteraction(.subset(getpix(attr(x, "index")), effect))
+  pid <- group_effect(x, effect)
+  x <- unindex(x)
 
   formby <- is.call(by)
   formw <- is.call(w)
@@ -141,14 +143,16 @@ qsu.pdata.frame <- function(x, by = NULL, w = NULL, cols = NULL, effect = 1L, hi
     } else byn <- NULL
     if(formw) {
       widn <- ckmatch(all.vars(w), nam)
-      w <- x[[widn]]
+      w <- eval(w[[2L]], x, attr(w, ".Environment")) # w <- x[[widn]]
     } else widn <- NULL
     if(is.null(v)) {
       x <- if(is.null(cols)) x[-c(byn, widn)] else x[cols2int(cols, x, nam, FALSE)]
     } else x <- x[v]
   } else if(length(cols)) x <- .subset(x, cols2int(cols, x, attr(x, "names"), FALSE))
 
-  if(vlabels) attr(x, "names") <- paste(attr(x, "names"), vlabels(x, use.names = FALSE), sep = ": ")
+  if(is.function(vlabels) || vlabels)
+    attr(x, "names") <- if(is.function(vlabels)) vlabels(x) else
+       paste(attr(x, "names"), setv(vlabels(x, use.names = FALSE), NA, ""), sep = ": ")
 
   if(is.null(by)) return(drop(fbstatslCpp(x,higher,0L,0L,fnlevels(pid),pid,w,stable.algo,array)))
   if(is.atomic(by)) {

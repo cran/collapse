@@ -157,7 +157,8 @@ SEXP fminC(SEXP x, SEXP Rng, SEXP g, SEXP Rnarm) {
     break;
   default: error("Unsupported SEXP type");
   }
-  if(ng && !isObject(x)) copyMostAttrib(x, out);
+  if(ATTRIB(x) != R_NilValue && !(isObject(x) && inherits(x, "ts")))
+    copyMostAttrib(x, out);
   UNPROTECT(1);
   return out;
 }
@@ -202,7 +203,7 @@ SEXP fminlC(SEXP x, SEXP Rng, SEXP g, SEXP Rnarm, SEXP Rdrop) {
   }
   SEXP out = PROTECT(allocVector(VECSXP, l)), *pout = SEXPPTR(out), *px = SEXPPTR(x);
   for(int j = 0; j != l; ++j) pout[j] = fminC(px[j], Rng, g, Rnarm);
-  if(ng == 0) for(int j = 0; j != l; ++j) copyMostAttrib(px[j], pout[j]);
+  // if(ng == 0) for(int j = 0; j != l; ++j) copyMostAttrib(px[j], pout[j]);
   DFcopyAttr(out, x, ng);
   UNPROTECT(1);
   return out;
@@ -228,7 +229,8 @@ SEXP fmaxC(SEXP x, SEXP Rng, SEXP g, SEXP Rnarm) {
     break;
   default: error("Unsupported SEXP type");
   }
-  if(ng && !isObject(x)) copyMostAttrib(x, out);
+  if(ATTRIB(x) != R_NilValue && !(isObject(x) && inherits(x, "ts")))
+    copyMostAttrib(x, out);
   UNPROTECT(1);
   return out;
 }
@@ -273,7 +275,7 @@ SEXP fmaxlC(SEXP x, SEXP Rng, SEXP g, SEXP Rnarm, SEXP Rdrop) {
   }
   SEXP out = PROTECT(allocVector(VECSXP, l)), *pout = SEXPPTR(out), *px = SEXPPTR(x);
   for(int j = 0; j != l; ++j) pout[j] = fmaxC(px[j], Rng, g, Rnarm);
-  if(ng == 0) for(int j = 0; j != l; ++j) copyMostAttrib(px[j], pout[j]);
+  // if(ng == 0) for(int j = 0; j != l; ++j) copyMostAttrib(px[j], pout[j]);
   DFcopyAttr(out, x, ng);
   UNPROTECT(1);
   return out;

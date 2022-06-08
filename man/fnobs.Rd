@@ -26,7 +26,7 @@ fnobs(x, \dots)
 \item{g}{a factor, \code{\link{GRP}} object, atomic vector (internally converted to factor) or a list of vectors / factors (internally converted to a \code{\link{GRP}} object) used to group \code{x}.}
 
 \item{TRA}{an integer or quoted operator indicating the transformation to perform:
-1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
+0 - "replace_NA"     |     1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
 
 
 \item{use.g.names}{logical. Make group-names and add to the result as names (default method) or row-names (matrix and data frame methods). No row-names are generated for \emph{data.table}'s.}
@@ -35,7 +35,7 @@ fnobs(x, \dots)
 
 \item{keep.group_vars}{\emph{grouped_df method:} Logical. \code{FALSE} removes grouping variables after computation.}
 
-\item{\dots}{arguments to be passed to or from other methods.}
+\item{\dots}{arguments to be passed to or from other methods. If \code{TRA} is used, passing \code{set = TRUE} will transform data by reference and return the result invisibly.}
 
 }
 \details{
@@ -62,13 +62,13 @@ head(fnobs(wlddev, wlddev$iso3c))
 aqm <- qM(airquality)
 fnobs(aqm)                                  # Also works for character or logical matrices
 fnobs(aqm, airquality$Month)
-\donttest{ % No code relying on suggested package
+%\donttest{ % No code relying on suggested package
 ## method for grouped data frames - created with dplyr::group_by or fgroup_by
 library(dplyr)
 airquality \%>\% group_by(Month) \%>\% fnobs()
 wlddev \%>\% group_by(country) \%>\%
            select(PCGDP,LIFEEX,GINI,ODA) \%>\% fnobs()
-}
+%}
 }
 \keyword{univar}
 \keyword{manip}

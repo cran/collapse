@@ -51,7 +51,8 @@ SEXP flast_impl(SEXP x, int ng, SEXP g, int narm, int *gl) {
         default: error("Unsupported SEXP type!");
       }
     }
-    copyMostAttrib(x, out);
+    if(ATTRIB(x) != R_NilValue && !(isObject(x) && inherits(x, "ts")))
+      copyMostAttrib(x, out);
     if(!isNull(getAttrib(x, R_NamesSymbol)))
       namesgets(out, ScalarString(STRING_ELT(getAttrib(x, R_NamesSymbol), j)));
     UNPROTECT(1);
@@ -125,25 +126,30 @@ SEXP flast_impl(SEXP x, int ng, SEXP g, int narm, int *gl) {
       switch(tx) {
       case REALSXP: {
         double *px = REAL(x), *pout = REAL(out);
-        for(int i = ng; i--; ) pout[i] = px[gl[i]];
+        for(int i = ng; i--; ) pout[i] = gl[i] == NA_INTEGER ? NA_REAL : px[gl[i]];
         break;
       }
       case INTSXP:
       case LGLSXP: {
         int *px = INTEGER(x), *pout = INTEGER(out);
-        for(int i = ng; i--; ) pout[i] = px[gl[i]];
+        for(int i = ng; i--; ) pout[i] = gl[i] == NA_INTEGER ? NA_INTEGER : px[gl[i]];
         break;
       }
-      case STRSXP:
+      case STRSXP: {
+        SEXP *px = STRING_PTR(x), *pout = STRING_PTR(out);
+        for(int i = ng; i--; ) pout[i] = gl[i] == NA_INTEGER ? NA_STRING : px[gl[i]];
+        break;
+      }
       case VECSXP: {
         SEXP *px = SEXPPTR(x), *pout = SEXPPTR(out);
-        for(int i = ng; i--; ) pout[i] = px[gl[i]];
+        for(int i = ng; i--; ) pout[i] = gl[i] == NA_INTEGER ? R_NilValue : px[gl[i]];
         break;
       }
       default: error("Unsupported SEXP type!");
       }
     }
-    copyMostAttrib(x, out);
+    if(ATTRIB(x) != R_NilValue && !(isObject(x) && inherits(x, "ts")))
+      copyMostAttrib(x, out);
     UNPROTECT(1);
     return out;
   }
@@ -316,7 +322,7 @@ SEXP flastmC(SEXP x, SEXP Rng, SEXP g, SEXP Rnarm, SEXP Rdrop) {
       case REALSXP: {
         double *px = REAL(x), *pout = REAL(out);
         for(int j = 0; j != col; ++j) {
-          for(int i = ng; i--; ) pout[i] = px[pgl[i]];
+          for(int i = ng; i--; ) pout[i] = pgl[i] == NA_INTEGER ? NA_REAL : px[pgl[i]];
           px += l; pout += ng;
         }
         break;
@@ -325,16 +331,23 @@ SEXP flastmC(SEXP x, SEXP Rng, SEXP g, SEXP Rnarm, SEXP Rdrop) {
       case LGLSXP: {
         int *px = INTEGER(x), *pout = INTEGER(out);
         for(int j = 0; j != col; ++j) {
-          for(int i = ng; i--; ) pout[i] = px[pgl[i]];
+          for(int i = ng; i--; ) pout[i] = pgl[i] == NA_INTEGER ? NA_INTEGER : px[pgl[i]];
           px += l; pout += ng;
         }
         break;
       }
-      case STRSXP:
+      case STRSXP: {
+        SEXP *px = STRING_PTR(x), *pout = STRING_PTR(out);
+        for(int j = 0; j != col; ++j) {
+          for(int i = ng; i--; ) pout[i] = pgl[i] == NA_INTEGER ? NA_STRING : px[pgl[i]];
+          px += l; pout += ng;
+        }
+        break;
+      }
       case VECSXP: {
         SEXP *px = SEXPPTR(x), *pout = SEXPPTR(out);
         for(int j = 0; j != col; ++j) {
-          for(int i = ng; i--; ) pout[i] = px[pgl[i]];
+          for(int i = ng; i--; ) pout[i] = pgl[i] == NA_INTEGER ? R_NilValue : px[pgl[i]];
           px += l; pout += ng;
         }
         break;

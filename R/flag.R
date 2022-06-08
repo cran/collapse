@@ -9,17 +9,12 @@ flag.default <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = TRUE, 
   .Call(Cpp_flaglead,x,n,fill,g[[1L]],g[[2L]],G_t(t),stubs)
 }
 
-flag.pseries <- function(x, n = 1, fill = NA, stubs = TRUE, ...) {
+flag.pseries <- function(x, n = 1, fill = NA, stubs = length(n) > 1L, shift = "time", ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
-  index <- unclass(getpix(attr(x, "index")))
-  if(length(index) > 2L) index <- list(finteraction(index[-length(index)]), index[[length(index)]])
+  index <- uncl2pix(x)
   g <- index[[1L]]
-  t <- index[[2L]]
-  tlev <- attr(t, "levels")
-  oldopts <- options(warn = -1L)
-  on.exit(options(oldopts))
-  if(is.finite(as.integer(tlev[1L]))) t <- as.integer(tlev)[t]
-  if(length(n) > 1 && is.factor(x)) x <- setNames(as.character(x), names(x))
+  t <- switch(shift, time = index[[2L]], row = NULL, stop("'shift' must be either 'time' or 'row'"))
+  if(length(t) && !inherits(x, "indexed_series")) t <- plm_check_time(t)
   if(is.matrix(x))
   .Call(Cpp_flagleadm,x,n,fill,fnlevels(g),g,t,stubs) else
   .Call(Cpp_flaglead,x,n,fill,fnlevels(g),g,t,stubs)
@@ -35,18 +30,15 @@ flag.matrix <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = length(
 flag.grouped_df <- function(x, n = 1, t = NULL, fill = NA, stubs = length(n) > 1L, keep.ids = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
   g <- GRP.grouped_df(x, call = FALSE)
-  tsym <- all.vars(substitute(t))
+  tsym <- substitute(t)
   nam <- attr(x, "names")
   gn <- which(nam %in% g[[5L]])
-  if(length(tsym) && !anyNA(tn <- match(tsym, nam))) {
-    if(length(tn) == 1L) {
-      if(any(gn == tn)) stop("timevar coincides with grouping variables!")
-      t <- .subset2(x, tn)
-    } else {
-      if(any(gn %in% tn)) stop("timevar coincides with grouping variables!")
-      t <- .subset(x, tn)
+  if(!is.null(tsym)) {
+    t <- eval(tsym, x, parent.frame())
+    if(!anyNA(tn <- match(all.vars(tsym), nam))) {
+      gn <- c(gn, tn)
+      if(anyDuplicated.default(gn)) stop("timevar coincides with grouping variables!")
     }
-    gn <- c(gn, tn)
   }
   if(length(gn)) {
     ax <- attributes(x)
@@ -65,19 +57,14 @@ flag.data.frame <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = len
   .Call(Cpp_flagleadl,x,n,fill,g[[1L]],g[[2L]],G_t(t),stubs)
 }
 
-flag.list <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = length(n) > 1L, ...)
-  flag.data.frame(x, n, g, t, fill, stubs, ...)
+flag.list <- function(x, ...) flag.data.frame(x, ...)
 
-flag.pdata.frame <- function(x, n = 1, fill = NA, stubs = length(n) > 1L, ...) {
+flag.pdata.frame <- function(x, n = 1, fill = NA, stubs = length(n) > 1L, shift = "time", ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
-  index <- unclass(getpix(attr(x, "index")))
-  if(length(index) > 2L) index <- list(finteraction(index[-length(index)]), index[[length(index)]])
+  index <- uncl2pix(x)
   g <- index[[1L]]
-  t <- index[[2L]]
-  tlev <- attr(t, "levels")
-  oldopts <- options(warn = -1L)
-  on.exit(options(oldopts))
-  if(is.finite(as.integer(tlev[1L]))) t <- as.integer(tlev)[t]
+  t <- switch(shift, time = index[[2L]], row = NULL, stop("'shift' must be either 'time' or 'row'"))
+  if(length(t) && !inherits(x, "indexed_frame")) t <- plm_check_time(t)
   .Call(Cpp_flagleadl,x,n,fill,fnlevels(g),g,t,stubs)
 }
 
@@ -89,8 +76,8 @@ L.default <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = TRUE, ...
   flag.default(x, n, g, t, fill, stubs, ...)
 }
 
-L.pseries <- function(x, n = 1, fill = NA, stubs = TRUE, ...)
-  flag.pseries(x, n, fill, stubs, ...)
+L.pseries <- function(x, n = 1, fill = NA, stubs = TRUE, shift = "time", ...)
+  flag.pseries(x, n, fill, stubs, shift, ...)
 
 L.matrix <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = TRUE, ...)
   flag.matrix(x, n, g, t, fill, stubs, ...)
@@ -114,7 +101,7 @@ L.data.frame <- function(x, n = 1, by = NULL, t = NULL, cols = is.numeric,
         gn <- ckmatch(all.vars(by[[3L]]), nam, "Unknown variables:")
       } else {
         gn <- ckmatch(all.vars(by), nam, "Unknown variables:")
-        cols <- if(is.null(cols)) seq_along(x)[-gn] else cols2int(cols, x, nam)
+        cols <- cols2intrmgn(gn, cols, x)
       }
       by <- G_guo(if(length(gn) == 1L) x[[gn]] else x[gn])
       if(!keep.ids) gn <- NULL
@@ -127,7 +114,7 @@ L.data.frame <- function(x, n = 1, by = NULL, t = NULL, cols = is.numeric,
     if(is.call(t)) {
       tn <- ckmatch(all.vars(t), nam, "Unknown variables:")
       t1 <- length(tn) == 1L
-      t <- if(t1) x[[tn]] else x[tn]
+      t <- eval(if(t1) t[[2L]] else attr(terms.formula(t), "variables"), x, attr(t, ".Environment")) # if(t1) x[[tn]] else x[tn]
       cols <- if(is.null(cols)) seq_along(x)[-tn] else if(t1) cols[cols != tn] else fsetdiff(cols, tn)
       if(keep.ids) gn <- c(gn, tn)
     }
@@ -150,29 +137,30 @@ L.data.frame <- function(x, n = 1, by = NULL, t = NULL, cols = is.numeric,
   .Call(Cpp_flagleadl,x,n,fill,by[[1L]],by[[2L]],G_t(t),stubs)
 }
 
-L.list <- function(x, n = 1, by = NULL, t = NULL, cols = is.numeric, fill = NA, stubs = TRUE, keep.ids = TRUE, ...)
-  L.data.frame(x, n, by, t, cols, fill, stubs, keep.ids, ...)
+L.list <- function(x, ...) L.data.frame(x, ...)
 
-L.pdata.frame <- function(x, n = 1, cols = is.numeric, fill = NA, stubs = TRUE, keep.ids = TRUE, ...) {
+L.pdata.frame <- function(x, n = 1, cols = is.numeric, fill = NA, stubs = TRUE, shift = "time", keep.ids = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
   ax <- attributes(x)
   nam <- ax[["names"]]
-  index <- unclass(getpix(ax[["index"]]))
+  index <- uncl2pix(x)
+  cols_fun <- is.function(cols)
 
-  if(keep.ids) {
-    gn <- which(nam %in% names(index))
-    if(length(gn) && is.null(cols)) cols <- seq_along(unclass(x))[-gn]
+  if(cols_fun && identical(cols, is.numeric)) cols <- which(.Call(C_vtypes, x, 1L))
+  else if(length(cols)) cols <- cols2int(cols, x, nam, FALSE)
+
+  if(cols_fun || keep.ids) {
+    gn <- which(nam %in% attr(index, "nam")) # Needed for 1 or 3+ index variables
+    if(length(gn)) {
+      if(cols_fun) cols <- fsetdiff(cols, gn)
+      else if(is.null(cols)) cols <- seq_along(unclass(x))[-gn]
+    }
+    if(!keep.ids) gn <- NULL
   } else gn <- NULL
 
-  if(length(index) > 2L) index <- list(finteraction(index[-length(index)]), index[[length(index)]])
   g <- index[[1L]]
-  t <- index[[2L]]
-  tlev <- attr(t, "levels")
-  oldopts <- options(warn = -1L)
-  on.exit(options(oldopts))
-  if(is.finite(as.integer(tlev[1L]))) t <- as.integer(tlev)[t]
-
-  if(length(cols)) cols <- cols2int(cols, x, nam, FALSE)
+  t <- switch(shift, time = index[[2L]], row = NULL, stop("'shift' must be either 'time' or 'row'"))
+  if(length(t) && !any(ax$class == "indexed_frame")) t <- plm_check_time(t)
 
   if(length(gn) && length(cols)) {
     class(x) <- NULL # Works for multiple lags !
@@ -193,8 +181,8 @@ F.default <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = TRUE, ...
   flag.default(x, -n, g, t, fill, stubs, ...)
 }
 
-F.pseries <- function(x, n = 1, fill = NA, stubs = TRUE, ...)
-  flag.pseries(x, -n, fill, stubs, ...)
+F.pseries <- function(x, n = 1, fill = NA, stubs = TRUE, shift = "time", ...)
+  flag.pseries(x, -n, fill, stubs, shift, ...)
 
 F.matrix <- function(x, n = 1, g = NULL, t = NULL, fill = NA, stubs = TRUE, ...)
   flag.matrix(x, -n, g, t, fill, stubs, ...)
@@ -210,7 +198,7 @@ F.data.frame <- function(x, n = 1, by = NULL, t = NULL, cols = is.numeric,
 
 F.list <- F.data.frame
 
-F.pdata.frame <- function(x, n = 1, cols = is.numeric, fill = NA, stubs = TRUE, keep.ids = TRUE, ...)
-  L.pdata.frame(x, -n, cols, fill, stubs, keep.ids, ...)
+F.pdata.frame <- function(x, n = 1, cols = is.numeric, fill = NA, stubs = TRUE, shift = "time", keep.ids = TRUE, ...)
+  L.pdata.frame(x, -n, cols, fill, stubs, shift, keep.ids, ...)
 
 

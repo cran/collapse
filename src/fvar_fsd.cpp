@@ -12,11 +12,9 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
   if(stable_algo) { // WELFORDS ONLINE METHOD ---------------------------------------------------------
     if(Rf_isNull(w)) { // No weights
       if(ng == 0) {
+        double n = 0, mean = 0, d1 = 0, M2 = 0;
         if(narm) {
           int j = l-1;
-          // double n = 0;
-          // long double mean = 0, d1 = 0, M2 = 0; // LD really necessary ? what about speed ?
-          double n = 0, mean = 0, d1 = 0, M2 = 0;
           while(std::isnan(x[j]) && j!=0) --j;
           if(j != 0) {
             for(int i = j+1; i--; ) {
@@ -28,15 +26,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
             M2 = M2/(n-1);
             if(sd) M2 = sqrt(M2);
             if(std::isnan(M2)) M2 = NA_REAL;
-            return Rf_ScalarReal(M2); // (double)M2
-          } else return Rf_ScalarReal(NA_REAL);
+          } else M2 = NA_REAL;
         } else {
-          // double n = 0;
-          // long double mean = 0, d1 = 0, M2 = 0;
-          double n = 0, mean = 0, d1 = 0, M2 = 0;
           for(int i = 0; i != l; ++i) {
             if(std::isnan(x[i])) {
-              return Rf_ScalarReal(NA_REAL);
+              M2 = NA_REAL;
+              break;
             } else {
               d1 = x[i]-mean;
               mean += d1*(1 / ++n);
@@ -46,8 +41,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
           M2 = M2/(l-1);
           if(sd) M2 = sqrt(M2);
           if(std::isnan(M2)) M2 = NA_REAL;
-          return Rf_ScalarReal(M2); // (double)M2
         }
+        if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts"))) {
+          SEXP out = Rf_ScalarReal(M2);
+          Rf_copyMostAttrib(x, out);
+          return out;
+        } else return Rf_ScalarReal(M2);
       } else { // with groups
         if(g.size() != l) stop("length(g) must match nrow(X)");
         // long double d1 = 0;
@@ -83,7 +82,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               }
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, M2);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, M2);
           return M2;
         } else {
           NumericVector M2(ng), mean(ng), n(ng);
@@ -117,7 +117,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               }
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, M2);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, M2);
           return M2;
         }
       }
@@ -125,10 +126,10 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
       NumericVector wg = w;
       if(l != wg.size()) stop("length(w) must match length(x)");
       if(ng == 0) {
+        // long double sumw = 0, mean = 0, M2 = 0, d1 = 0;
+        double sumw = 0, mean = 0, M2 = 0, d1 = 0;
         if(narm) {
           int j = l-1;
-          // long double sumw = 0, mean = 0, M2 = 0, d1 = 0;
-          double sumw = 0, mean = 0, M2 = 0, d1 = 0;
           while((std::isnan(x[j]) || std::isnan(wg[j]) || wg[j] == 0) && j!=0) --j;
           if(j != 0) {
             for(int i = j+1; i--; ) {
@@ -141,14 +142,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
             M2 /= sumw-1;
             if(sd) M2 = sqrt(M2);
             if(std::isnan(M2)) M2 = NA_REAL;
-            return Rf_ScalarReal(M2); // (double)M2
-          } else return Rf_ScalarReal(NA_REAL);
+          } else M2 = NA_REAL;
         } else {
-          // long double sumw = 0, mean = 0, M2 = 0, d1 = 0;
-          double sumw = 0, mean = 0, M2 = 0, d1 = 0;
           for(int i = 0; i != l; ++i) {
             if(std::isnan(x[i]) || std::isnan(wg[i])) {
-              return NumericVector::create(NA_REAL);
+              M2 = NA_REAL;
+              break;
             } else {
               if(wg[i] == 0) continue; // This is necessary to prevent 0 starting weights which will render the mean infinite. Has little computational cost.
               sumw += wg[i];
@@ -160,8 +159,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
           M2 /= sumw-1;
           if(sd) M2 = sqrt(M2);
           if(std::isnan(M2)) M2 = NA_REAL;
-          return Rf_ScalarReal(M2); // (double)M2
         }
+        if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts"))) {
+          SEXP out = Rf_ScalarReal(M2);
+          Rf_copyMostAttrib(x, out);
+          return out;
+        } else return Rf_ScalarReal(M2);
       } else { // with groups
         if(g.size() != l) stop("length(g) must match nrow(X)");
         // long double d1 = 0;
@@ -199,7 +202,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               }
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, M2);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, M2);
           return M2;
         } else {
           NumericVector M2(ng), sumw(ng), mean(ng);
@@ -235,7 +239,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               }
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, M2);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, M2);
           return M2;
         }
       }
@@ -244,9 +249,10 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
   } else { // ONE-PASS METHOD ---------------------------------------------------------
     if(Rf_isNull(w)) { // No weights
       if(ng == 0) {
+        long double sum = 0, sq_sum = 0;
         if(narm) {
           int j = l-1, n = 1;
-          long double sum = x[j], sq_sum;
+          sum = x[j];
           while(std::isnan(sum) && j!=0) sum = x[--j];
           sq_sum = sum*sum;
           if(j != 0) {
@@ -259,13 +265,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
             sq_sum = (sq_sum - pow(sum/n,2)*n)/(n-1);
             if(sd) sq_sum = sqrt(sq_sum);
             if(std::isnan(sq_sum)) sq_sum = NA_REAL;
-            return Rf_ScalarReal((double)sq_sum);
-          } else return Rf_ScalarReal(NA_REAL);
+          } else sq_sum = NA_REAL;
         } else {
-          long double sum = 0, sq_sum = 0;
           for(int i = 0; i != l; ++i) {
             if(std::isnan(x[i])) {
-              return Rf_ScalarReal(x[i]);
+              sq_sum = NA_REAL;
+              break;
             } else {
               sum += x[i];
               sq_sum += pow(x[i],2);
@@ -274,8 +279,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
           sq_sum = (sq_sum - pow(sum/l,2)*l)/(l-1);
           if(sd) sq_sum = sqrt(sq_sum);
           if(std::isnan(sq_sum)) sq_sum = NA_REAL;
-          return Rf_ScalarReal((double)sq_sum);
         }
+        if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts"))) {
+          SEXP out = Rf_ScalarReal((double)sq_sum);
+          Rf_copyMostAttrib(x, out);
+          return out;
+        } else return Rf_ScalarReal((double)sq_sum);
       } else { // with groups
         if(g.size() != l) stop("length(g) must match nrow(X)");
         if(narm) {
@@ -306,7 +315,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               if(std::isnan(sq_sum[i])) sq_sum[i] = NA_REAL;
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, sq_sum);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, sq_sum);
           return sq_sum;
         } else {
           NumericVector sq_sum(ng), sum(ng);
@@ -357,7 +367,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               if(std::isnan(sq_sum[i])) sq_sum[i] = NA_REAL;
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, sq_sum);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, sq_sum);
           return sq_sum;
         }
       }
@@ -365,10 +376,11 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
       NumericVector wg = w;
       if(l != wg.size()) stop("length(w) must match length(x)");
       if(ng == 0) {
+        long double sum = 0, sumw = 0, sq_sum = 0;
         if(narm) {
           int j = l-1;
           while((std::isnan(x[j]) || std::isnan(wg[j])) && j!=0) --j;
-          long double sumw = wg[j], sum = x[j]*sumw, sq_sum = sum*x[j];
+          sumw = wg[j], sum = x[j]*sumw, sq_sum = sum*x[j];
           if(j != 0) {
             for(int i = j; i--; ) {
               if(std::isnan(x[i]) || std::isnan(wg[i])) continue;
@@ -379,13 +391,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
             sq_sum = (sq_sum - pow(sum/sumw,2)*sumw)/(sumw-1);
             if(sd) sq_sum = sqrt(sq_sum);
             if(std::isnan(sq_sum)) sq_sum = NA_REAL;
-            return Rf_ScalarReal((double)sq_sum);
-          } else return Rf_ScalarReal(NA_REAL);
+          } else sq_sum = NA_REAL;
         } else {
-          long double sum = 0, sumw = 0, sq_sum = 0;
           for(int i = 0; i != l; ++i) {
             if(std::isnan(x[i]) || std::isnan(wg[i])) {
-              return Rf_ScalarReal(NA_REAL);
+              sq_sum = NA_REAL;
+              break;
             } else {
               sum += x[i]*wg[i];
               sumw += wg[i];
@@ -395,8 +406,12 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
           sq_sum = (sq_sum - pow(sum/sumw,2)*sumw)/(sumw-1);
           if(sd) sq_sum = sqrt(sq_sum);
           if(std::isnan(sq_sum)) sq_sum = NA_REAL;
-          return Rf_ScalarReal((double)sq_sum);
         }
+        if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts"))) {
+          SEXP out = Rf_ScalarReal((double)sq_sum);
+          Rf_copyMostAttrib(x, out);
+          return out;
+        } else return Rf_ScalarReal((double)sq_sum);
       } else { // with groups
         if(g.size() != l) stop("length(g) must match nrow(X)");
         if(narm) {
@@ -427,7 +442,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               if(std::isnan(sq_sum[i])) sq_sum[i] = NA_REAL;
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, sq_sum);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, sq_sum);
           return sq_sum;
         } else {
           NumericVector sq_sum(ng), sumw(ng), sum(ng);
@@ -457,7 +473,8 @@ NumericVector fvarsdCpp(const NumericVector& x, int ng = 0, const IntegerVector&
               if(std::isnan(sq_sum[i])) sq_sum[i] = NA_REAL;
             }
           }
-          if(!Rf_isObject(x)) Rf_copyMostAttrib(x, sq_sum);
+          if(ATTRIB(x) != R_NilValue && !(Rf_isObject(x) && Rf_inherits(x, "ts")))
+            Rf_copyMostAttrib(x, sq_sum);
           return sq_sum;
         }
       }

@@ -327,7 +327,7 @@ fhdwithin.default <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.me
   } else return(setAttributes(demean(x, fl, w, ...), ax))
 }
 fhdwithin.pseries <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, ...) {
-  ix <- getpix(attr(x, "index"))
+  ix <- findex(x)
   namix <- attr(ix, "names")
   if(is.character(effect) && length(effect) == 1L && effect == "all") {
     effect <- seq_along(namix)
@@ -412,7 +412,7 @@ fhdwithin.matrix <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, lm.met
 
 # x = collapse:::colsubset(pwlddev, is.numeric)
 fhdwithin.pdata.frame <- function(x, effect = "all", w = NULL, na.rm = TRUE, fill = TRUE, variable.wise = TRUE, ...) {
-  ix <- getpix(attr(x, "index"))
+  ix <- findex(x)
   namix <- attr(ix, "names")
   if(is.character(effect) && length(effect) == 1L && effect == "all") {
     effect <- seq_along(namix)
@@ -444,7 +444,7 @@ fhdwithin.pdata.frame <- function(x, effect = "all", w = NULL, na.rm = TRUE, fil
       reix <- copyMostAttributes(c(.Call(C_subsetDT, ix, cc, toss, FALSE), gcc)[namix], ix)
     } else reix <- copyMostAttributes(gcc, ix)
     attr(reix, "row.names") <- .set_row_names(length(cc))
-    attr(Y, "index") <- reix
+    attr(Y, if(inherits(x, "indexed_frame")) "index_df" else "index") <- reix
     attr(Y, "na.rm") <- which(miss)
     return(Y)
   } else return(demean(x, g, w, ...)) # setAttributes(, ax) -> Not needed anymore (included in demean())
@@ -520,6 +520,8 @@ fhdwithin.data.frame <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, va
   }
 }
 
+fhdwithin.list <- function(x, ...) fhdwithin.data.frame(x, ...)
+
 
 # Note: could also do Mudlack and add means to second regression -> better than two-times centering ??
 HDW <- function(x, ...) UseMethod("HDW") # , x
@@ -547,7 +549,7 @@ HDW.data.frame <- function(x, fl, w = NULL, cols = is.numeric, na.rm = TRUE, fil
       fl[[2L]] <- NULL
     } else {
       fvars <- ckmatch(all.vars(fl), nam)
-      Xvars <- if(length(cols)) fsetdiff(cols2int(cols, x, nam), fvars) else seq_along(unclass(x))[-fvars]
+      Xvars <- cols2intrmgn(fvars, cols, x) # if(length(cols)) fsetdiff(cols2int(cols, x, nam), fvars) else seq_along(unclass(x))[-fvars]
     }
     ax[["names"]] <- if(is.character(stub)) paste0(stub, nam[Xvars]) else nam[Xvars]
 
@@ -600,8 +602,9 @@ HDW.data.frame <- function(x, fl, w = NULL, cols = is.numeric, na.rm = TRUE, fil
 
 HDW.pdata.frame <- function(x, effect = "all", w = NULL, cols = is.numeric, na.rm = TRUE, fill = TRUE,
                             variable.wise = TRUE, stub = "HDW.", ...)
-add_stub(fhdwithin.pdata.frame(if(is.null(cols)) x else colsubset(x, cols), effect, w, na.rm, fill, variable.wise, ...), stub)
+add_stub(fhdwithin.pdata.frame(fcolsubset(x, cols2intrmgn(which(attr(x, "names") %in% attr(findex(x), "nam")), cols, x)), effect, w, na.rm, fill, variable.wise, ...), stub)
 
+HDW.list <- function(x, ...) HDW.data.frame(x, ...)
 
 # Theory: y = ?1 x1 + ?2 x2 + e
 # FWT: M2 y = ?1 M2 x1 + e so residuals: e = M2 y - ?1 M2 x1 and fitted:
@@ -818,6 +821,8 @@ fhdbetween.data.frame <- function(x, fl, w = NULL, na.rm = TRUE, fill = FALSE, v
   }
 }
 
+fhdbetween.list <- function(x, ...) fhdbetween.data.frame(x, ...)
+
 
 HDB <- function(x, ...) UseMethod("HDB") # , x
 
@@ -844,7 +849,7 @@ HDB.data.frame <- function(x, fl, w = NULL, cols = is.numeric, na.rm = TRUE, fil
       fl[[2L]] <- NULL
     } else {
       fvars <- ckmatch(all.vars(fl), nam)
-      Xvars <- if(length(cols)) fsetdiff(cols2int(cols, x, nam), fvars) else seq_along(unclass(x))[-fvars]
+      Xvars <- cols2intrmgn(fvars, cols, x) #  if(length(cols)) fsetdiff(cols2int(cols, x, nam), fvars) else seq_along(unclass(x))[-fvars]
     }
     ax[["names"]] <- if(is.character(stub)) paste0(stub, nam[Xvars]) else nam[Xvars]
 
@@ -904,8 +909,9 @@ HDB.data.frame <- function(x, fl, w = NULL, cols = is.numeric, na.rm = TRUE, fil
 
 HDB.pdata.frame <- function(x, effect = "all", w = NULL, cols = is.numeric, na.rm = TRUE, fill = TRUE,
                             variable.wise = TRUE, stub = "HDB.", ...)
-  add_stub(fhdwithin.pdata.frame(if(is.null(cols)) x else colsubset(x, cols), effect, w, na.rm, fill, variable.wise, ..., means = TRUE), stub)
+  add_stub(fhdwithin.pdata.frame(fcolsubset(x, cols2intrmgn(which(attr(x, "names") %in% attr(findex(x), "nam")), cols, x)), effect, w, na.rm, fill, variable.wise, ..., means = TRUE), stub)
 
+HDB.list <- function(x, ...) HDB.data.frame(x, ...)
 
 fHDbetween <- function(x, ...) {
   message("Note that 'fHDbetween' was renamed to 'fhdbetween'. The S3 generic will not be removed anytime soon, but please use updated function names in new code, see help('collapse-renamed')")

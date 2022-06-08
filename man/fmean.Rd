@@ -13,16 +13,17 @@ The \code{\link{TRA}} argument can further be used to transform \code{x} using i
 fmean(x, \dots)
 
 \method{fmean}{default}(x, g = NULL, w = NULL, TRA = NULL, na.rm = TRUE,
-      use.g.names = TRUE, \dots)
+      use.g.names = TRUE, nthreads = 1L, \dots)
 
 \method{fmean}{matrix}(x, g = NULL, w = NULL, TRA = NULL, na.rm = TRUE,
-      use.g.names = TRUE, drop = TRUE, \dots)
+      use.g.names = TRUE, drop = TRUE, nthreads = 1L, \dots)
 
 \method{fmean}{data.frame}(x, g = NULL, w = NULL, TRA = NULL, na.rm = TRUE,
-      use.g.names = TRUE, drop = TRUE, \dots)
+      use.g.names = TRUE, drop = TRUE, nthreads = 1L, \dots)
 
 \method{fmean}{grouped_df}(x, w = NULL, TRA = NULL, na.rm = TRUE,
-      use.g.names = FALSE, keep.group_vars = TRUE, keep.w = TRUE, \dots)
+      use.g.names = FALSE, keep.group_vars = TRUE,
+      keep.w = TRUE, nthreads = 1L, \dots)
 }
 \arguments{
 \item{x}{a numeric vector, matrix, data frame or grouped data frame (class 'grouped_df').}
@@ -32,12 +33,14 @@ fmean(x, \dots)
 \item{w}{a numeric vector of (non-negative) weights, may contain missing values.}
 
 \item{TRA}{an integer or quoted operator indicating the transformation to perform:
-1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
+0 - "replace_NA"     |     1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
 
 
 \item{na.rm}{logical. Skip missing values in \code{x}. Defaults to \code{TRUE} and implemented at very little computational cost. If \code{na.rm = FALSE} a \code{NA} is returned when encountered.}
 
 \item{use.g.names}{logical. Make group-names and add to the result as names (default method) or row-names (matrix and data frame methods). No row-names are generated for \emph{data.table}'s.}
+
+\item{nthreads}{integer. The number of threads to utilize. See Details of \code{\link{fsum}}. }
 
 \item{drop}{\emph{matrix and data.frame method:} Logical. \code{TRUE} drops dimensions and returns an atomic vector if \code{g = NULL} and \code{TRA = NULL}.}
 
@@ -45,22 +48,25 @@ fmean(x, \dots)
 
 \item{keep.w}{\emph{grouped_df method:} Logical. Retain summed weighting variable after computation (if contained in \code{grouped_df}).}
 
-\item{\dots}{arguments to be passed to or from other methods.}
+\item{\dots}{arguments to be passed to or from other methods. If \code{TRA} is used, passing \code{set = TRUE} will transform data by reference and return the result invisibly.}
 
 }
 \details{
 % Non-grouped mean computations internally utilize long-doubles in C++, for additional numeric precision.
 
-Missing-value removal as controlled by the \code{na.rm} argument is done very efficiently by simply skipping them in the computation (thus setting \code{na.rm = FALSE} on data with no missing values doesn't give extra speed). Large performance gains can nevertheless be achieved in the presence of missing values if \code{na.rm = FALSE}, since then the corresponding computation is terminated once a \code{NA} is encountered and \code{NA} is returned (unlike \code{\link{mean}} which just runs through without any checks).
+% Missing-value removal as controlled by the \code{na.rm} argument is done very efficiently by simply skipping them in the computation (thus setting \code{na.rm = FALSE} on data with no missing values doesn't give extra speed). Large performance gains can nevertheless be achieved in the presence of missing values if \code{na.rm = FALSE}, since then the corresponding computation is terminated once a \code{NA} is encountered and \code{NA} is returned (unlike \code{\link{mean}} which just runs through without any checks).
 
 The weighted mean is computed as \code{sum(x * w) / sum(w)}. If \code{na.rm = TRUE}, missing values will be removed from both \code{x} and \code{w} i.e. utilizing only \code{x[complete.cases(x,w)]} and \code{w[complete.cases(x,w)]}.
 
-This all seamlessly generalizes to grouped computations, which are performed in a single pass (without splitting the data) and therefore extremely fast.
+%This all seamlessly generalizes to grouped computations, which are performed in a single pass (without splitting the data) and therefore extremely fast.
 
-When applied to data frames with groups or \code{drop = FALSE}, \code{fmean} preserves all column attributes (such as variable labels) but does not distinguish between classed and unclassed object (thus applying \code{fmean} to a factor column will give a 'malformed factor' error). The attributes of the data frame itself are also preserved.
+%When applied to data frames with groups or \code{drop = FALSE}, \code{fmean} preserves all column attributes (such as variable labels) but does not distinguish between classed and unclassed object (thus applying \code{fmean} to a factor column will give a 'malformed factor' error). The attributes of the data frame itself are also preserved.
+
+For further computational details see \code{\link{fsum}}, which works equivalently.
+
 }
 \value{
-The (\code{w} weighted) mean of \code{x}, grouped by \code{g}, or (if \code{\link{TRA}} is used) \code{x} transformed by its mean, grouped by \code{g}.
+The (\code{w} weighted) mean of \code{x}, grouped by \code{g}, or (if \code{\link{TRA}} is used) \code{x} transformed by its (grouped, weighted) mean.
 }
 \seealso{
 \code{\link{fmedian}}, \code{\link{fmode}}, \link[=fast-statistical-functions]{Fast Statistical Functions}, \link[=collapse-documentation]{Collapse Overview}
@@ -90,7 +96,7 @@ m <- qM(mtcars)
 fmean(m)
 fmean(m, g)
 head(fmean(m, g, TRA = "-")) # etc..
-\donttest{ % No code relying on suggested package
+%\donttest{ % No code relying on suggested package
 ## method for grouped data frames - created with dplyr::group_by or fgroup_by
 library(dplyr)
 mtcars \%>\% group_by(cyl,vs,am) \%>\% fmean()         # Ordinary
@@ -101,7 +107,7 @@ mtcars \%>\% group_by(cyl,vs,am) \%>\%
 
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\%                # Equivalent and faster !
            fselect(mpg,hp) \%>\% fmean(hp, "-")
-}
+%}
 }
 \keyword{univar}
 \keyword{manip}

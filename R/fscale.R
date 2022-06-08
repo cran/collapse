@@ -17,7 +17,9 @@ fscale.default <- function(x, g = NULL, w = NULL, na.rm = TRUE, mean = 0, sd = 1
 
 fscale.pseries <- function(x, effect = 1L, w = NULL, na.rm = TRUE, mean = 0, sd = 1, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
-  g <- if(length(effect) == 1L) .subset2(getpix(attr(x, "index")), effect) else finteraction(.subset(getpix(attr(x, "index")), effect))
+  g <- group_effect(x, effect)
+  if(is.matrix(x))
+  .Call(Cpp_fscalem,x,fnlevels(g),g,w,na.rm,cm(mean),csd(sd)) else
   .Call(Cpp_fscale,x,fnlevels(g),g,w,na.rm,cm(mean),csd(sd))
 }
 
@@ -31,16 +33,20 @@ fscale.matrix <- function(x, g = NULL, w = NULL, na.rm = TRUE, mean = 0, sd = 1,
 fscale.grouped_df <- function(x, w = NULL, na.rm = TRUE, mean = 0, sd = 1, keep.group_vars = TRUE, keep.w = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
   g <- GRP.grouped_df(x, call = FALSE)
-  wsym <- l1orn(as.character(substitute(w)), NULL)
+  wsym <- substitute(w)
   nam <- attr(x, "names")
   gn2 <- which(nam %in% g[[5L]])
   gn <- if(keep.group_vars) gn2 else NULL
-  if(length(wsym) && length(wn <- whichv(nam, wsym))) {
-    w <- .subset2(x, wn)
-    if(any(gn2 == wn)) stop("Weights coincide with grouping variables!")
-    gn2 <- c(gn2, wn)
-    if(keep.w) gn <- c(gn, wn)
+
+  if(!is.null(wsym)) {
+    w <- eval(wsym, x, parent.frame())
+    if(length(wn <- which(nam %in% all.vars(wsym)))) {
+      if(any(gn2 %in% wn)) stop("Weights coincide with grouping variables!")
+      gn2 <- c(gn2, wn)
+      if(keep.w) gn <- c(gn, wn)
+    }
   }
+
   if(length(gn2)) {
     # if(!length(gn)) return(.Call(Cpp_fscalel,x[-gn2],g[[1L]],g[[2L]],w,na.rm,cm(mean),csd(sd)))
     ax <- attributes(x)
@@ -58,12 +64,11 @@ fscale.data.frame <- function(x, g = NULL, w = NULL, na.rm = TRUE, mean = 0, sd 
   .Call(Cpp_fscalel,x,g[[1L]],g[[2L]],w,na.rm,cm(mean),csd(sd))
 }
 
-fscale.list <- function(x, g = NULL, w = NULL, na.rm = TRUE, mean = 0, sd = 1, ...)
-  fscale.data.frame(x, g, w, na.rm, mean, sd, ...)
+fscale.list <- function(x, ...) fscale.data.frame(x, ...)
 
 fscale.pdata.frame <- function(x, effect = 1L, w = NULL, na.rm = TRUE, mean = 0, sd = 1, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
-  g <- if(length(effect) == 1L) .subset2(getpix(attr(x, "index")), effect) else finteraction(.subset(getpix(attr(x, "index")), effect))
+  g <- group_effect(x, effect)
   .Call(Cpp_fscale,x,fnlevels(g),g,w,na.rm,cm(mean),csd(sd))
 }
 
@@ -86,16 +91,20 @@ STD.matrix <- function(x, g = NULL, w = NULL, na.rm = TRUE, mean = 0, sd = 1, st
 STD.grouped_df <- function(x, w = NULL, na.rm = TRUE, mean = 0, sd = 1, stub = "STD.", keep.group_vars = TRUE, keep.w = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
   g <- GRP.grouped_df(x, call = FALSE)
-  wsym <- l1orn(as.character(substitute(w)), NULL)
+  wsym <- substitute(w)
   nam <- attr(x, "names")
   gn2 <- which(nam %in% g[[5L]])
   gn <- if(keep.group_vars) gn2 else NULL
-  if(length(wsym) && length(wn <- whichv(nam, wsym))) {
-    w <- .subset2(x, wn)
-    if(any(gn2 == wn)) stop("Weights coincide with grouping variables!")
-    gn2 <- c(gn2,wn)
-    if(keep.w) gn <- c(gn,wn)
+
+  if(!is.null(wsym)) {
+    w <- eval(wsym, x, parent.frame())
+    if(length(wn <- which(nam %in% all.vars(wsym)))) {
+      if(any(gn2 %in% wn)) stop("Weights coincide with grouping variables!")
+      gn2 <- c(gn2, wn)
+      if(keep.w) gn <- c(gn, wn)
+    }
   }
+
   if(length(gn2)) {
     ax <- attributes(x)
     ax[["names"]] <- c(nam[gn], if(is.character(stub)) paste0(stub, nam[-gn2]) else nam[-gn2])
@@ -111,21 +120,25 @@ STD.pdata.frame <- function(x, effect = 1L, w = NULL, cols = is.numeric,
                             keep.w = TRUE, ...) {
   if(!missing(...)) unused_arg_action(match.call(), ...)
   ax <- attributes(x)
-  class(x) <- NULL
-  nam <- names(x)
-  g <- if(length(effect) == 1L) .subset2(getpix(ax[["index"]]), effect) else
-    finteraction(.subset(getpix(ax[["index"]]), effect))
+  nam <- ax[["names"]]
+  g <- group_effect(x, effect)
+  cols_fun <- is.function(cols)
 
-  if(keep.ids) {
-    gn <- which(nam %in% attr(getpix(ax[["index"]]), "names"))
-    if(length(gn) && is.null(cols)) cols <- seq_along(x)[-gn]
+  if(cols_fun && identical(cols, is.numeric)) cols <- which(.Call(C_vtypes, x, 1L))
+  else if(length(cols)) cols <- cols2int(cols, x, nam)
+  oldClass(x) <- NULL
+  if(cols_fun || keep.ids) {
+    gn <- which(nam %in% attr(findex(x), "nam")) # Needed for 3+ index variables
+    if(length(gn)) {
+      if(cols_fun) cols <- fsetdiff(cols, gn)
+      else if(is.null(cols)) cols <- seq_along(x)[-gn]
+    }
+    if(!keep.ids) gn <- NULL
   } else gn <- NULL
-
-  if(length(cols)) cols <- cols2int(cols, x, nam)
 
   if(is.call(w)) {
     wn <- ckmatch(all.vars(w), nam, "Unknown weight variable:")
-    w <- x[[wn]]
+    w <- eval(w[[2L]], x, attr(w, ".Environment")) # w <- x[[wn]]
     cols <- if(is.null(cols)) seq_along(x)[-wn] else cols[cols != wn]
     if(keep.w) gn <- c(gn, wn)
   }
@@ -162,7 +175,7 @@ STD.data.frame <- function(x, by = NULL, w = NULL, cols = is.numeric,
         gn <- ckmatch(all.vars(by[[3L]]), nam)
       } else {
         gn <- ckmatch(all.vars(by), nam)
-        cols <- if(is.null(cols)) seq_along(x)[-gn] else cols2int(cols, x, nam)
+        cols <- cols2intrmgn(gn, cols, x)
       }
       by <- G_guo(if(length(gn) == 1L) x[[gn]] else x[gn])
       if(!keep.by) gn <- NULL
@@ -174,7 +187,7 @@ STD.data.frame <- function(x, by = NULL, w = NULL, cols = is.numeric,
 
     if(is.call(w)) {
       wn <- ckmatch(all.vars(w), nam, "Unknown weight variable:")
-      w <- x[[wn]]
+      w <- eval(w[[2L]], x, attr(w, ".Environment")) # w <- x[[wn]]
       cols <- if(is.null(cols)) seq_along(x)[-wn] else cols[cols != wn]
       if(keep.w) gn <- c(gn, wn)
     }
@@ -199,6 +212,5 @@ STD.data.frame <- function(x, by = NULL, w = NULL, cols = is.numeric,
   .Call(Cpp_fscalel,x,by[[1L]],by[[2L]],w,na.rm,cm(mean),csd(sd))
 }
 
-STD.list <- function(x, by = NULL, w = NULL, cols = is.numeric, na.rm = TRUE, mean = 0, sd = 1, stub = "STD.", keep.by = TRUE, keep.w = TRUE, ...)
-  STD.data.frame(x, by, w, cols, na.rm, mean, sd, stub, keep.by, keep.w, ...)
+STD.list <- function(x, ...) STD.data.frame(x, ...)
 

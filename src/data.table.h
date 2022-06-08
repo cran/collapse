@@ -54,11 +54,12 @@ extern SEXP sym_sorted;
 // extern SEXP sym_starts;
 // extern SEXP char_starts;
 extern SEXP sym_index;
+extern SEXP sym_index_df;
 extern SEXP sym_inherits;
 extern SEXP sym_sf_column;
 extern SEXP SelfRefSymbol;
 extern SEXP sym_datatable_locked;
-extern SEXP sym_collapse_DT_alloccol;
+// extern SEXP sym_collapse_DT_alloccol;
 
 long long DtoLL(double x);
 double LLtoD(long long x);
