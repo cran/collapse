@@ -1,8 +1,8 @@
-#include "kit.h"
-#include "collapse_c.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include "kit.h"
+#include "collapse_c.h"
 
 // C-implementations for different data types ----------------------------------
 // TODO: outsource and memset hash table and count vector?
@@ -648,7 +648,7 @@ SEXP w_mode_impl(SEXP x, double *pw, int narm, int ret) {
                              w_mode_int(INTEGER(x), pw, &l, l, 1, narm, ret)));
       break;
     case LGLSXP:
-      PROTECT(res = ScalarLogical(w_mode_fct_logi(LOGICAL(x), pw, &l, l, 1, 1, narm, ret)));
+      PROTECT(res = duplicate(ScalarLogical(w_mode_fct_logi(LOGICAL(x), pw, &l, l, 1, 1, narm, ret))));
       break;
     case STRSXP:
       PROTECT(res = ScalarString(w_mode_string(STRING_PTR(x), pw, &l, l, 1, narm, ret)));

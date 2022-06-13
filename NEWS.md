@@ -1,3 +1,10 @@
+# collapse 1.8.5
+
+* Fixed some issues flagged by CRAN
+  - Installation on some linux distributions failed because omp.h was included after Rinternals.h
+  - Some signed integer overflows while running tests caused UBSAN warnings. (This happened inside a hash function where overflows are not a problem. I changed to unsigned int to avoid the UBSAN warning.)
+  - Ensured that package passes R CMD Check without suggested packages
+  
 # collapse 1.8.4
 
 * Makevars text substitution hack to have CRAN accept a package that combines C, C++ and OpenMP. Thanks also to @MichaelChirico for pointing me in the right direction. 

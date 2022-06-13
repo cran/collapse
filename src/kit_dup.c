@@ -41,6 +41,7 @@ SEXP dupVecIndex(SEXP x) {
             else x_min = x_tmp;
           }
         }
+        if((unsigned)(x_max - x_min) > INT_MAX) goto bigint; // To avoid overflows (UBSAN errors)
         x_max -= x_min;
         if(++x_max > 3 * n) goto bigint;
         M = (size_t)(x_max + 2);
@@ -431,8 +432,8 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   case INTSXP: {
     const int *restrict px = INTEGER(x);
     for (int i = 0; i != n; ++i) {
-      id = HASH(px[i] * pidx[i], K) + pidx[i]; // Need multiplication here instead of bitwise, see your benchmark with 100 mio. obs where second group is just sample.int(1e4, 1e8, T), there bitwise is very slow!!
-      while(h[id]) {
+      id = HASH((unsigned)px[i] * (unsigned)pidx[i], K) + pidx[i]; // Need multiplication here instead of bitwise, see your benchmark with 100 mio. obs where second group is just sample.int(1e4, 1e8, T), there bitwise is very slow!!
+      while(h[id]) {  // However multiplication causes signed integer overflow... UBSAN error.
         hid = h[id]-1;
         if(px[hid] == px[i] && pidx[hid] == pidx[i]) {
           pans_i[i] = pans_i[hid];
@@ -646,7 +647,7 @@ SEXP funiqueC(SEXP x) {
   } else error("Type %s is not supported.", type2char(tx)); // # nocov
   int *restrict h = (int*)Calloc(M, int); // Table to save the hash values, table has size M
   int *restrict st = (int*)R_alloc((tx == LGLSXP || tx == 1000) ? (int)M : n, sizeof(int));
-  int g = 0;
+  int g = 0, nprotect = 0;
   size_t id = 0;
   SEXP res = R_NilValue;
   switch (tx) {
@@ -673,7 +674,7 @@ SEXP funiqueC(SEXP x) {
     }
     Free(h);
     if(g == n) return x;
-    PROTECT(res = allocVector(tx == LGLSXP ? LGLSXP : INTSXP, g));
+    PROTECT(res = allocVector(tx == LGLSXP ? LGLSXP : INTSXP, g)); ++nprotect;
     int *restrict pres = INTEGER(res);
     for(int i = 0; i != g; ++i) pres[i] = px[st[i]];
   } break;
@@ -706,7 +707,7 @@ SEXP funiqueC(SEXP x) {
     }
     Free(h);
     if(g == n) return x;
-    PROTECT(res = allocVector(INTSXP, g));
+    PROTECT(res = allocVector(INTSXP, g)); ++nprotect;
     int *restrict pres = INTEGER(res);
     for(int i = 0; i != g; ++i) pres[i] = px[st[i]];
   } break;
@@ -726,7 +727,7 @@ SEXP funiqueC(SEXP x) {
     }
     Free(h);
     if(g == n) return x;
-    PROTECT(res = allocVector(REALSXP, g));
+    PROTECT(res = allocVector(REALSXP, g)); ++nprotect;
     double *restrict pres = REAL(res);
     for(int i = 0; i != g; ++i) pres[i] = px[st[i]];
   } break;
@@ -757,7 +758,7 @@ SEXP funiqueC(SEXP x) {
     }
     Free(h);
     if(g == n) return x;
-    PROTECT(res = allocVector(CPLXSXP, g));
+    PROTECT(res = allocVector(CPLXSXP, g)); ++nprotect;
     Rcomplex *restrict pres = COMPLEX(res);
     for(int i = 0; i != g; ++i) pres[i] = px[st[i]];
   } break;
@@ -775,13 +776,13 @@ SEXP funiqueC(SEXP x) {
     }
     Free(h);
     if(g == n) return x;
-    PROTECT(res = allocVector(STRSXP, g));
+    PROTECT(res = allocVector(STRSXP, g)); ++nprotect;
     SEXP *restrict pres = STRING_PTR(res);
     for(int i = 0; i != g; ++i) pres[i] = px[st[i]];
   } break;
   }
   copyMostAttrib(x, res);
-  UNPROTECT(1);
+  if(g != n) UNPROTECT(nprotect); // The condition and nprotect variable is not necessary here, just an attempt to appease rchk
   return res;
 }
 

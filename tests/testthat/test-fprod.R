@@ -1,12 +1,14 @@
 context("fprod")
 
+if(!is.null(attributes(identical(FALSE, TRUE)))) stop("OECD label issue")
+
 bprod <- base::prod
 
 # rm(list = ls())
 set.seed(101)
 x <- rnorm(100)
-w <- abs(100*rnorm(100))
-wdat <- abs(100*rnorm(32))
+w <- abs(5*rnorm(100))
+wdat <- abs(5*rnorm(32))
 xNA <- x
 wNA <- w
 wdatNA <- wdat
