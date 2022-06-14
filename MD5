@@ -1,7 +1,7 @@
-d32281dc85ace2f864dbd623f57cea38 *DESCRIPTION
+4326f746b728b54951630a8ad3351fc5 *DESCRIPTION
 60fbeb63059a10588f6bec7e3af7e8ae *LICENSE
 382e09910b96588756153e9778140c72 *NAMESPACE
-e7038048ad7820fdbecf3367d804f3bb *NEWS.md
+9feb1b113e3264c3c156fe16b4f8253d *NEWS.md
 e862e1f686c0a3d68da01d7b019674a2 *R/BY.R
 9102cd474004c9b193fed5617e1dff54 *R/GRP.R
 f574633bd28412f224bdf687a1d94233 *R/RcppExports.R
@@ -52,7 +52,7 @@ c45ba47943e394f72b326cf556c526c4 *R/zzz.R
 a5742d7c7117d4198a262b7079ef3b58 *data/GGDC10S.rda
 c0728676845d1671c4342e712cad7673 *data/wlddev.rda
 1fec1351d6286e5919a61d3a5bf7540a *inst/doc/collapse_documentation.Rmd
-33909da15d23b5c41c8fb91d968eec9b *inst/doc/collapse_documentation.html
+7f543dfc0a8c3c83cc6bca4a5c1d174a *inst/doc/collapse_documentation.html
 7eab0a8b7e9d57b0e0a2f9d75ed72ba1 *man/BY.Rd
 958dc8924938484b1bb20aaaf123cc29 *man/GGDC10S.Rd
 6e8efc4b1adc7f530f1ae86b0324c206 *man/GRP.Rd
@@ -124,7 +124,7 @@ a0c85da3b0319ea6950e77d91866f8ea *man/small-helpers.Rd
 c9ccc9f300f46e81c6621055522a9d65 *man/summary-statistics.Rd
 34103e18afb280ba9e63058c48aeccd9 *man/t_list.Rd
 dd60b5f74e3a8c2ad3a77c3089c9ac5c *man/time-series-panel-series.Rd
-c03dd764df864d34dd11341ab1f54844 *man/timeid.Rd
+6b069bf290641ac9f140dfda72e533a7 *man/timeid.Rd
 651aeb9264deea457965a21a77b9d0b4 *man/unlist2d.Rd
 a95ba1ecab43086644104d1def3062ad *man/varying.Rd
 864bb6a79e40002b66abea34eca6df6a *man/wlddev.Rd
@@ -132,7 +132,7 @@ a95ba1ecab43086644104d1def3062ad *man/varying.Rd
 a6ae1902fa32bed356a76e1400c8bfae *src/Makevars
 2639e6c79d863ae7606e6d15c7bb97b0 *src/Makevars.win
 1fe9e7fe2d0192f09a3f6f208018a839 *src/RcppExports.cpp
-1ac938494b75a9e0ea1fbb2a941baff0 *src/TRA.c
+3aa73633a6140087d4fc69b96ac85a4a *src/TRA.c
 37db889b407707d7664bc9f6d9d12905 *src/base_radixsort.c
 cd34e7507b9a9288d3b4859a43b9bfad *src/base_radixsort.h
 5fd4d9dac0a20adfcda4e0f7c0d535d5 *src/collapse_c.h
@@ -163,7 +163,7 @@ c53bcc4287c85d5d6336ad3c58cdcd62 *src/fvar_fsd.cpp
 e254dcdf975fe9830fb77ff246da293f *src/gsplit.c
 2d6ffc909a87ae8359204db2f5a55d6a *src/handle_attributes.c
 df9f64eb8097a9f3eb101ba6a294d164 *src/kit.h
-5adad40d080b36f011453d50ceace9ca *src/kit_dup.c
+7f91c3f123c9baa1032a50af93d00981 *src/kit_dup.c
 86065a72eb88a35e8429aa37f3b517b8 *src/mrtl_mctl.cpp
 ba08c14a5787ae558766db22b3e42f48 *src/programming.c
 bda7beadcbe9dabb587a906db59e2a66 *src/psmat.cpp
