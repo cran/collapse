@@ -328,8 +328,18 @@ fFUN_mutate_add_groups <- function(z) {
   z
 }
 
-gsplit_single_apply <- function(x, g, ex, v, encl)
-  copyMostAttributes(unlist(lapply(gsplit(x, g), function(i) eval(ex, `names<-`(list(i), v), encl)), FALSE, FALSE), x)
+
+gsplit_single_apply <- function(x, g, ex, v, encl) {
+  funexpr <- quote(function(.x_yz_) .x_yz_)
+  funexpr[[3]] <- eval(call("substitute", ex, `names<-`(list(quote(.x_yz_)), v)), NULL, NULL)
+  funexpr[[4]] <- NULL
+  fun <- eval(funexpr, encl, baseenv())
+  copyMostAttributes(unlist(lapply(gsplit(x, g), fun), FALSE, FALSE), x)
+}
+
+# Old version: more expensive...
+# gsplit_single_apply <- function(x, g, ex, v, encl)
+#   copyMostAttributes(unlist(lapply(gsplit(x, g), function(i) eval(ex, `names<-`(list(i), v), encl)), FALSE, FALSE), x)
 
 gsplit_multi_apply <- function(x, g, ex, encl) {
   sx <- seq_along(x)
@@ -601,15 +611,15 @@ mutate_funi_grouped <- function(i, data, .data_, funs, aplvec, ce, ...) {
 }
 
 
-do_grouped_expr <- function(ei, eiv, .data, g, pe) {
-  v <- all.vars(ei, unique = FALSE)
+do_grouped_expr <- function(ei, nfun, .data, g, pe) {
+  v <- all.vars(ei) # unique = FALSE -> not needed anymore... can turn expressions into functions...
   if(length(v) > 1L) {
     # Could include global environemntal variables e.g. fmutate(data, new = mean(var) + q)
     namd <- names(.data)
     if(length(wv <- na_rm(match(v, namd))) > 1L) return(gsplit_multi_apply(.data[wv], g, ei, pe))
     return(gsplit_single_apply(.data[[wv]], g, ei, namd[wv], pe))
   }
-  if(length(eiv) == 2L) return(copyMostAttributes(eval(othFUN_compute(ei), .data, pe), .data[[v]]))
+  if(nfun == 1L) return(copyMostAttributes(eval(othFUN_compute(ei), .data, pe), .data[[v]]))
   gsplit_single_apply(.data[[v]], g, ei, v, pe)
 }
 
@@ -647,11 +657,11 @@ fmutate <- function(.data, ..., .keep = "all") {
           .data[[nam[i]]] <- NULL
           next
         }
-        eiv <- all.names(ei)
-        if(any(eiv %in% .FAST_FUN_MOPS)) {
+        eif <- all_funs(ei)
+        if(any(eif %in% .FAST_FUN_MOPS)) {
           .data[[nam[i]]] <- eval(fFUN_mutate_add_groups(ei), .data, pe)
         } else {
-          r <- do_grouped_expr(ei, eiv, .data, g, pe)
+          r <- do_grouped_expr(ei, length(eif), .data, g, pe)
           .data[[nam[i]]] <- if(length(r) == g[[1L]])
                .Call(C_subsetVector, r, g[[2L]], FALSE) else # .Call(C_TRA, .data[[v]], r, g[[2L]], 1L) # Faster than simple subset r[g[[2L]] ??]
                .Call(C_greorder, r, g) # r[forder.int(forder.int(g[[2L]]))] # Seems twice is necessary...

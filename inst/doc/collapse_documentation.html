@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2022-06-13" />
+<meta name="date" content="2022-08-13" />
 
 <title>collapse Documentation and Resources</title>
 
@@ -239,7 +239,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore"><em>collapse</em> Documentation and
 Resources</h1>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2022-06-13</h4>
+<h4 class="date">2022-08-13</h4>
 
 
 
@@ -251,34 +251,41 @@ tasks in R.</li>
 <li>To help make R code fast, flexible, parsimonious and programmer
 friendly.</li>
 </ol>
-<p>Documentation comes in 4 different forms:</p>
+<p>Documentation comes in 5 different forms:</p>
 <div id="built-in-structured-documentation" class="section level2">
 <h2>Built-In Structured Documentation</h2>
 <p>After installing <em>collapse</em>, you can call
 <code>help(&quot;collapse-documentation&quot;)</code> which will produce a central
 help page providing a broad overview of the entire functionality of the
 package, including direct links to all function documentation pages and
-links to 13 further topical documentation pages describing how clusters
-of related functions work together. The names of these additional help
-pages are contained in a global macro <code>.COLLAPSE_TOPICS</code> and
-can so easily be called from the R console as well. Function
-documentation is interlinked with the relevant topical pages, and all
-documentation pages link back to the central overview page at
-<code>help(&quot;collapse-documentation&quot;)</code>.</p>
+links to 13 further topical documentation pages (names in
+<code>.COLLAPSE_TOPICS</code>) describing how clusters of related
+functions work together.</p>
+<!-- The names of these additional help pages are contained in a global macro `.COLLAPSE_TOPICS` and can so easily be called from the R console as well. Function documentation is interlinked with the relevant topical pages, and all documentation pages link back to the central overview page at `help("collapse-documentation")`.  -->
 <p>Thus <em>collapse</em> comes with a fully structured hierarchical
 documentation which you can browse within R - and that provides
 everything necessary to fully understand the package. The Documentation
 is also available <a href="https://sebkrantz.github.io/collapse/reference/index.html">online</a>.</p>
-<p>The package page under <code>help(&quot;collapse-package&quot;)</code>
-additionally provides some more general information about the package
-and its design philosophy, as well as a very compact set of examples
-covering important functionality.</p>
+<p>The package page under <code>help(&quot;collapse-package&quot;)</code> provides
+some general information about the package and its design philosophy, as
+well as a compact set of examples covering important functionality.</p>
 <p>Reading <code>help(&quot;collapse-package&quot;)</code> and
-<code>help(&quot;collapse-documentation&quot;)</code> and working through the
-examples on <code>help(&quot;collapse-package&quot;)</code> is the fastest way to
-get acquainted with the package.
+<code>help(&quot;collapse-documentation&quot;)</code> is the most comprehensive
+way to get acquainted with the package.
 <code>help(&quot;collapse-documentation&quot;)</code> is always the most
-up-to-date documentation of the package.</p>
+up-to-date resource.</p>
+</div>
+<div id="user-2022-presentation-and-slides" class="section level2">
+<h2>useR 2022 Presentation and Slides</h2>
+<p>I have presented collapse in detail at useR 2022. A 2h video
+recording that provides a quite comprehensive up-to-date introduction is
+available <a href="https://www.youtube.com/watch?v=OwWT1-dSEts">here</a>. The
+corresponding slides are available <a href="https://raw.githubusercontent.com/SebKrantz/collapse/master/misc/useR2022%20presentation/collapse_useR2022_final.pdf">here</a>.</p>
+</div>
+<div id="cheatsheet" class="section level2">
+<h2>Cheatsheet</h2>
+<p>There is an updated (2022) <a href="https://raw.githubusercontent.com/SebKrantz/cheatsheets/master/collapse.pdf">cheatsheet</a>
+that compactly summarizes the package.</p>
 </div>
 <div id="vignettes" class="section level2">
 <h2>Vignettes</h2>
@@ -304,9 +311,9 @@ and <em>data.table</em></strong></a>: Shows how collapse and
 and <em>sf</em></strong></a>: Shows how collapse can be used to
 efficiently manipulate <em>sf</em> data frames</p></li>
 </ul>
-<p>Note that these vignettes currently (May 2022) do not cover features
-introduced in versions 1.7 and 1.8. They have been updated if you see a
-2022 in the date of the vignette.</p>
+<p>Note that these vignettes currently (August 2022) do not cover major
+features introduced in versions 1.7 and 1.8. They have been updated if
+you see a 2022/23 in the date of the vignette.</p>
 </div>
 <div id="blog" class="section level2">
 <h2>Blog</h2>
@@ -314,16 +321,9 @@ introduced in versions 1.7 and 1.8. They have been updated if you see a
 linked to <a href="https://www.r-bloggers.com/">Rbloggers.com</a> where
 I introduced <em>collapse</em> with some compact posts covering central
 functionality. Among these, the post about <a href="https://sebkrantz.github.io/Rblog/2020/09/13/programming-with-collapse/">programming
-with <em>collapse</em></a> is recommended for ambitious users and
-developers willing to build on <em>collapse</em>.
+with <em>collapse</em></a> is useful for ambitious users and developers
+willing to build on <em>collapse</em>.
 <!-- , as it exposes to some degree how central parts of *collapse* work together and provides tips on how to write very efficient *collapse* code. Future blog posts will expose some specialized functionality in more detail. --></p>
-</div>
-<div id="cheatsheet" class="section level2">
-<h2>Cheatsheet</h2>
-<p>Finally, there is a <a href="https://raw.githubusercontent.com/SebKrantz/cheatsheets/master/collapse.pdf">cheatsheet</a>
-at Rstudio that compactly summarizes the collapse function space,
-similar to <code>help(&quot;collapse-documentation&quot;)</code>. This one will be
-updated shortly.</p>
 </div>
 
 

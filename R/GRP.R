@@ -273,6 +273,8 @@ finteraction <- function(..., factor = TRUE, ordered = FALSE, sort = factor, met
   res
 }
 
+itn <- function(...) finteraction(...)
+
 GRP.qG <- function(X, ..., group.sizes = TRUE, return.groups = TRUE, call = TRUE) {
   # if(!missing(...)) unused_arg_action(match.call(), ...)
   gvars <- l1orlst(as.character(substitute(X))) # paste(all.vars(call), collapse = ".") # good in all circumstances ?
@@ -348,7 +350,7 @@ GRP.pseries <- function(X, effect = 1L, ..., group.sizes = TRUE, return.groups =
 GRP.pdata.frame <- function(X, effect = 1L, ..., group.sizes = TRUE, return.groups = TRUE, call = TRUE)
   GRP.pseries(X, effect, ..., group.sizes = group.sizes, return.groups = return.groups, call = call)
 
-fgroup_by <- function(.X, ..., sort = TRUE, decreasing = FALSE, na.last = TRUE, return.order = sort, method = "auto") {          #   e <- substitute(list(...)) # faster but does not preserve attributes of unique groups !
+fgroup_by <- function(.X, ..., sort = TRUE, decreasing = FALSE, na.last = TRUE, return.groups = TRUE, return.order = sort, method = "auto") {          #   e <- substitute(list(...)) # faster but does not preserve attributes of unique groups !
   clx <- oldClass(.X)
   oldClass(.X) <- NULL
   m <- match(c("GRP_df", "grouped_df", "data.frame"), clx, nomatch = 0L)
@@ -379,7 +381,7 @@ fgroup_by <- function(.X, ..., sort = TRUE, decreasing = FALSE, na.last = TRUE, 
       } else names(e) <- vars
     }
   }
-  attr(.X, "groups") <- GRP.default(e, NULL, sort, decreasing, na.last, TRUE, return.order, method, FALSE)
+  attr(.X, "groups") <- GRP.default(e, NULL, sort, decreasing, na.last, return.groups, return.order, method, FALSE)
   # if(any(clx == "sf")) oldClass(.X) <- clx[clx != "sf"]
   # attr(.X, "groups") <- GRP.default(fselect(if(m[2L]) fungroup(.X) else .X, ...), NULL, sort, decreasing, na.last, TRUE, return.order, method, FALSE)
     # Needed: wlddev %>% fgroup_by(country) gives error if dplyr is loaded. Also sf objects etc..

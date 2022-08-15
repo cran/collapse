@@ -1,6 +1,7 @@
 Package: collapse
 Title: Advanced and Fast Data Transformation
-Version: 1.8.6
+Version: 1.8.8
+Date: 2022-08-13
 Authors@R: c(
            person("Sebastian", "Krantz", role = c("aut", "cre"), 
                   email = "sebastian.krantz@graduateinstitute.ch"),
@@ -52,13 +53,13 @@ LazyData: true
 Depends: R (>= 3.3.0)
 Imports: Rcpp (>= 1.0.1)
 LinkingTo: Rcpp
-Suggests: fastverse, data.table, magrittr, kit, sf, xts, zoo, plm,
-        fixest, vars, RcppArmadillo, RcppEigen, tibble, dplyr, ggplot2,
-        scales, microbenchmark, testthat, covr, knitr, rmarkdown
+Suggests: fastverse, data.table, magrittr, kit, xts, zoo, plm, fixest,
+        vars, RcppArmadillo, RcppEigen, tibble, dplyr, ggplot2, scales,
+        microbenchmark, testthat, covr, knitr, rmarkdown
 SystemRequirements: C++11
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2022-06-13 12:00:37 UTC; sebastiankrantz
+Packaged: 2022-08-13 20:07:22 UTC; sebastiankrantz
 Author: Sebastian Krantz [aut, cre],
   Matt Dowle [ctb],
   Arun Srinivasan [ctb],
@@ -71,4 +72,4 @@ Author: Sebastian Krantz [aut, cre],
   1999-2016 The R Core Team [cph]
 Maintainer: Sebastian Krantz <sebastian.krantz@graduateinstitute.ch>
 Repository: CRAN
-Date/Publication: 2022-06-14 07:10:02 UTC
+Date/Publication: 2022-08-15 08:50:30 UTC

@@ -1,3 +1,34 @@
+# collapse 1.8.8
+
+* `flm` and `fFtest` are now internal generic with an added formula method e.g. `flm(mpg ~ hp + carb, mtcars, weights = wt)` or `fFtest(mpg ~ hp + carb | vs + am, mtcars, weights = wt)` in addition to the programming interface. Thanks to Grant McDermott for suggesting. 
+
+* Added method `as.data.frame.qsu`, to efficiently turn the default array outputs from `qsu()` into tidy data frames. 
+
+* Major improvements to `setv` and `copyv`, generalizing the scope of operations that can be performed to all common cases. This means that even simple base R operations such as `X[v] <- R` can now be done significantly faster using `setv(X, v, R)`. 
+
+* `n` and `qtab` can now be added to `options("collapse_mask")` e.g. `options(collapse_mask = c("manip", "helper", "n", "qtab"))`. This will export a function `n()` to get the (group) count in `fsummarise` and `fmutate` (which can also always be done using `GRPN()` but `n()` is more familiar to *dplyr* users), and will mask `table()` with `qtab()`, which is principally a fast drop-in replacement, but with some different further arguments. 
+
+* Added C-level helper function `all_funs`, which fetches all the functions called in an expression, similar to `setdiff(all.names(x), all.vars(x))` but better because it takes account of the syntax. For example let `x = quote(sum(sum))` i.e. we are summing a column named `sum`. Then `all.names(x) = c("sum", "sum")` and `all.vars(x) = "sum"` so that the difference is `character(0)`, whereas `all_funs(x)` returns `"sum"`. This function makes *collapse* smarter when parsing expressions in `fsummarise` and `fmutate` and deciding which ones to vectorize. 
+
+<!--
+For example, take the `.OPERATOR_FUN` such as `W()` for within-transforming/centering data. These receive vectorized execution in `fmutate` e.g. `mtcars |> gby(cyl) |> fmutate(mpg = W(mpg))` executes `W(mpg, g = GRP(.))`. Now suppose you have a column called `W` 
+-->
+
+# collapse 1.8.7
+
+* Fixed a bug in `fscale.pdata.frame` where the default C++ method was being called instead of the list method (i.e. the method didn't work at all).
+
+* Fixed 2 minor rchk issues (the remaining ones are spurious).
+
+* `fsum` has an additional argument `fill = TRUE` (default `FALSE`) that initializes the result vector with `0` instead of `NA` when `na.rm = TRUE`, so that `fsum(NA, fill = TRUE)` gives `0` like `base::sum(NA, na.rm = TRUE)`. 
+
+* Slight performance increase in `fmean` with groups if `na.rm = TRUE` (the default). 
+
+* Significant performance improvement when using base R expressions involving multiple functions and one column e.g. `mid_col = (min(col) + max(col)) / 2` or `lorentz_col = cumsum(sort(col)) / sum(col)` etc. inside `fsummarise` and `fmutate`. Instead of evaluating such expressions on a data subset of one column for each group, they are now turned into a function e.g. `function(x) cumsum(sort(x)) / sum(x)` which is applied to a single vector split by groups. 
+* `fsummarise` now also adds groupings to transformation functions and operators, which allows full vectorization of more complex tasks involving transformations which are subsequently aggregated. A prime example is grouped bivariate linear model fitting, which can now be done using `mtcars |> fgroup_by(cyl) |> fsummarise(slope = fsum(W(mpg), hp) / fsum(W(mpg)^2))`. Before 1.8.7 it was necessary to do a mutate step first e.g. `mtcars |> fgroup_by(cyl) |> fmutate(dm_mpg = W(mpg)) |> fsummarise(slope = fsum(dm_mpg, hp) / fsum(dm_mpg^2))`, because `fsummarise` did not add groupings to transformation functions like `fwithin/W`. Thanks to Brodie Gaslam for making me aware of this. 
+
+* Argument `return.groups` from `GRP.default` is now also available in `fgroup_by`, allowing grouped data frames without materializing the unique grouping columns. This allows more efficient mutate-only operations e.g. `mtcars |> fgroup_by(cyl, return.groups = FALSE) |> fmutate(across(hp:carb, fscale))`. Similarly for aggregation with dropping of grouping columns `mtcars |> fgroup_by(cyl, return.groups = FALSE) |> fmean()` is equivalent and faster than `mtcars |> fgroup_by(cyl) |> fmean(keep.group_vars = FALSE)`.
+
 # collapse 1.8.6
 
 * Fixed further minor issues: 
@@ -38,7 +69,7 @@
 * Operators (see `.OPERATOR_FUN`) have been improved a bit such that id-variables selected in the `.data.frame` (`by`, `w` or `t` arguments) or `.pdata.frame` methods (variables in the index) are not computed upon even if they are numeric (since the default is `cols = is.numeric`). In general, if `cols` is a function used to select columns of a certain data type, id variables are excluded from computation even if they are of that data type. It is still possible to compute on id variables by explicitly selecting them using names or indices passed to `cols`, or including them in the lhs of a formula passed to `by`. 
 
 * Further efforts to facilitate adding the group-count in `fsummarise` and `fmutate`: 
-  - if `options(collapse_mask = "all")` before loading the package, an additional function `n()` is exported that works just like `dplyr:::n()`. (Note that internal optimization flags for `n` are always on, so if you really want the function to be called `n()` without setting `options(collapse_mask = "all")`, you could also do `n <- GRPN` or `n <- collapse:::n`)
+  - if `options(collapse_mask = "all")` before loading the package, an additional function `n()` is exported that works just like `dplyr:::n()`. 
   - otherwise the same can now always be done using `GRPN()`. The previous uses of `GRPN` are unaltered i.e. `GRPN` can also:
     + fetch group sizes directly grouping object or grouped data frame i.e. `data |> gby(id) |> GRPN()` or `data %>% gby(id) %>% ftransform(N = GRPN(.))` (note the dot). 
     + compute group sizes on the fly, for example `fsubset(data, GRPN(id) > 10L)` or `fsubset(data, GRPN(list(id1, id2)) > 10L)` or `GRPN(data, by = ~ id1 + id2)`.
@@ -189,7 +220,7 @@
 
 # collapse 1.7.0
 
-*collapse* 1.7.0, released mid January 2022, brings major improvements in the computational backend of the package, it's data manipulation capabilities, and a whole set of new functions that enable more flexible and memory efficient R programming - significantly enhancing the language itself. For the vast majority of codes, updating to 1.7 should not cause any problems. 
+*collapse* 1.7.0, released mid January 2022, brings major improvements in the computational backend of the package, its data manipulation capabilities, and a whole set of new functions that enable more flexible and memory efficient R programming - significantly enhancing the language itself. For the vast majority of codes, updating to 1.7 should not cause any problems. 
 
 
 
@@ -228,7 +259,7 @@
 
 #### Basic Computational Infrastructure
 
-* Function `group` was added, providing a low-level interface to a new unordered grouping algorithm based on hashing in C and optimized for R's data structures. The algorithm was heavily inspired by the great `kit` package of Morgan Jacob, and now feeds into the package through multiple central functions (including `GRP` / `fgroup_by`, `funique` and `qF`) when invoked with argument `sort = FALSE`. It is also used in internal groupings performed in data transformation functions such as `fwithin` (when no factor or 'GRP' object is provided to the `g` argument). The speed of the algorithm is very promising (often superior to `radixorder`), and it could be used in more places still. I welcome any feedback on it's performance on different datasets.    
+* Function `group` was added, providing a low-level interface to a new unordered grouping algorithm based on hashing in C and optimized for R's data structures. The algorithm was heavily inspired by the great `kit` package of Morgan Jacob, and now feeds into the package through multiple central functions (including `GRP` / `fgroup_by`, `funique` and `qF`) when invoked with argument `sort = FALSE`. It is also used in internal groupings performed in data transformation functions such as `fwithin` (when no factor or 'GRP' object is provided to the `g` argument). The speed of the algorithm is very promising (often superior to `radixorder`), and it could be used in more places still. I welcome any feedback on its performance on different datasets.    
 
 * Function `gsplit` provides an efficient alternative to `split` based on grouping objects. It is used as a new backend to `rsplit` (which also supports data frame) as well as `BY`, `collap`, `fsummarise` and `fmutate` - for more efficient grouped operations with functions external to the package. 
 
