@@ -244,7 +244,7 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
       // Just some heuristic checking as this is a programmers function
       const int v1 = INTEGER_ELT(val, 0), vn = INTEGER_ELT(val, lv-1);
       if(v1 < 1 || v1 > n || vn < 1 || vn > n) error("Detected index (v) outside of range [1, length(x)]");
-    } else error("If length(v) > 1, v must be an integer or logical vector");
+    } else error("If length(v) > 1, v must be an integer or logical vector"); // TODO: Allow reals of length 1 ??
   } else if(lr != 1 && lr != n) error("If length(v) == 1, length(r) must be 1 or length(x)");
 
   if(lr > 1 && tr != tx) { // lr == n &&
@@ -258,7 +258,7 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
 
   SEXP ans = R_NilValue;
   if(set == 0) {
-    PROTECT(ans = duplicate(x)); // Fastest?? // copies attributes ?? -> Yes
+    PROTECT(ans = shallow_duplicate(x)); // Fastest?? // copies attributes ?? -> Yes
     ++nprotect;
   }
 

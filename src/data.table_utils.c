@@ -162,7 +162,7 @@ SEXP uniqlengths(SEXP x, SEXP n) {
 
 SEXP dt_na(SEXP x, SEXP cols) {
   int n=0, elem;
-
+  // TODO: Skip rows with already missing values in previous column??
   if (!isNewList(x)) error("Internal error. Argument 'x' to Cdt_na is type '%s' not 'list'", type2char(TYPEOF(x))); // # nocov
   if (!isInteger(cols)) error("Internal error. Argument 'cols' to Cdt_na is type '%s' not 'integer'", type2char(TYPEOF(cols))); // # nocov
   for (int i=0; i<LENGTH(cols); ++i) {

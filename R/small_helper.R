@@ -298,6 +298,11 @@ unattrib <- function(object) `attributes<-`(object, NULL)
 # setAttrR <- function(object, a, v) `attr<-`(object, a, v)
 
 setAttrib <- function(object, a) .Call(C_setAttrib, object, a)
+setattrib <- function(object, a) {
+  .Call(C_setattributes, object, a)
+  return(invisible(object))
+}
+
 # setAttribR <- function(object, a) `attributes<-`(object, x)
 
 copyAttrib <- function(to, from) .Call(C_copyAttrib, to, from)
@@ -398,15 +403,15 @@ all_eq <- function(x) .Call(C_anyallv, x, x[1L], TRUE)
 na_omit <- function(X, cols = NULL, na.attr = FALSE, ...) {
   if(is.list(X)) {
     iX <- seq_along(unclass(X))
-    rl <- if(is.null(cols)) !.Call(C_dt_na, X, iX) else
-      !.Call(C_dt_na, X, cols2int(cols, X, attr(X, "names"))) # gives error if X not list
-    rkeep <- which(rl)
+    rl <- if(is.null(cols)) .Call(C_dt_na, X, iX) else
+          .Call(C_dt_na, X, cols2int(cols, X, attr(X, "names"))) # gives error if X not list
+    rkeep <- whichv(rl, FALSE)
     if(length(rkeep) == fnrow2(X)) return(condalc(X, inherits(X, "data.table")))
     res <- .Call(C_subsetDT, X, rkeep, iX, FALSE) # This allocates data.tables...
     rn <- attr(X, "row.names")
     if(!(is.numeric(rn) || is.null(rn) || rn[1L] == "1")) attr(res, "row.names") <- Csv(rn, rkeep)
     if(na.attr) {
-      attr(res, "na.action") <- `oldClass<-`(whichv(rl, FALSE), "omit")
+      attr(res, "na.action") <- `oldClass<-`(which(rl), "omit")
       if(inherits(res, "data.table") && !inherits(X, "pdata.frame")) return(alc(res))
     }
     if(inherits(X, "pdata.frame")) {

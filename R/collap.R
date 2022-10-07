@@ -181,6 +181,7 @@ collap <- function(X, by, FUN = fmean, catFUN = fmode, cols = NULL, w = NULL, wF
     nul <- length(nu) > 0L
     nnul <- length(nnu) > 0L
 
+    # TODO: Update parsing of function list: enable list(mean = fmean) to be optimized etc...
     # Identifying FUN and catFUN:
     if(nul) if(is.function(FUN)) {
       namFUN <- l1orn(as.character(substitute(FUN)), "FUN")
