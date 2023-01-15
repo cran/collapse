@@ -6,7 +6,6 @@
 \alias{allNA}
 \alias{whichv}
 \alias{whichNA}
-\alias{frange}
 \alias{alloc}
 \alias{copyv}
 \alias{setv}
@@ -47,7 +46,7 @@ whichv(x, value,            # Faster than which(x == value)
 whichNA(x, invert = FALSE)  # Faster than which((!)is.na(x))
 x \%==\% value                # Infix for whichv(v, value, FALSE), use e.g. in fsubset()
 x \%!=\% value                # Infix for whichv(v, value, TRUE). See also Note (3)
-alloc(value, n)             # Faster than rep_len(value, n)
+alloc(value, n)             # Fast rep_len(value, n) or replicate(n, value). See Details
 copyv(X, v, R, \dots, invert  # Fast replace(X, v, R), replace(X, X (!/=)= v, R) or
     = FALSE, vind1 = FALSE, # replace(X, (!)v, R[(!)v]). See Details and Note (4).
     xlist = FALSE)          # For multi-replacement see also kit::vswitch()
@@ -63,15 +62,15 @@ X \%/=\% V                    # Infix for setop(X, "/", V). See also Note (2)
 na_rm(x)                    # Fast: if(anyNA(x)) x[!is.na(x)] else x,
                             # also removes NULL / empty elements from list
 na_omit(X, cols = NULL,     # Faster na.omit for matrices and data frames,
-      na.attr = FALSE, ...) # can use selected columns and attach indices
+        na.attr = FALSE,    # can use selected columns to check, attach indices,
+        prop = 0, ...)      # and remove cases with a proportion of values missing
 na_insert(X, prop = 0.1,    # Insert missing values at random
           value = NA)
-missing_cases(X,            # The oposite of complete.cases(), faster for
-              cols = NULL)  # data frames. See also kit::panyNA() and kit::pallNA()
+missing_cases(X, cols=NULL, # The oposite of complete.cases(), faster for DF's.
+  prop = 0, count = FALSE)  # See also kit::panyNA(), kit::pallNA(), kit::pcountNA()
 vlengths(X, use.names=TRUE) # Faster version of lengths() (in C, no method dispatch)
 vtypes(X, use.names = TRUE) # Get data storage types (faster vapply(X, typeof, ...))
 vgcd(x)                     # Greatest common divisor of positive integers or doubles
-frange(x, na.rm = TRUE)     # Much faster base::range, for integer and double objects
 fnlevels(x)                 # Faster version of nlevels(x) (for factors)
 fnrow(X)                    # Faster nrow for data frames (not faster for matrices)
 fncol(X)                    # Faster ncol for data frames (not faster for matrices)
@@ -100,12 +99,14 @@ cinv(x)                     # Choleski (fast) inverse of symmetric PD matrix, e.
    \item{cols}{select columns to check for missing values using column names, indices, a logical vector or a function (e.g. \code{is.numeric}). The default is to check all columns, which could be inefficient.}
   \item{n}{integer. The length of the vector to allocate with \code{value}.}
   \item{na.attr}{logical. \code{TRUE} adds an attribute containing the removed cases. For compatibility reasons this is exactly the same format as \code{na.omit} i.e. the attribute is called "na.action" and of class "omit".}
-  \item{prop}{double. Specify the proportion of observations randomly replaced with \code{NA}.}
+  \item{prop}{double. For \code{na_insert}: the proportion of observations to be randomly replaced with \code{NA}. For \code{missing_cases} and \code{na_omit}: the proportion of values missing for the case to be considered missing (within \code{cols} if specified). For matrices this is implemented in R as \code{rowSums(is.na(X)) >= max(as.integer(prop * ncol(X)), 1L)}. The C code for data frames works equivalently, and skips list- and raw-columns (\code{ncol(X)} is adjusted downwards).}
+  \item{count}{logical. \code{TRUE} returns the row-wise missing value count (within \code{cols}). This ignores \code{prop}.}
   \item{use.names}{logical. Preserve names if \code{X} is a list. }
-  \item{na.rm}{logical. \code{TRUE} omits missing values by skipping them in the computation. \code{FALSE} terminates the computation once a missing value is encountered and returns 2 missing values.}
   \item{\dots}{for \code{na_omit}: further arguments passed to \code{[} for vectors and matrices. With indexed data it is also possible to specify the \code{drop.index.levels} argument, see \link{indexing}. For \code{copyv}, \code{setv} and \code{setop}, the argument is unused, and serves as a placeholder for possible future arguments.}
 }
 \details{
+\code{alloc} is a fusion of \code{\link{rep_len}} and \code{\link{replicate}} that is faster in both cases. If \code{value} is a length one atomic vector (logical, integer, double, string, complex or raw), the functionality is as \code{rep_len(value, n)} i.e. the output is a length \code{n} atomic vector with the same attributes as \code{value} (apart from \code{"names"}, \code{"dim"} and \code{"dimnames"}). For all other cases the functionality is as \code{replicate(n, value, simplify = FALSE)} i.e. the output is a length-10 list of the objects. If \code{value} is a list itself, the list is not deep-copied on each replication.
+
 \code{copyv} and \code{setv} are designed to optimize operations that require replacing data in objects in the broadest sense. The only difference between them is that \code{copyv} first deep-copies \code{X} before doing replacements whereas \code{setv} modifies \code{X} in place and returns the result invisibly. There are 3 ways these functions can be used:
 
 \enumerate{
@@ -127,7 +128,7 @@ If \code{X} should not be interpreted like a data frame, setting \code{xlist = T
 \note{
 
 \enumerate{
-\item None of these functions currently support complex vectors.
+\item None of these functions (apart from \code{alloc}) currently support complex vectors.
 
 \item \code{setop} and the operators \code{\%+=\%}, \code{\%-=\%}, \code{\%*=\%} and \code{\%/=\%} also work with integer data, but do not perform any integer related checks. R's integers are bounded between +-2,147,483,647 and \code{NA_integer_} is stored as the value -2,147,483,648. Thus computations resulting in values exceeding +-2,147,483,647 will result in integer overflows, and \code{NA_integer_} should not occur on either side of a \code{setop} call. These are programmers functions and meant to provide the most efficient math possible to responsible users.
 
@@ -199,15 +200,19 @@ mtc_na <- na_insert(mtcars, 0.15)    # Set 15\% of values missing at random
 fnobs(mtc_na)                        # See observation count
 missing_cases(mtc_na)                # Fast equivalent to !complete.cases(mtc_na)
 missing_cases(mtc_na, cols = 3:4)    # Missing cases on certain columns?
-# to see all missing cases use kit::pallNA(mtc_na)
+missing_cases(mtc_na, count = TRUE)  # Missing case count
+missing_cases(mtc_na, prop = 0.8)    # Cases with 80\% or more missing
+missing_cases(mtc_na, cols = 3:4, prop = 1)     # Cases mssing columns 3 and 4
+missing_cases(mtc_na, cols = 3:4, count = TRUE) # Missing case count on columns 3 and 4
+
 na_omit(mtc_na)                      # 12x faster than na.omit(mtc_na)
+na_omit(mtc_na, prop = 0.8)          # Only remove cases missing 80\% or more
 na_omit(mtc_na, na.attr = TRUE)      # Adds attribute with removed cases, like na.omit
-na_omit(mtc_na, cols = c("vs","am")) # Removes only cases missing vs or am
+na_omit(mtc_na, cols = .c(vs, am))   # Removes only cases missing vs or am
 na_omit(qM(mtc_na))                  # Also works for matrices
 na_omit(mtc_na$vs, na.attr = TRUE)   # Also works with vectors
 na_rm(mtc_na$vs)                     # For vectors na_rm is faster ...
 rm(mtc_na)
-
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

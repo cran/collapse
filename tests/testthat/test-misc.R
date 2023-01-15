@@ -5,6 +5,7 @@ if(!is.null(attributes(identical(FALSE, TRUE)))) stop("OECD label issue")
 # rm(list = ls())
 set.seed(101)
 m <- na_insert(qM(mtcars))
+F <- getNamespace("collapse")$F
 
 test_that("descr, pwcor, pwcov, pwnobs", {
 
@@ -248,6 +249,9 @@ test_that("frange works well", {
   expect_equal(frange(xiNA, na.rm = FALSE), range(xiNA))
   expect_equal(frange(xiNA), range(xiNA, na.rm = TRUE))
 
+  expect_identical(frange(numeric(0)), rep(NA_real_, 2L))
+  expect_identical(frange(integer(0)), rep(NA_integer_, 2L))
+
 })
 
 # TODO: Test other cols options and formula options !!!
@@ -325,4 +329,16 @@ test_that("all_funs works properly", {
   expect_identical(all_funs(quote(sum(x) + fmean(x) * e - 1 / fmedian(z))), c("-", "+", "sum", "*", "fmean", "/", "fmedian"))
   expect_identical(all_funs(quote(sum(z)/2+4+e+g+h+(p/sum(u))+(q-y))), c("+", "+", "+", "+", "+", "+", "/", "sum", "(", "/", "sum", "(", "-"))
   expect_identical(all_funs(quote(mean(fmax(min(fmode(mpg))))/fmean(mpg) + e + f + 1 + fsd(hp) + sum(bla) / 20)), c("+", "+", "+", "+", "+", "/", "mean", "fmax", "min", "fmode", "fmean", "fsd", "/", "sum"))
+})
+
+test_that("fdist works properly", {
+  expect_equal(fdist(m), fdist(mtcars))
+  expect_equal(fdist(m), fdist(m, method = 1L))
+  expect_equal(fdist(m, method = "euclidean_squared"), fdist(m, method = 2L))
+  expect_equal(fdist(m), `attr<-`(dist(m), "call", NULL))
+  expect_equal(unattrib(fdist(m, method = "euclidean_squared")), unattrib(dist(m))^2)
+  expect_equal(fdist(m, fmean(m)), unattrib(sqrt(colSums((t(m) - fmean(m))^2))))
+  expect_equal(fdist(m, fmean(m), method = "euclidean_squared"), unattrib(colSums((t(m) - fmean(m))^2)))
+  expect_equal(fdist(m[, 1], m[, 3]), sqrt(sum((m[, 1] - m[, 3])^2)))
+  expect_equal(fdist(m[, 1], m[, 3], method = "euclidean_squared"), sum((m[, 1] - m[, 3])^2))
 })

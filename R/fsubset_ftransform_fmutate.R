@@ -39,7 +39,7 @@ ss <- function(x, i, j, check = TRUE) {
   }
   if(!is.integer(i)) {
     if(is.numeric(i)) i <- as.integer(i) else if(is.logical(i)) {
-      nr <- fnrow2(x)
+      nr <- fnrow(x)
       if(check && length(i) != nr) stop("i needs to be integer or logical(nrow(x))") # which(r & !is.na(r)) not needed !
       i <- which(i)
       if(length(i) == nr) return(if(mj) x else .Call(C_subsetCols, x, j, TRUE))
@@ -74,7 +74,7 @@ fsubset.data.frame <- function(.x, subset, ...) {
   }
   checkrows <- TRUE
   if(is.logical(r)) {
-    nr <- fnrow2(.x)
+    nr <- fnrow(.x)
     if(length(r) != nr) stop("subset needs to be an expression evaluating to logical(nrow(.x)) or integer") # which(r & !is.na(r)) not needed !
     r <- which(r)
     if(length(r) == nr) if(missing(...)) return(.x) else return(.Call(C_subsetCols, .x, vars, TRUE))
@@ -130,7 +130,7 @@ fsubset.pdata.frame <- function(.x, subset, ..., drop.index.levels = "id") {
   }
   checkrows <- TRUE
   if(is.logical(r)) {
-    nr <- fnrow2(.x)
+    nr <- fnrow(.x)
     if(length(r) != nr) stop("subset needs to be an expression evaluating to logical(nrow(.x)) or integer") # which(r & !is.na(r)) not needed !
     r <- which(r)
     if(length(r) == nr) if(missing(...)) return(.x) else return(.Call(C_subsetCols, .x, vars, TRUE))
@@ -278,7 +278,7 @@ fcompute_core <- function(.data, e, keep = NULL) {
         e <- c(e, .subset(.data, attr(.data, "sf_column")))
   ax[["names"]] <- names(e)
   le <- vlengths(e, FALSE)
-  nr <- fnrow2(.data)
+  nr <- fnrow(.data)
   rl <- le == nr
   if(all(rl)) return(condalcSA(e, ax, inherits(.data, "data.table"))) # All computed vectors have the right length
   if(any(1L < le & !rl)) stop("Lengths of replacements must be equal to nrow(.data) or 1")
@@ -332,32 +332,35 @@ fFUN_mutate_add_groups <- function(z) {
 }
 
 
-gsplit_single_apply <- function(x, g, ex, v, encl) {
+gsplit_single_apply <- function(x, g, ex, v, encl, unl = TRUE) {
   funexpr <- quote(function(.x_yz_) .x_yz_)
   funexpr[[3]] <- eval(call("substitute", ex, `names<-`(list(quote(.x_yz_)), v)), NULL, NULL)
   funexpr[[4]] <- NULL
   fun <- eval(funexpr, encl, baseenv())
-  copyMostAttributes(unlist(lapply(gsplit(x, g), fun), FALSE, FALSE), x)
+  res <- lapply(gsplit(x, g), fun)
+  if(unl) copyMostAttributes(unlist(res, FALSE, FALSE), x) else res
 }
 
 # Old version: more expensive...
 # gsplit_single_apply <- function(x, g, ex, v, encl)
 #   copyMostAttributes(unlist(lapply(gsplit(x, g), function(i) eval(ex, `names<-`(list(i), v), encl)), FALSE, FALSE), x)
 
-gsplit_multi_apply <- function(x, g, ex, encl) {
+gsplit_multi_apply <- function(x, g, ex, encl, SD = FALSE) {
   sx <- seq_along(x)
-  unlist(lapply(gsplit(NULL, g),
-         function(i) eval(ex, .Call(C_subsetDT, x, i, sx, FALSE), encl)), FALSE, FALSE)
+  gs <- gsplit(NULL, g)
+  if(!SD) return(lapply(gs, function(i) eval(ex, .Call(C_subsetDT, x, i, sx, FALSE), encl)))
+  funexpr <- substitute(function(.data) expr, list(expr = ex))
+  funexpr[[4]] <- NULL
+  fun <- eval(funexpr, encl, baseenv())
+  lapply(gs, function(i) fun(.Call(C_subsetDT, x, i, sx, FALSE)))
 }
 
 othFUN_compute <- function(x) {
   if(length(x) == 2L) # No additional function arguments
-    return(substitute(unlist(lapply(.gsplit_(a, .g_), b), FALSE, FALSE),
+    return(substitute(lapply(.gsplit_(a, .g_), b),
                       list(a = x[[2L]], b = x[[1L]])))
   # With more arguments, things become more complex..
-  lapply_call <- as.call(c(list(quote(lapply), substitute(.gsplit_(a, .g_), list(a = x[[2L]]))), as.list(x[-2L])))
-  substitute(unlist(a, FALSE, FALSE),
-             list(a = lapply_call, b = x[[2L]]))
+  as.call(c(list(quote(lapply), substitute(.gsplit_(a, .g_), list(a = x[[2L]]))), as.list(x[-2L])))
 }
 
 keep_v <- function(d, v) copyMostAttributes(null_rm(.subset(d, unique.default(v))), d)
@@ -373,8 +376,8 @@ acr_get_cols <- function(.cols, d, nam, ce) {
   # if(is.integer(cols)) cols else (you are checking against length(cols) in setup_across)
 }
 
-# TODO: Implement for collap() ??
-acr_get_funs <- function(.fnsexp, .fns, ce) {
+# Also used in collap()
+acr_get_funs <- function(.fnsexp, .fns, ...) {
 
   if(is.function(.fns)) {
     namfun <- l1orlst(as.character(.fnsexp))
@@ -396,7 +399,7 @@ acr_get_funs <- function(.fnsexp, .fns, ce) {
   } else if(is.character(.fns)) {
     namfun <- names(.fns)
     names(.fns) <- .fns
-    .fns <- lapply(.fns, get, mode = "function", envir = ce) # lapply(.fns, match.fun())
+    .fns <- lapply(.fns, ...) # lapply(.fns, match.fun())
     if(is.null(namfun)) namfun <- names(.fns)
   } else stop(".fns must be a fucntion, list of functions or character vector of function names")
 
@@ -418,15 +421,24 @@ setup_across <- function(.cols, .fnsexp, .fns, .names, .apply, .transpose, .FFUN
   # return(list(.cols, .fns, .names, d))
   nam <- names(d)
   cols <- acr_get_cols(.cols, d, nam, ce)
-  funs <- acr_get_funs(.fnsexp, .fns, ce)
+  funs <- acr_get_funs(.fnsexp, .fns, get, mode = "function", envir = ce)
   namfun <- funs$namfun
   fun <- funs$funs
 
   if(length(.names) && !is.logical(.names)) {
-    if(is.function(.names)) names <- .names(nam[cols], namfun)
-    else {
-      if(length(.names) != length(namfun) * length(cols)) stop("length(.names) must match length(.fns) * length(.cols)")
-      names <- .names
+    if(is.function(.names)) {
+      names <- if(isFALSE(.transpose)) # .names(nam[cols], namfun)
+        as.vector(outer(nam[cols], namfun, .names)) else
+        as.vector(t(outer(nam[cols], namfun, .names)))
+    } else {
+      if(length(.names) == 1L && .names == "flip") {
+        names <- if(isFALSE(.transpose))
+          as.vector(outer(nam[cols], namfun, function(z, f) paste(f, z, sep = "_"))) else
+          as.vector(t(outer(nam[cols], namfun, function(z, f) paste(f, z, sep = "_"))))
+      } else {
+        if(length(.names) != length(namfun) * length(cols)) stop("length(.names) must match length(.fns) * length(.cols)")
+        names <- .names
+      }
     }
   } else {
     # Third version: .names = FALSE does nothing. Allows fmutate(mtcars, across(cyl:vs, list(L, D, G), n = 1:3))
@@ -544,6 +556,7 @@ dots_apply_grouped <- function(d, g, f, dots) {
     asl <- lapply(dots[ln], gsplit, g)
     if(length(dots) > length(ln)) {
       mord <- dots[-ln]
+      if(is.null(names(mord)) && is.null(names(asl))) warning("If some arguments have the same length as the data (vectors) while others have length 1 (scalars), please ensure that at least one of the two have keywords e.g. argname = value. This is because the latter are passed to the 'MoreArgs' argument of .mapply, and thus the order in which arguments are passed to the function might be different from your top-level call. In particular, .mapply will first pass the vector valued arguments followed by the scalar valued ones.")
       FUN <- function(x) .mapply(f, c(list(gsplit(x, g)), asl), mord) # do.call(mapply, c(list(f, gsplit(x, g), SIMPLIFY = FALSE, USE.NAMES = FALSE, MoreArgs = mord), asl))
     } else FUN <- function(x) .mapply(f, c(list(gsplit(x, g)), asl), NULL) # do.call(mapply, c(list(f, gsplit(x, g), SIMPLIFY = FALSE, USE.NAMES = FALSE), asl))
     return(lapply(d, function(y) copyMostAttributes(unlist(FUN(y), FALSE, FALSE), y)))
@@ -553,18 +566,39 @@ dots_apply_grouped <- function(d, g, f, dots) {
 }
 
 dots_apply_grouped_bulk <- function(d, g, f, dots) {
-  n <- fnrow2(d)
+  n <- fnrow(d)
   dsp <- rsplit.data.frame(d, g, simplify = FALSE, flatten = TRUE, use.names = FALSE)
   if(is.null(dots)) return(lapply(dsp, f))
   # Arguments withs ame length as data
   if(length(ln <- whichv(vlengths(dots, FALSE), n))) {
     asl <- lapply(dots[ln], gsplit, g)
-    return(.mapply(f, c(list(dsp), asl), if(length(dots) > length(ln)) dots[-ln] else NULL))
+    if(length(dots) > length(ln)) {
+      mord <- dots[-ln]
+      if(is.null(names(mord)) && is.null(names(asl))) warning("If some arguments have the same length as the data (vectors) while others have length 1 (scalars), please ensure that at least one of the two have keywords e.g. argname = value. This is because the latter are passed to the 'MoreArgs' argument of .mapply, and thus the order in which arguments are passed to the function might be different from your top-level call. In particular, .mapply will first pass the vector valued arguments followed by the scalar valued ones.")
+    } else mord <- NULL
+    return(.mapply(f, c(list(dsp), asl), mord))
   }
   # No arguments to be split
   do.call(lapply, c(list(dsp, f), dots))
 }
 
+mutate_grouped_expand <- function(value, g) {
+  lv <- vlengths(value, FALSE)
+  nr <- length(g[[2L]])
+  if(allv(lv, nr)) {
+    if(!isTRUE(g$ordered[2L])) {
+      if(length(value) < 4L) { # optimal?
+        value <- lapply(value, function(x, g) .Call(C_greorder, x, g), g)
+      } else {
+        ind <- .Call(C_greorder, seq_len(nr), g)
+        value <- .Call(C_subsetDT, value, ind, seq_along(value), FALSE)
+      }
+    }
+    return(value)
+  }
+  if(!allv(lv, g[[1L]])) stop("With groups, NROW(value) must either be ng or nrow(.data)")
+  return(.Call(C_subsetDT, value, g[[2L]], seq_along(value), FALSE))
+}
 
 mutate_funi_grouped <- function(i, data, .data_, funs, aplvec, ce, ...) {
   g <- data[[".g_"]]
@@ -594,23 +628,8 @@ mutate_funi_grouped <- function(i, data, .data_, funs, aplvec, ce, ...) {
     value <- .Call(C_rbindlist, unclass(value), FALSE, FALSE, NULL)
     oldClass(value) <- NULL
   }
-  lv <- vlengths(value, FALSE)
-  nr <- length(g[[2L]])
-  if(allv(lv, nr)) {
-    if(!isTRUE(g$ordered[2L])) {
-      if(length(value) < 4L) { # optimal?
-        value <- lapply(value, function(x, g) .Call(C_greorder, x, g), g)
-      } else {
-        ind <- .Call(C_greorder, seq_len(nr), g)
-        value <- .Call(C_subsetDT, value, ind, seq_along(value), FALSE)
-      }
-    }
-    if(apli) names(value) <- names(.data_)
-    return(value)
-  }
-  if(!allv(lv, g[[1L]])) stop("With groups, NROW(value) must either be ng or nrow(.data)")
   if(apli) names(value) <- names(.data_)
-  return(.Call(C_subsetDT, value, g[[2L]], seq_along(value), FALSE))
+  return(mutate_grouped_expand(value, g))
 }
 
 
@@ -619,16 +638,47 @@ do_grouped_expr <- function(ei, nfun, .data, g, pe) {
   if(length(v) > 1L) {
     # Could include global environemntal variables e.g. fmutate(data, new = mean(var) + q)
     namd <- names(.data)
-    if(length(wv <- na_rm(match(v, namd))) > 1L) return(gsplit_multi_apply(.data[wv], g, ei, pe))
+    if(length(wv <- na_rm(match(v, namd))) > 1L) return(unlist(gsplit_multi_apply(.data[wv], g, ei, pe), FALSE, FALSE))
     return(gsplit_single_apply(.data[[wv]], g, ei, namd[wv], pe))
   }
-  if(nfun == 1L) return(copyMostAttributes(eval(othFUN_compute(ei), .data, pe), .data[[v]]))
+  if(nfun == 1L) {
+    res <- eval(othFUN_compute(ei), .data, pe)
+    return(copyMostAttributes(unlist(res, FALSE, FALSE), .data[[v]]))
+  }
   gsplit_single_apply(.data[[v]], g, ei, v, pe)
 }
 
+# Same as above, without unlisting...
+do_grouped_expr_list <- function(ei, .data, g, pe, .cols, ax, mutate = FALSE) {
+  v <- all.vars(ei)
+  if(any(v == ".data")) {
+    .data[names(.data) %in% c(".g_", ".gsplit_")] <- NULL
+    if(is.character(ax)) { # for fmutate
+      cld <- ax
+      ax <- attributes(.data)
+      ax[["groups"]] <- NULL
+      ax[["names"]] <- fsetdiff(ax[["names"]], c(".g_", ".gsplit_"))
+      ax[["class"]] <- fsetdiff(cld, c("GRP_df", "grouped_df"))
+    }
+    setattributes(.data, ax)
+    if(length(.cols)) .data <- colsubset(.data, .cols)
+    res <- gsplit_multi_apply(.data, g, ei, pe, TRUE)
+  } else if(length(v) > 1L) {
+    namd <- names(.data)
+    res <- if(length(wv <- na_rm(match(v, namd))) > 1L)
+      gsplit_multi_apply(.data[wv], g, ei, pe) else
+      gsplit_single_apply(.data[[wv]], g, ei, namd[wv], pe, FALSE)
+  } else {
+    res <- if(length(all_funs(ei)) == 1L) eval(othFUN_compute(ei), .data, pe) else
+      gsplit_single_apply(.data[[v]], g, ei, v, pe, FALSE)
+  }
+  res <- .Call(C_rbindlist, res, FALSE, FALSE, NULL)
+  if(mutate) return(mutate_grouped_expand(res, g))
+  res
+}
 
-# TODO: Preserves attributes ?? what about ftransform??
-fmutate <- function(.data, ..., .keep = "all") {
+
+fmutate <- function(.data, ..., .keep = "all", .cols = NULL) {
   if(!is.list(.data)) stop(".data needs to be a list of equal length columns or a data.frame")
   e <- substitute(list(...))
   nam <- names(e)
@@ -644,17 +694,20 @@ fmutate <- function(.data, ..., .keep = "all") {
   gdfl <- any(cld == "grouped_df")
   if(gdfl) {
     g <- GRP.grouped_df(.data, return.groups = FALSE, call = FALSE)
-    .data[[".g_"]] <- g
-    .data[[".gsplit_"]] <- gsplit
+    .data[c(".g_", ".gsplit_")] <- list(g, gsplit)
     for(i in 2:length(e)) {
       ei <- e[[i]]
       if(nullnam || nam[i] == "") { # Across
-        if(ei[[1L]] != quote(across) && ei[[1L]] != quote(acr)) stop("expressions need to be named or start with across(), or its shorthand acr().")
-        ei[[1L]] <- quote(do_across)
-        ei$.eval_funi <- quote(mutate_funi_grouped)
-        ei$.summ <- FALSE
-        # return(eval(ei, enclos = pe))
-        .data <- eval(ei, list(do_across = do_across, mutate_funi_grouped = mutate_funi_grouped), pe) # ftransform_core(.data, eval(ei, pe))
+        if(ei[[1L]] == quote(across) || ei[[1L]] == quote(acr)) {
+          ei[[1L]] <- quote(do_across)
+          ei$.eval_funi <- quote(mutate_funi_grouped)
+          ei$.summ <- FALSE
+          # return(eval(ei, enclos = pe))
+          .data <- eval(ei, list(do_across = do_across, mutate_funi_grouped = mutate_funi_grouped), pe) # ftransform_core(.data, eval(ei, pe))
+        } else {
+          r <- do_grouped_expr_list(ei, .data, g, pe, .cols, cld, TRUE)
+          .data[names(r)] <- r
+        }
       } else { # Tagged vector expressions
         if(is.null(ei)) {
           .data[[nam[i]]] <- NULL
@@ -663,11 +716,16 @@ fmutate <- function(.data, ..., .keep = "all") {
         eif <- all_funs(ei)
         if(any(eif %in% .FAST_FUN_MOPS)) {
           .data[[nam[i]]] <- eval(fFUN_mutate_add_groups(ei), .data, pe)
-        } else {
+        } else if(length(eif)) {
           r <- do_grouped_expr(ei, length(eif), .data, g, pe)
           .data[[nam[i]]] <- if(length(r) == g[[1L]])
                .Call(C_subsetVector, r, g[[2L]], FALSE) else # .Call(C_TRA, .data[[v]], r, g[[2L]], 1L) # Faster than simple subset r[g[[2L]] ??]
                .Call(C_greorder, r, g) # r[forder.int(forder.int(g[[2L]]))] # Seems twice is necessary...
+        } else { # something like bla = 1 or mpg = vs
+          r <- eval(ei, .data, pe)
+          if(length(r) == 1L) r <- alloc(r, nr)
+          else if(length(r) != nr) stop("length mismatch")
+          .data[[nam[i]]] <- r
         }
       }
     }
@@ -676,12 +734,16 @@ fmutate <- function(.data, ..., .keep = "all") {
     for(i in 2:length(e)) { # This is good and very fast
       ei <- e[[i]]
       if(nullnam || nam[i] == "") { # Across
-        if(ei[[1L]] != quote(across) && ei[[1L]] != quote(acr)) stop("expressions need to be named or start with across(), or its shorthand acr().")
-        ei[[1L]] <- quote(do_across)
-        ei$.eval_funi <- quote(mutate_funi_simple)
-        ei$.summ <- FALSE
-        # return(eval(ei, enclos = pe))
-        .data <- eval(ei, list(do_across = do_across, mutate_funi_simple = mutate_funi_simple), pe) # ftransform_core(.data, eval(ei, enclos = pe))
+        if(ei[[1L]] == quote(across) || ei[[1L]] == quote(acr)) { # stop("expressions need to be named or start with across(), or its shorthand acr().")
+          ei[[1L]] <- quote(do_across)
+          ei$.eval_funi <- quote(mutate_funi_simple)
+          ei$.summ <- FALSE
+          # return(eval(ei, enclos = pe))
+          .data <- eval(ei, list(do_across = do_across, mutate_funi_simple = mutate_funi_simple), pe) # ftransform_core(.data, eval(ei, enclos = pe))
+        } else {
+          r <- eval(ei, .data, pe)
+          .data[names(r)] <- r
+        }
       } else { # Tagged vector expressions
         r <- eval(ei, .data, pe)
         if(!is.null(r)) { # don't use length(), because only NULL removes list elements...
@@ -711,55 +773,4 @@ mtt <- fmutate # Note: see if function(.data, ...) fmutate(.data, ...) is possib
 
 
 
-# OLD versions and experimental stuff:
 
-# fssm <- function(x, subset) { # not faster than native [ !!
-#   ax <- attributes(x)
-#   d <- dim(x)
-#   ax[["dimnames"]][[1L]] <- ax[["dimnames"]][[1L]][subset]
-#   ax[["dim"]] <- c(length(subset), d[2L])
-#   ic <- seq_len(d[2L]) * d[1L] - d[1L]
-#   setAttributes(.Call(C_subsetVector, x, outer(subset, ic, FUN = "+"), TRUE), ax)
-# }
-
-# Older version: But classes for [ can also be very useful for certain objects !!
-# fsubset.matrix <- function(x, subset, select, drop = FALSE, ...) {
-#   if(!missing(...)) stop("Unknown argument ", dotstostr(...))
-#   if(missing(select)) {
-#     if(is.object(x)) return(`oldClass<-`(unclass(x)[subset, , drop = drop], oldClass(x))) else
-#       return(x[subset, , drop = drop])
-#   } else {
-#     nl <- as.vector(1L:ncol(x), "list")
-#     names(nl) <- dimnames(x)[[2L]]
-#     vars <- eval(substitute(select), nl, parent.frame())
-#     if(is.object(x)) {
-#       if(missing(subset)) return(`oldClass<-`(unclass(x)[, vars, drop = drop], class(x))) else
-#         return(`oldClass<-`(unclass(x)[subset, vars, drop = drop], oldClass(x)))
-#     } else {
-#       if(missing(subset)) return(x[, vars, drop = drop]) else
-#         return(x[subset, vars, drop = drop])
-#     }
-#   }
-# }
-
-# older version -> more like base::subset
-# fsubset.data.frame <- function(x, subset, select, ...) {
-#   if(!missing(...)) stop("Unknown argument ", dotstostr(...))
-#   if(missing(select)) vars <- seq_along(unclass(x)) else {
-#     nl <- `names<-`(as.vector(seq_along(unclass(x)), "list"), attr(x, "names"))
-#     vars <- eval(substitute(select), nl, parent.frame())
-#     if(!is.integer(vars)) vars <- if(is.character(vars)) ckmatch(vars, names(nl)) else which(vars)
-#   }                   # Best solution ??
-#   if(missing(subset)) return(colsubset(x, vars)) else { # if(is.atomic(subset))  # rep_len(TRUE, length(x[[1L]])) else {
-#     r <- eval(substitute(subset), x, parent.frame()) #     # e <- substitute(subset) # if(e[[1L]] == ":") ... but what about objects? -> just keep this !!
-#     if(is.logical(r)) r <- which(r) # which(r & !is.na(r)) is.na not needed !!
-#   } # improve qDF !!!
-#   rn <- attr(x, "row.names") # || is.integer(rn) # maybe many have character converted integers ??
-#   if(is.numeric(rn) || is.null(rn) || rn[1L] == "1") return(.Call(C_subsetDT, x, r, vars, TRUE))
-#   return(`attr<-`(.Call(C_subsetDT, x, r, vars, TRUE), "row.names", rn[r])) # fast ?? scalable ??
-# }
-
-
-# transform(mtcars, newc = cyl > 5, bla = cyl > 3)
-
-# See also with and within. What about keeping attributes ??

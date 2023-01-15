@@ -9,6 +9,7 @@ library(magrittr)
 bmean <- base::mean
 bsum <- base::sum
 bsd <- stats::sd
+bmin <- base::min
 bmax <- base::max
 
 NCRAN <- identical(Sys.getenv("NCRAN"), "TRUE")
@@ -317,6 +318,7 @@ if(NCRAN) {
 
 test_that("fmutate works as intended for simple usage", {
 
+  expect_equal(fmutate(mtc, bla = 1), dplyr::mutate(mtc, bla = 1))
   expect_equal(fmutate(mtc, mu = bmean(mpg)), dplyr::mutate(mtc, mu = bmean(mpg)))
   expect_equal(fmutate(mtc, mu = bmean(mpg), mpg = NULL), dplyr::mutate(mtc, mu = bmean(mpg), mpg = NULL))
   expect_equal(fmutate(mtc, mu = bmean(mpg), dmu = mpg - mu), dplyr::mutate(mtc, mu = bmean(mpg), dmu = mpg - mu))
@@ -332,6 +334,7 @@ test_that("fmutate works as intended for simple usage", {
   ))
 
   # With groups:
+  expect_equal(fmutate(gmtc, bla = 1), dplyr::mutate(gmtc, bla = 1))
   expect_equal(fmutate(gmtc, mu = bmean(mpg)), dplyr::mutate(gmtc, mu = bmean(mpg)))
   expect_equal(fmutate(gmtc, mu = bmean(mpg), mpg = NULL), dplyr::mutate(gmtc, mu = bmean(mpg), mpg = NULL))
   expect_equal(fmutate(gmtc, mu = bmean(mpg), dmu = mpg - mu), dplyr::mutate(gmtc, mu = bmean(mpg), dmu = mpg - mu))
@@ -358,6 +361,7 @@ test_that("fmutate with across works like ftransformv", {
      ftransformv(mtcars, cyl:vs, fwithin, w = wt, apply = FALSE),
      fmutate(mtcars, across(cyl:vs, fwithin, w = wt, .apply = TRUE)),
      fmutate(mtcars, across(cyl:vs, fwithin, w = wt, .apply = FALSE))
+     # fmutate(mtcars, fwithin(.data, w = .data[["wt"]]), .cols = slt(., cyl:vs, return = "names"))
 
    ))
 
@@ -371,7 +375,8 @@ test_that("fmutate with across works like ftransformv", {
     fmutate(gmtc, across(cyl:vs, fmean, TRA = "-", .apply = TRUE)) %>% qDF(),
     fmutate(gmtc, across(cyl:vs, fmean, TRA = "-", .apply = FALSE)) %>% qDF(),
     fmutate(gmtc, across(cyl:vs, function(x) x - bmean(x), .apply = TRUE)) %>% qDF(),
-    fmutate(gmtc, across(cyl:vs, function(x) lapply(x, function(y) y - bmean(y)), .apply = FALSE)) %>% qDF()
+    fmutate(gmtc, across(cyl:vs, function(x) lapply(x, function(y) y - bmean(y)), .apply = FALSE)) %>% qDF(),
+    gmtc %>% fmutate(fwithin(.data), .cols = slt(., cyl:vs, return = "names")) %>% qDF()
 
   ))
 
@@ -392,9 +397,39 @@ test_that("fmutate with across works like ftransformv", {
 test_that("fmutate with across reorders correctly", {
 
   for(i in seq_col(wlddev)) {
-    expect_equal(fungroup(fmutate(fgroup_by(wlddev, i), across(c(PCGDP, LIFEEX), identity))), wlddev)
-    expect_equal(fungroup(fmutate(fgroup_by(wlddev, i), across(.fns = identity))), wlddev)
+    gdf <- fgroup_by(wlddev, i)
+    expect_true(all_identical(
+      wlddev,
+      fungroup(fmutate(gdf, across(c(PCGDP, LIFEEX), identity))),
+      fungroup(fmutate(gdf, across(.fns = identity))),
+      fungroup(fmutate(gdf, list(PCGDP = PCGDP, LIFEEX = LIFEEX))),
+      fungroup(fmutate(gdf, (.data), .cols = .c(PCGDP, LIFEEX))),
+      fungroup(fmutate(gdf, (.data)))
+    ))
   }
+
+})
+
+test_that("fsummarise and fmutate with arbitrary expressions", {
+
+  expect_true(
+    all_obj_equal(
+    fsummarise(gmtc, qDF(cor(cbind(mpg, wt, hp))), mpg_qs = quantile(mpg, c(0.25, 0.5, 0.75))),
+    fsummarise(gmtc, acr(c(mpg, wt, hp), function(x) qDF(cor(x)), .apply = FALSE), mpg_qs = quantile(mpg, c(0.25, 0.5, 0.75))),
+    fsummarise(gmtc, qDF(cor(.data)), .cols = .c(mpg, wt, hp), mpg_qs = quantile(mpg, c(0.25, 0.5, 0.75))),
+    fsummarise(gmtc, qDF(cor(slt(.data, mpg, wt, hp))), mpg_qs = quantile(mpg, c(0.25, 0.5, 0.75))))
+  )
+
+  expect_true(
+    all_obj_equal(
+      fmutate(gmtc, fscale(list(mpg = mpg, wt = wt, hp = hp)), bla = 1, mu = fmean(mpg), su = sum(hp)),
+      fmutate(gmtc, acr(c(mpg, wt, hp), fscale), bla = 1, mu = fmean(mpg), su = sum(hp)),
+      fmutate(gmtc, acr(c(mpg, wt, hp), function(x) fscale(x), .apply = FALSE), bla = 1, mu = fmean(mpg), su = sum(hp)),
+      fmutate(gmtc, fscale(.data), .cols = .c(mpg, wt, hp), bla = 1, mu = fmean(mpg), su = sum(hp)),
+      fmutate(gmtc, fscale(slt(.data, mpg, wt, hp)), bla = 1, mu = fmean(mpg), su = sum(hp)))
+  )
+
+  expect_equal(fmutate(gmtc, acr(mpg:carb, fscale)), fmutate(gmtc, fscale(.data)))
 
 })
 
@@ -476,6 +511,67 @@ test_that("fmutate miscellaneous", {
 })
 
 }
+
+test_that(".names works properly", {
+  expect_equal(
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min))),
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = TRUE))
+  )
+  expect_equal(
+   smr(gmtc, acr(c(hp, wt), list(sum, max, min))),
+   smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = function(c, f) paste0(c, "_", f)))
+  )
+  expect_equal(
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = "flip")),
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = function(c, f) paste0(f, "_", c)))
+  )
+  expect_equal(
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .transpose = FALSE)),
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = function(c, f) paste0(c, "_", f), .transpose = FALSE))
+  )
+  expect_equal(
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = "flip", .transpose = FALSE)),
+    smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = function(c, f) paste0(f, "_", c), .transpose = FALSE))
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = FALSE))),
+    .c(cyl, vs, am, hp, hp, hp, wt, wt, wt)
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), list(sum, max, min), .names = FALSE, .transpose = FALSE))),
+    .c(cyl, vs, am, hp, wt, hp, wt, hp, wt)
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), sum, .names = FALSE))),
+    .c(cyl, vs, am, hp, wt)
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), sum, .names = FALSE, .transpose = FALSE))),
+    .c(cyl, vs, am, hp, wt)
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), sum, .names = TRUE))),
+    .c(cyl, vs, am, hp_sum, wt_sum)
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), sum, .names = "flip"))),
+    .c(cyl, vs, am, sum_hp, sum_wt)
+  )
+  expect_equal(
+    names(smr(gmtc, acr(c(hp, wt), sum, .names = "flip", .transpose = FALSE))),
+    .c(cyl, vs, am, sum_hp, sum_wt)
+  )
+
+})
+
+
+test_that("Warnings for unnamed scalar and vector-valued arguments passed", {
+  tf <- function(x, ...) x
+  expect_warning(mtt(gmtc, acr(hp:carb, tf, TRUE, wt)))
+  expect_warning(mtt(gmtc, acr(hp:carb, tf, wt, TRUE)))
+  expect_warning(mtt(gmtc, acr(hp:carb, tf, TRUE, wt, .apply = FALSE)))
+  expect_warning(mtt(gmtc, acr(hp:carb, tf, wt, TRUE, .apply = FALSE)))
+})
 
 if(FALSE) {
 

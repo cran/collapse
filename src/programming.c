@@ -1,3 +1,6 @@
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include "collapse_c.h"
 
 SEXP Cna_rm(SEXP x) {
@@ -229,28 +232,41 @@ default: error("Unsupported type '%s' passed to allv() / anyv()", type2char(TYPE
 
 SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
 
-  const int n = length(x), lv = length(val), lr = length(rep), tv = TYPEOF(val),
-    tx = TYPEOF(x), tr = TYPEOF(rep), ind1 = asLogical(Rind1), invert = asLogical(Rinvert), set = asLogical(Rset);
-  int nprotect = 0;
+  const int n = length(x), lv = length(val), lr = length(rep),
+    tx = TYPEOF(x), ind1 = asLogical(Rind1), invert = asLogical(Rinvert), set = asLogical(Rset);
+  int nprotect = 0, tv = TYPEOF(val), tr = TYPEOF(rep);
 
   if(lv > 1 || ind1) {
     if(tv == LGLSXP) {
       if(lv != n) error("If v is a logical vector, length(v) needs to be equal to length(x)");
       if(lr != 1 && lr != n) error("If v is a logical vector, length(r) needs to be 1 or length(x)");
-    } else if(tv == INTSXP) {
+    } else if(tv == INTSXP || tv == REALSXP) {
       if(invert) error("invert = TRUE is only possible if v is a logical vector");
+      if(lv == 0) return x; // integer(0) cannot cause error
       if(lv > n) error("length(v) must be <= length(x)");
       if(!(lr == 1 || lr == n || lr == lv)) error("length(r) must be either 1, length(v) or length(x)");
+      if(tv == REALSXP) {
+        if(lv == 1 && REAL_ELT(val, 0) == (int)REAL_ELT(val, 0)) {
+          tv = INTSXP;
+          val = PROTECT(coerceVector(val, INTSXP));
+          ++nprotect;
+        } else error("If length(v) > 1 or vind1 = TRUE, v must be an integer or logical vector");
+      }
       // Just some heuristic checking as this is a programmers function
       const int v1 = INTEGER_ELT(val, 0), vn = INTEGER_ELT(val, lv-1);
       if(v1 < 1 || v1 > n || vn < 1 || vn > n) error("Detected index (v) outside of range [1, length(x)]");
-    } else error("If length(v) > 1, v must be an integer or logical vector"); // TODO: Allow reals of length 1 ??
-  } else if(lr != 1 && lr != n) error("If length(v) == 1, length(r) must be 1 or length(x)");
+    } else error("If length(v) > 1 or vind1 = TRUE, v must be an integer or logical vector");
+  } else {
+    if(lv == 0) return x; // empty replacement, good to return?
+    if(lr != 1 && lr != n) error("If length(v) == 1, length(r) must be 1 or length(x)");
+  }
 
   if(lr > 1 && tr != tx) { // lr == n &&
     if(!((tx == INTSXP && tr == LGLSXP) || (tx == LGLSXP && tr == INTSXP))) {
-      PROTECT_INDEX ipx;
-      PROTECT_WITH_INDEX(rep = coerceVector(rep, tx), &ipx);
+      // PROTECT_INDEX ipx;
+      // PROTECT_WITH_INDEX(rep = coerceVector(rep, tx), &ipx);
+      tr = tx;
+      rep = PROTECT(coerceVector(rep, tx));
       ++nprotect;
     } // error("typeof(x) needs to match typeof(r)");
   }
@@ -428,7 +444,7 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
   default: error("Unsupported type '%s' passed to setv() / copyv()", type2char(tx));
   }
 
-  if(nprotect) UNPROTECT(nprotect);
+  UNPROTECT(nprotect);
   if(set == 0) return(ans);
   return(x);
 }
@@ -611,36 +627,123 @@ SEXP setop(SEXP x, SEXP val, SEXP op, SEXP roww) {
 SEXP vtypes(SEXP x, SEXP isnum) {
   int tx = TYPEOF(x);
   if(tx != VECSXP) return ScalarInteger(tx);
+  SEXP *px = SEXPPTR(x); // This is ok, even if x contains ALTREP objects..
   int n = length(x);
   SEXP ans = PROTECT(allocVector(INTSXP, n));
   int *pans = INTEGER(ans);
   switch(asInteger(isnum)) {
   case 0:
-    for(int i = 0; i != n; ++i) pans[i] = TYPEOF(VECTOR_ELT(x, i)) + 1;
+    for(int i = 0; i != n; ++i) pans[i] = TYPEOF(px[i]) + 1;
     break;
   case 1: // Numeric variables: do_is with op = 100: https://github.com/wch/r-source/blob/2b0818a47199a0b64b6aa9b9f0e53a1e886e8e95/src/main/coerce.c
+          // See also DispatchOrEval in https://github.com/wch/r-source/blob/trunk/src/main/eval.c
     {
-    if(inherits(x, "indexed_frame")) {
-      for(int i = 0; i != n; ++i) {
-        SEXP ci = VECTOR_ELT(x, i);
-        int tci = TYPEOF(ci);
-        pans[i] = (tci == INTSXP && inherits(ci, "integer")) || (tci == REALSXP && inherits(ci, "numeric")); // length(getAttrib(ci, R_ClassSymbol)) <= 2;
+    if(inherits(x, "indexed_frame")) { // NOT pdata.frame!! because columns in pdata.frame only become pseries when extracted from the frame
+      for(int i = 0, tci, tnum, is_num; i != n; ++i) {
+        is_num = 0;
+        tci = TYPEOF(px[i]);
+        tnum = tci == INTSXP || tci == REALSXP;
+        if(tnum) is_num = inherits(px[i], "integer") || inherits(px[i], "numeric") || inherits(px[i], "ts") || inherits(px[i], "units");
+        pans[i] = tnum && is_num;
       }
+      // for(int i = 0; i != n; ++i) {
+      //   int tci = TYPEOF(px[i]);
+      //   pans[i] = (tci == INTSXP && inherits(px[i], "integer")) || (tci == REALSXP && inherits(px[i], "numeric")); // length(getAttrib(ci, R_ClassSymbol)) <= 2;
+      // }
     } else {
-      for(int i = 0; i != n; ++i) {
-        SEXP ci = VECTOR_ELT(x, i);
-        int tci = TYPEOF(ci);
-        pans[i] = (tci == INTSXP || tci == REALSXP) && OBJECT(ci) == 0;
+      for(int i = 0, tci, tnum, is_num; i != n; ++i) {
+        // pans[i] = isNumeric(px[i]) && !isLogical(px[i]); // Date is numeric, from: https://github.com/wch/r-source/blob/2b0818a47199a0b64b6aa9b9f0e53a1e886e8e95/src/main/coerce.c
+        tci = TYPEOF(px[i]);
+        tnum = tci == INTSXP || tci == REALSXP;
+        is_num = tnum && OBJECT(px[i]) == 0;
+        if(tnum && !is_num) is_num = inherits(px[i], "ts") || inherits(px[i], "units");
+        pans[i] = is_num;
       }
     }
     SET_TYPEOF(ans, LGLSXP);
     break;
     }
-  case 2:
-    for(int i = 0; i != n; ++i) pans[i] = (int)isFactor(VECTOR_ELT(x, i));
+  case 2: // is.factor
+    for(int i = 0; i != n; ++i) pans[i] = (int)isFactor(px[i]);
     SET_TYPEOF(ans, LGLSXP);
     break;
-  default: error("Unsupported vtypes option");
+  case 3: // is.list, needed for list processing functions
+    for(int i = 0; i != n; ++i) pans[i] = TYPEOF(px[i]) == VECSXP;
+    SET_TYPEOF(ans, LGLSXP);
+    break;
+  case 4: // is.sublist, needed for list processing functions
+    for(int i = 0; i != n; ++i) pans[i] = TYPEOF(px[i]) == VECSXP && !isFrame(px[i]);
+    SET_TYPEOF(ans, LGLSXP);
+    break;
+  case 7: // is.atomic(x), needed in atomic_elem()
+    // is.atomic: do_is with op = 200:  https://github.com/wch/r-source/blob/9f9033e193071f256e21a181cb053cba983ed4a9/src/main/coerce.c
+    for(int i = 0; i != n; ++i) {
+      switch(TYPEOF(px[i])) {
+      case NILSXP: /* NULL is atomic (S compatibly), but not in isVectorAtomic(.) */
+      case CHARSXP:
+      case LGLSXP:
+      case INTSXP:
+      case REALSXP:
+      case CPLXSXP:
+      case STRSXP:
+      case RAWSXP:
+        pans[i] = 1;
+        break;
+      default:
+        pans[i] = 0;
+      }
+    }
+    SET_TYPEOF(ans, LGLSXP);
+    break;
+  case 5: // is.atomic(x) || is.list(x), needed in reg_elem() and irreg_elem()
+    for(int i = 0; i != n; ++i) {
+      switch(TYPEOF(px[i])) {
+      case VECSXP:
+        pans[i] = 1;
+        break;
+      case NILSXP: /* NULL is atomic (S compatibly), but not in isVectorAtomic(.) */
+      case CHARSXP:
+      case LGLSXP:
+      case INTSXP:
+      case REALSXP:
+      case CPLXSXP:
+      case STRSXP:
+      case RAWSXP:
+        pans[i] = 1;
+        break;
+      default:
+        pans[i] = 0;
+      }
+    }
+    SET_TYPEOF(ans, LGLSXP);
+    break;
+  case 6:
+    // Faster object type identification, needed in unlist2d:
+    // idf <- function(x) if(inherits(x, "data.frame")) 2L else if (!length(x)) 1L else 3L*is.atomic(x)
+    for(int i = 0; i != n; ++i) {
+      if(length(px[i]) == 0)
+        pans[i] = 1;
+      else switch(TYPEOF(px[i])) {
+           case VECSXP:
+             pans[i] = isFrame(px[i]) ? 2 : 0;
+             break;
+           case NILSXP: /* NULL is atomic (S compatibly), but not in isVectorAtomic(.) */
+           case CHARSXP:
+           case LGLSXP:
+           case INTSXP:
+           case REALSXP:
+           case CPLXSXP:
+           case STRSXP:
+           case RAWSXP:
+            pans[i] = 3;
+            break;
+           default:
+             pans[i] = 0;
+           }
+    }
+    break;
+  default:
+    error("Unsupported vtypes option");
   }
   UNPROTECT(1);
   return ans;
@@ -676,6 +779,10 @@ SEXP frange(SEXP x, SEXP Rnarm) {
     case INTSXP:
     case LGLSXP:
     {
+      if(l < 1) {
+        INTEGER(out)[0] = INTEGER(out)[1] = NA_INTEGER;
+        break;
+      }
       int min, max, tmp, *px = INTEGER(x);
       if(narm) {
         int j = l-1;
@@ -706,6 +813,10 @@ SEXP frange(SEXP x, SEXP Rnarm) {
     }
     case REALSXP:
     {
+      if(l < 1) {
+        REAL(out)[0] = REAL(out)[1] = NA_REAL;
+        break;
+      }
       double min, max, tmp, *px = REAL(x);
       if(narm) {
         int j = l-1;
@@ -733,10 +844,154 @@ SEXP frange(SEXP x, SEXP Rnarm) {
       REAL(out)[1] = max;
       break;
     }
-    default: error("Unsupported SEXP type!");
+    default: error("Unsupported SEXP type: %s", type2char(tx));
   }
 
   copyMostAttrib(x, out);
   UNPROTECT(1);
   return out;
+}
+
+
+// faster distance matrices
+// base R's version: https://github.com/wch/r-source/blob/79298c499218846d14500255efd622b5021c10ec/src/library/stats/src/distance.c
+SEXP fdist(SEXP x, SEXP vec, SEXP Rret, SEXP Rnthreads) {
+
+  SEXP dim = getAttrib(x, R_DimSymbol);
+  int nrow, ncol, ret, nullv = isNull(vec), nthreads = asInteger(Rnthreads), nprotect = 1;
+  if(nthreads > max_threads) nthreads = max_threads;
+  if(TYPEOF(dim) != INTSXP) {
+    nrow = 1;
+    ncol= length(x);
+  } else {
+    nrow = INTEGER(dim)[0];
+    ncol= INTEGER(dim)[1];
+  }
+  if(TYPEOF(x) != REALSXP) {
+    x = PROTECT(coerceVector(x, REALSXP)); ++nprotect;
+  }
+  if(TYPEOF(Rret) == STRSXP) {
+    const char *r = CHAR(STRING_ELT(Rret, 0));
+    if(strcmp(r, "euclidean") == 0) ret = 1;
+    else if(strcmp(r, "euclidean_squared") == 0) ret = 2;
+    else error("Unsupported method: %s", r);
+  } else {
+    ret = asInteger(Rret);
+    if(ret < 1 || ret > 2) error("method must be 1 ('euclidean') or 2 ('euclidean_squared')");
+  }
+
+  size_t l = nrow;
+  if(nullv) { // Full distance matrix
+    if(nrow <= 1) error("If v is left empty, x needs to be a matrix with at least 2 rows");
+    l = ((double)nrow / 2) * (nrow - 1);
+  } else if(length(vec) != ncol) error("length(v) must match ncol(x)");
+
+  SEXP res = PROTECT(allocVector(REALSXP, l));
+  double *px = REAL(x), *pres = REAL(res);
+  memset(pres, 0, sizeof(double) * l);
+
+  if(nullv) { // Full distance matrix
+    if(nthreads > 1) {
+      if(nthreads > nrow-1) nthreads = nrow-1;
+      #pragma omp parallel for num_threads(nthreads)
+      for (int k = 1; k < nrow; ++k) { // Row vectors to compute distances with
+        int nmk = nrow - k;
+        double *presk = pres + l - nmk*(nmk+1)/2, // https://en.wikipedia.org/wiki/1_%2B_2_%2B_3_%2B_4_%2B_%E2%8B%AF
+               *pxj = px + k, v = pxj[-1], tmp;
+        for (int j = 0; j < ncol; ++j) { // Elements of the row vector at hand
+          for(int i = 0; i < nmk; ++i) { // All remaining rows to compute the distance to
+            tmp = pxj[i] - v;
+            presk[i] += tmp * tmp;
+          }
+          pxj += nrow; v = pxj[-1];
+        }
+      }
+    } else {
+      double *presk = pres, *pxj, v, tmp;
+      for (int k = 1, nmk = nrow; k != nrow; ++k) { // Row vectors to compute distances with
+        --nmk; pxj = px + k; v = pxj[-1];
+        for (int j = 0; j != ncol; ++j) { // Elements of the row vector at hand
+          for(int i = 0; i != nmk; ++i) { // All remaining rows to compute the distance to
+            tmp = pxj[i] - v;
+            presk[i] += tmp * tmp;
+          }
+          pxj += nrow; v = pxj[-1];
+        }
+        presk += nmk;
+      }
+    }
+  } else { // Only a single vector
+    if(TYPEOF(vec) != REALSXP) {
+      vec = PROTECT(coerceVector(vec, REALSXP)); ++nprotect;
+    }
+    double *pv = REAL(vec);
+
+    if(nrow > 1) { // x is a matrix
+      if(nthreads > 1) {
+        if(nthreads > nrow) nthreads = nrow;
+        for (int j = 0; j < ncol; ++j) {
+          double *pxj = px + j * nrow, v = pv[j];
+          #pragma omp parallel for num_threads(nthreads)
+          for (int i = 0; i < nrow; ++i) {
+            double tmp = pxj[i] - v;
+            pres[i] += tmp * tmp;
+          }
+        }
+      } else {
+        for (int j = 0; j != ncol; ++j) {
+          double *pxj = px + j * nrow, v = pv[j], tmp;
+          for (int i = 0; i != nrow; ++i) {
+            tmp = pxj[i] - v;
+            pres[i] += tmp * tmp;
+          }
+        }
+      }
+    } else { // x is a vector
+      double dres = 0.0;
+      if(nthreads > 1) {
+        if(nthreads > ncol) nthreads = ncol;
+        #pragma omp parallel for num_threads(nthreads) reduction(+:dres)
+        for (int i = 0; i < ncol; ++i) {
+          double tmp = px[i] - pv[i];
+          dres += tmp * tmp;
+        }
+      } else {
+        double tmp;
+        for (int i = 0; i != ncol; ++i) {
+          tmp = px[i] - pv[i];
+          dres += tmp * tmp;
+        }
+      }
+      pres[0] = ret == 1 ? sqrt(dres) : dres;
+      ret = 2; // ensures we avoid the square root loop below
+    }
+  }
+
+  // Square Root
+  if(ret == 1) {
+    if(nthreads > 1) {
+      #pragma omp parallel for num_threads(nthreads)
+      for (size_t i = 0; i < l; ++i) pres[i] = sqrt(pres[i]);
+    } else {
+      for (size_t i = 0; i != l; ++i) pres[i] = sqrt(pres[i]);
+    }
+  }
+
+  if(nullv) { // Full distance matrix object
+    // First creating symbols to avoid protect errors: https://blog.r-project.org/2019/04/18/common-protect-errors/
+    SEXP sym_Size = install("Size"), sym_Labels = install("Labels"),
+      sym_Diag = install("Diag"), sym_Upper = install("Upper"), sym_method = install("method");
+    setAttrib(res, sym_Size, ScalarInteger(nrow));
+    SEXP dn = getAttrib(x, R_DimNamesSymbol);
+    if(TYPEOF(dn) == VECSXP && length(dn))
+       setAttrib(res, sym_Labels, VECTOR_ELT(dn, 0));
+    setAttrib(res, sym_Diag, ScalarLogical(0));
+    setAttrib(res, sym_Upper, ScalarLogical(0));
+    setAttrib(res, sym_method, mkString(ret == 1 ? "euclidean" : "euclidean_squared"));
+    // Note: Missing "call" attribute
+    classgets(res, mkString("dist"));
+  }
+
+  UNPROTECT(nprotect);
+  return res;
 }

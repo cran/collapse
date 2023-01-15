@@ -9,7 +9,7 @@
 // Problem: does not work in parallel, each thread needs own hash table...
 
 int ndistinct_int(const int *restrict px, const int *restrict po, const int l, const int sorted, const int narm) {
-  if(l == 1) return !(narm && px[0] == NA_INTEGER);
+  if(l == 1) return !(narm && px[sorted ? 0 : po[0]-1] == NA_INTEGER);
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, ndist = 0, anyNA = 0;
@@ -58,7 +58,7 @@ int ndistinct_int(const int *restrict px, const int *restrict po, const int l, c
 }
 
 int ndistinct_fct(const int *restrict px, const int *restrict po, const int l, const int nlev, const int sorted, const int narm) {
-  if(l == 1) return !(narm && px[0] == NA_INTEGER);
+  if(l == 1) return !(narm && px[sorted ? 0 : po[0]-1] == NA_INTEGER);
   int *restrict h = (int*)Calloc(nlev+1, int);
   int ndist = 0, anyNA = narm; // Ensures breaking works if narm = TRUE or FALSE
   if(sorted) {
@@ -92,7 +92,7 @@ int ndistinct_fct(const int *restrict px, const int *restrict po, const int l, c
 }
 
 int ndistinct_logi(const int *restrict px, const int *restrict po, const int l, const int sorted, const int narm) {
-  if(l == 1) return !(narm && px[0] == NA_LOGICAL);
+  if(l == 1) return !(narm && px[sorted ? 0 : po[0]-1] == NA_LOGICAL);
   int seenT = 0, seenF = 0, anyNA = narm; // Ensures breaking works if narm = TRUE or FALSE
   if(sorted) {
     for (int i = 0, xi; i != l; ++i) {
@@ -131,7 +131,7 @@ int ndistinct_logi(const int *restrict px, const int *restrict po, const int l, 
 }
 
 int ndistinct_double(const double *restrict px, const int *restrict po, const int l, const int sorted, const int narm) {
-  if(l == 1) return !(narm && ISNAN(px[0]));
+  if(l == 1) return !(narm && ISNAN(px[sorted ? 0 : po[0]-1]));
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, ndist = 0, anyNA = 0;
@@ -185,7 +185,7 @@ int ndistinct_double(const double *restrict px, const int *restrict po, const in
 }
 
 int ndistinct_string(const SEXP *restrict px, const int *restrict po, const int l, const int sorted, const int narm) {
-  if(l == 1) return !(narm && px[0] == NA_STRING);
+  if(l == 1) return !(narm && px[sorted ? 0 : po[0]-1] == NA_STRING);
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, ndist = 0, anyNA = 0;
@@ -236,27 +236,22 @@ int ndistinct_string(const SEXP *restrict px, const int *restrict po, const int 
 
 // Implementations for R vectors -----------------------------------------------
 
-SEXP ndistinct_impl(SEXP x, int narm) {
-  int l = length(x), res;
-  if(l < 1) return ScalarInteger(0);
+int ndistinct_impl_int(SEXP x, int narm) {
+  int l = length(x);
+  if(l < 1) return 0;
   switch(TYPEOF(x)) {
-    case REALSXP:
-      res = ndistinct_double(REAL(x), &l, l, 1, narm);
-      break;
-  case INTSXP:  // TODO: optimize for plain integer??
-      res = isFactor(x) ? ndistinct_fct(INTEGER(x), &l, l, nlevels(x), 1, narm) :
-               ndistinct_int(INTEGER(x), &l, l, 1, narm);
-      break;
-    case LGLSXP:
-      res = ndistinct_logi(INTEGER(x), &l, l, 1, narm);
-      break;
-    case STRSXP:
-      res = ndistinct_string(STRING_PTR(x), &l, l, 1, narm);
-      break;
-    default: error("Not Supported SEXP Type!");
+    case REALSXP: return ndistinct_double(REAL(x), &l, l, 1, narm);
+    case INTSXP:  // TODO: optimize for plain integer??
+      return isFactor(x) ? ndistinct_fct(INTEGER(x), &l, l, nlevels(x), 1, narm) :
+                           ndistinct_int(INTEGER(x), &l, l, 1, narm);
+    case LGLSXP: return ndistinct_logi(INTEGER(x), &l, l, 1, narm);
+    case STRSXP: return ndistinct_string(STRING_PTR(x), &l, l, 1, narm);
+    default: error("Not Supported SEXP Type: '%s'", type2char(TYPEOF(x)));
   }
+}
 
-  return ScalarInteger(res);
+SEXP ndistinct_impl(SEXP x, int narm) {
+  return ScalarInteger(ndistinct_impl_int(x, narm));
 }
 
 // TODO: Optimize grouped distinct value count for logical vectors??
@@ -359,7 +354,8 @@ SEXP fndistinctC(SEXP x, SEXP g, SEXP Rnarm, SEXP Rnthreads) {
   if(TYPEOF(g) != VECSXP || !inherits(g, "GRP")) error("g needs to be an object of class 'GRP', see ?GRP");
   const SEXP *restrict pg = SEXPPTR(g), o = pg[6];
   SEXP res;
-  int sorted = LOGICAL(pg[5])[1] == 1, ng = INTEGER(pg[0])[0], *restrict pgs = INTEGER(pg[2]), *restrict po, *restrict pst, l = length(x);
+  int sorted = LOGICAL(pg[5])[1] == 1, ng = INTEGER(pg[0])[0], *restrict pgs = INTEGER(pg[2]), *restrict po, *restrict pst,
+    l = length(x), nthreads = asInteger(Rnthreads);
   if(l != length(pg[1])) error("length(g) must match length(x)");
   if(isNull(o)) {
     int *cgs = (int *) R_alloc(ng+2, sizeof(int)), *restrict pgv = INTEGER(pg[1]); cgs[1] = 1;
@@ -376,7 +372,8 @@ SEXP fndistinctC(SEXP x, SEXP g, SEXP Rnarm, SEXP Rnthreads) {
     po = INTEGER(o);
     pst = INTEGER(getAttrib(o, install("starts")));
   }
-  PROTECT(res = ndistinct_g_impl(x, ng, pgs, po, pst, sorted, asLogical(Rnarm), asInteger(Rnthreads)));
+  if(nthreads > max_threads) nthreads = max_threads;
+  PROTECT(res = ndistinct_g_impl(x, ng, pgs, po, pst, sorted, asLogical(Rnarm), nthreads));
   if(OBJECT(x) == 0) copyMostAttrib(x, res);
   else {
     SEXP sym_label = install("label");
@@ -389,12 +386,17 @@ SEXP fndistinctC(SEXP x, SEXP g, SEXP Rnarm, SEXP Rnthreads) {
 SEXP fndistinctlC(SEXP x, SEXP g, SEXP Rnarm, SEXP Rdrop, SEXP Rnthreads) {
   int l = length(x), narm = asLogical(Rnarm), nthreads = asInteger(Rnthreads);
   if(l < 1) return ScalarInteger(0);
+  if(nthreads > max_threads) nthreads = max_threads;
   if(isNull(g) && asLogical(Rdrop)) {
     SEXP out = PROTECT(allocVector(INTSXP, l)), *restrict px = SEXPPTR(x);
     int *restrict pout = INTEGER(out);
-    if(nthreads > l) nthreads = l;
-    #pragma omp parallel for num_threads(nthreads)
-    for(int j = 0; j < l; ++j) pout[j] = INTEGER(ndistinct_impl(px[j], narm))[0];
+    if(nthreads <= 1) {
+      for(int j = 0; j != l; ++j) pout[j] = ndistinct_impl_int(px[j], narm);
+    } else {
+      if(nthreads > l) nthreads = l;
+      #pragma omp parallel for num_threads(nthreads)
+      for(int j = 0; j < l; ++j) pout[j] = ndistinct_impl_int(px[j], narm);
+    }
     setAttrib(out, R_NamesSymbol, getAttrib(x, R_NamesSymbol));
     UNPROTECT(1);
     return out;
@@ -402,11 +404,16 @@ SEXP fndistinctlC(SEXP x, SEXP g, SEXP Rnarm, SEXP Rdrop, SEXP Rnthreads) {
     SEXP out = PROTECT(allocVector(VECSXP, l)), sym_label = PROTECT(install("label")),
       *restrict pout = SEXPPTR(out), *restrict px = SEXPPTR(x);
     if(isNull(g)) {
-      if(nthreads > l) nthreads = l;
-      #pragma omp parallel for num_threads(nthreads)
-      for(int j = 0; j < l; ++j) {
+      if(nthreads <= 1) {
+        for(int j = 0; j != l; ++j) pout[j] = ndistinct_impl(px[j], narm);
+      } else {
+        if(nthreads > l) nthreads = l;
+        #pragma omp parallel for num_threads(nthreads)
+        for(int j = 0; j < l; ++j) pout[j] = ndistinct_impl(px[j], narm);
+      }
+      // Not thread safe and thus taken out
+      for(int j = 0; j != l; ++j) {
         SEXP xj = px[j];
-        pout[j] = ndistinct_impl(xj, narm);
         if(OBJECT(xj) == 0) copyMostAttrib(xj, pout[j]);
         else setAttrib(pout[j], sym_label, getAttrib(xj, sym_label));
       }
@@ -450,7 +457,7 @@ SEXP fndistinctmC(SEXP x, SEXP g, SEXP Rnarm, SEXP Rdrop, SEXP Rnthreads) {
   int tx = TYPEOF(x), l = INTEGER(dim)[0], col = INTEGER(dim)[1],
       narm = asLogical(Rnarm), nthreads = asInteger(Rnthreads);
   if(l < 1) return ScalarInteger(0); // Prevents seqfault for numeric(0) #101
-
+  if(nthreads > max_threads) nthreads = max_threads;
   if(isNull(g)) {
     SEXP res = PROTECT(allocVector(INTSXP, col));
     int *restrict pres = INTEGER(res);

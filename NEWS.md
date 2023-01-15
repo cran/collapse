@@ -1,3 +1,91 @@
+# collapse 1.9.0
+
+*collapse* 1.9.0 released min of January 2023, provides improvements in performance and versatility in many areas, as well as greater statistical capabilities, most notably efficient (grouped, weighted) estimation of sample quantiles. 
+
+### Changes to functionality
+
+* All functions renamed in *collapse* 1.6.0 are now depreciated, to be removed end of 2023. These functions had already been giving messages since v1.6.0. See `help("collapse-renamed")`.
+
+* The lead operator `F()` is not exported anymore from the package namespace, to avoid clashes with `base::F` flagged by multiple people. The operator is still part of the package and can be accessed using `collapse:::F`. I have also added an option `"collapse_export_F"`, such that setting `options(collapse_export_F = TRUE)` before loading the package exports the operator as before. Thanks @matthewross07 (#100), @edrubin (#194), and @arthurgailes (#347). 
+
+* Function `fnth()` has a new default `ties = "q7"`, which gives the same result as `quantile(..., type = 7)` (R's default). More details below. 
+
+### Bug Fixes
+
+* `fmode()` gave wrong results for singleton groups (groups of size 1) on *unsorted* data. I had optimized `fmode()` for singleton groups to directly return the corresponding element, but it did not access the element through the (internal) ordering vector, so the first element/row of the entire vector/data was taken. The same mistake occurred for `fndistinct` if singleton groups were `NA`, which were counted as `1` instead of `0` under the `na.rm = TRUE` default (provided the first element of the vector/data was not `NA`). The mistake did not occur with data sorted by the groups, because here the data pointer already pointed to the first element of the group. (My apologies for this bug, it took me more than half a year to discover it, using *collapse* on a daily basis, and it escaped 700 unit tests as well).
+
+* Function `groupid(x, na.skip = TRUE)` returned uninitialized first elements if the first values in `x` where `NA`. Thanks for reporting @Henrik-P (#335). 
+
+* Fixed a bug in the `.names` argument to `across()`. Passing a naming function such as `.names = function(c, f) paste0(c, "-", f)` now works as intended i.e. the function is applied to all combinations of columns (c) and functions (f) using `outer()`. Previously this was just internally evaluated as `.names(cols, funs)`, which did not work if there were multiple cols and multiple funs. There is also now a possibility to set `.names = "flip"`, which names columns `f_c` instead of `c_f`. 
+
+* `fnrow()` was rewritten in C and also supports data frames with 0 columns. Similarly for `seq_row()`. Thanks @NicChr (#344). 
+
+### Additions
+
+* Added functions `fcount()` and `fcountv()`: a versatile and blazing fast alternative to `dplyr::count`. It also works with vectors, matrices, as well as grouped and indexed data. 
+
+* Added function `fquantile()`: Fast (weighted) continuous quantile estimation (methods 5-9 following Hyndman and Fan (1996)), implemented fully in C based on quickselect and radixsort algorithms, and also supports an ordering vector as optional input to speed up the process. It is up to 2x faster than `stats::quantile` on larger vectors, but also especially fast on smaller data, where the R overhead of `stats::quantile` becomes burdensome. For maximum performance during repeated executions, a programmers version `.quantile()` with different defaults is also provided. 
+
+* Added function `fdist()`: A fast and versatile replacement for `stats::dist`. It computes a full euclidian distance matrix around 4x faster than `stats::dist` in serial mode, with additional gains possible through multithreading along the distance matrix columns (decreasing thread loads as the matrix is lower triangular). It also supports computing the distance of a matrix with a single row-vector, or simply between two vectors. E.g. `fdist(mat, mat[1, ])` is the same as `sqrt(colSums((t(mat) - mat[1, ])^2)))`, but about 20x faster in serial mode, and `fdist(x, y)` is the same as `sqrt(sum((x-y)^2))`, about 3x faster in serial mode. In both cases (sub-column level) multithreading is available. *Note* that `fdist` does not skip missing values i.e. `NA`'s will result in `NA` distances. There is also no internal implementation for integers or data frames. Such inputs will be coerced to numeric matrices. 
+
+* Added function `GRPid` to easily fetch the group id from a grouping object, especially inside grouped `fmutate()` calls. This addition was warranted especially by the new improved `fnth.default()` method which allows orderings to be supplied for performance improvements. See commends on `fnth()` and the example provided below. 
+
+* `fsummarize()` was added as a synonym to `fsummarise`. Thanks @arthurgailes for the PR. 
+
+* **C API**: *collapse* exports around 40 C functions that provide functionality that is either convenient or rather complicated to implement from scratch. The exported functions can be found at the bottom of `src/ExportSymbols.c`. The API does not include the *Fast Statistical Functions*, which I thought are too closely related to how *collapse* works internally to be of much use to a C programmer (e.g. they expect grouping objects or certain kinds of integer vectors). But you are free to request the export of additional functions, including C++ functions. 
+
+### Improvements
+
+* `fnth()` and `fmedian()` were rewritten in C, with significant gains in performance and versatility. Notably, `fnth()` now supports (grouped, weighted) continuous quantile estimation like `fquantile()` (`fmedian()`, which is a wrapper around `fnth()`, can also estimate various quantile based weighted medians). The new default for `fnth()` is `ties = "q7"`, which gives the same result as `(f)quantile(..., type = 7)` (R's default). OpenMP multithreading across groups is also much more effective in both the weighted and unweighted case. Finally, `fnth.default` gained an additional argument `o` to pass an ordering vector, which can dramatically speed up repeated invocations of the function on the dame data: 
+
+  ```r
+  # Estimating multiple weighted-grouped quantiles on mpg: pre-computing an ordering provides extra speed. 
+  mtcars %>% fgroup_by(cyl, vs, am) %>%
+      fmutate(o = radixorder(GRPid(), mpg)) %>% # On grouped data, need to account for GRPid()
+      fsummarise(mpg_Q1 = fnth(mpg, 0.25, o = o, w = wt),
+                 mpg_median = fmedian(mpg, o = o, w = wt),
+                 mpg_Q3 = fnth(mpg, 0.75, o = o, w = wt))
+  # Note that without weights this is not always faster. Quickselect can be very efficient, so it depends 
+  # on the data, the number of groups, whether they are sorted (which speeds up radixorder), etc...
+  ```
+
+* `BY` now supports data-length arguments to be passed e.g. `BY(mtcars, mtcars$cyl, fquantile, w = mtcars$wt)`, making it effectively a generic grouped `mapply` function as well. Furthermore, the grouped_df method now also expands grouping columns for output length > 1. 
+
+* `collap()`, which internally uses `BY` with non-*Fast Statistical Functions*, now also supports arbitrary further arguments passed down to functions to be split by groups. Thus users can also apply custom weighted functions with `collap()`. Furthermore, the parsing of the `FUN`, `catFUN` and `wFUN` arguments was improved and brought in-line with the parsing of `.fns` in `across()`. The main benefit of this is that *Fast Statistical Functions* are now also detected and optimizations carried out when passed in a list providing a new name e.g. `collap(data, ~ id, list(mean = fmean))` is now optimized! Thanks @ttrodrigz (#358) for requesting this.    
+
+* `descr()`, by virtue of `fquantile` and the improvements to `BY`, supports full-blown grouped and weighted descriptions of data. This is implemented through additional `by` and `w` arguments. The function has also be turned into an S3 generic, with a default and a 'grouped_df' method. The 'descr' methods `as.data.frame` and `print` also feature various improvements, and a new `compact` argument to `print.descr`, allowing a more compact printout. Users will also notice improved performance, mainly due to `fquantile`: on the M1 `descr(wlddev)` is now 2x faster than `summary(wlddev)`, and 41x faster than `Hmisc::describe(wlddev)`. Thanks @statshero (#355).
+
+
+* `radixorder` is about 25% faster on characters and doubles. This also benefits grouping performance. Note that `group()` may still be substantially faster on unsorted data, so if performance is critical try the `sort = FALSE` argument to functions like `fgroup_by` and compare. 
+
+* Most list processing functions are noticeably faster, as checking the data types of elements in a list is now also done in C, and I have made some improvements to *collapse*'s version of `rbindlist()` (used in `unlist2d()`, and various other places). 
+
+* `fsummarise` and `fmutate` gained an ability to evaluate arbitrary expressions that result in lists / data frames without the need to use `across()`. For example: `mtcars |> fgroup_by(cyl, vs, am) |> fsummarise(mctl(cor(cbind(mpg, wt, carb)), names = TRUE))` or `mtcars |> fgroup_by(cyl) |> fsummarise(mctl(lmtest::coeftest(lm(mpg ~ wt + carb)), names = TRUE))`. There is also the possibility to compute expressions using `.data` e.g. `mtcars |> fgroup_by(cyl) |> fsummarise(mctl(lmtest::coeftest(lm(mpg ~ wt + carb, .data)), names = TRUE))` yields the same thing, but is less efficient because the whole dataset (including 'cyl') is split by groups. For greater efficiency and convenience, you can pre-select columns using a global `.cols` argument, e.g. `mtcars |> fgroup_by(cyl, vs, am) |> fsummarise(mctl(cor(.data), names = TRUE), .cols = .c(mpg, wt, carb))` gives the same as above. Three *Notes* about this:
+
+  + No grouped vectorizations for fast statistical functions i.e. the entire expression is evaluated for each group. (Let me know if there are applications where vectorization would be possible and beneficial. I can't think of any.)  
+  + All elements in the result list need to have the same length, or, for `fmutate`, have the same length as the data (in each group). 
+  + If `.data` is used, the entire expression (`expr`) will be turned into a function of `.data` (`function(.data) expr`), which means columns are only available when accessed through `.data` e.g. `.data$col1`. 
+  
+* `fsummarise` supports computations with mixed result lengths e.g. `mtcars |> fgroup_by(cyl) |> fsummarise(N = GRPN(), mean_mpg = fmean(mpg), quantile_mpg = fquantile(mpg))`, as long as all computations result in either length 1 or length k vectors, where k is the maximum result length (e.g. for `fquantile` with default settings k = 5).   
+
+* List extraction function `get_elem()` now has an option `invert = TRUE` (default `FALSE`) to remove matching elements from a (nested) list. Also the functionality of argument `keep.class = TRUE` is implemented in a better way, such that the default `keep.class = FALSE` toggles classes from (non-matched) list-like objects inside the list to be removed. 
+
+* `num_vars()` has become a bit smarter: columns of class 'ts' and 'units' are now also recognized as numeric. In general, users should be aware that `num_vars()` does not regard any R methods defined for `is.numeric()`, it is implemented in C and simply checks whether objects are of type integer or double, and do not have a class. The addition of these two exceptions now guards against two common cases where `num_vars()` may give undesirable outcomes. Note that `num_vars()`  is also called in `collap()` to distinguish between numeric (`FUN`) and non-numeric (`catFUN`) columns. 
+
+* Improvements to `setv()` and `copyv()`, making them more robust to borderline cases: `integer(0)` passed to `v` does nothing (instead of error), and it is also possible to pass a single real index if `vind1 = TRUE` i.e. passing `1` instead of `1L` does not produce an error. 
+
+* `alloc()` now works with all types of objects i.e. it can replicate any object. If the input is non-atomic, atomic with length > 1 or `NULL`, the output is a list of these objects, e.g. `alloc(NULL, 10)` gives a length 10 list of `NULL` objects, or `alloc(mtcars, 10)` gives a list of `mtcars` datasets. Note that in the latter case the datasets are not deep-copied, so no additional memory is consumed. 
+
+* `missing_cases()` and `na_omit()` have gained an argument `prop = 0`, indicating the proportion of values missing for the case to be considered missing/to be omitted. The default value of `0` indicates that at least 1 value must be missing. Of course setting `prop = 1` indicates that all values must be missing. For data frames/lists the checking is done efficiently in C. For matrices this is currently still implemented using `rowSums(is.na(X)) >= max(as.integer(prop * ncol(X)), 1L)`, so the performance is less than optimal. 
+
+* `missing_cases()` has an extra argument `count = FALSE`. Setting `count = TRUE` returns the case-wise missing value count (by `cols`).  
+
+* Functions `frename()` and `setrename()` have an additional argument `.nse = TRUE`, conforming to the default non-standard evaluation of tagged vector expressions e.g. `frename(mtcars, mpg = newname)` is the same as `frename(mtcars, mpg = "newname")`. Setting `.nse = FALSE` allows `newname` to be a variable holding a name e.g. `newname = "othername"; frename(mtcars, mpg = newname, .nse = FALSE)`. Another use of the argument is that a (named) character vector can now be passed to the function to rename a (subset of) columns e.g. `cvec = letters[1:3]; frename(mtcars, cvec, cols = 4:6, .nse = FALSE)` (this works even with `.nse = TRUE`), and `names(cvec) = c("cyl", "vs", "am"); frename(mtcars, cvec, .nse = FALSE)`. Furthermore, `setrename()` now also returns the renamed data invisibly, and `relabel()` and `setrelabel()` have also gained similar flexibility to allow (named) lists or vectors of variable labels to be passed. *Note* that these function have no NSE capabilities, so they work essentially like `frename(..., .nse = FALSE)`.
+
+* Function `add_vars()` became a bit more flexible and also allows single vectors to be added with tags e.g. `add_vars(mtcars, log_mpg = log(mtcars$mpg), STD(mtcars))`, similar to `cbind`. However `add_vars()` continues to not replicate length 1 inputs. 
+* Safer multithreading: OpenMP multithreading over parts of the R API is minimized, reducing errors that occurred especially when multithreading across data frame columns. Also the number of threads supplied by the user to all OpenMP enabled functions is ensured to not exceed either of `omp_get_num_procs()`, `omp_get_thread_limit()`, and `omp_get_max_threads()`. 
+
+
 # collapse 1.8.9
 
 * Fixed some warnings on rchk and newer C compilers (LLVM clang 10+). 

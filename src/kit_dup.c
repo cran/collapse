@@ -367,6 +367,9 @@ SEXP dupVecIndexKeepNA(SEXP x) {
 // TODO: Only one M calculation ?
 // Think: If in the second grouping variable all entries are the same, you loop through the whole table for each value..
 
+// TODO: Faster possibility indexing by grouping vector?? -> would need multiple hash tables through which complicates things,
+// but could still end up being faster...
+
 // **************************************************
 // This function adds a second vector to the grouping
 // **************************************************
@@ -392,7 +395,7 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
         M *= 2;
         K++;
       }
-      M += ng; // Here we addd the number of previous groups...
+      M += ng; // Here we add the number of previous groups...
     }
   } else if (tx == LGLSXP) {
     M = (size_t)ng * 3 + 1;

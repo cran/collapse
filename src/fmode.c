@@ -4,12 +4,14 @@
 #include "kit.h"
 #include "collapse_c.h"
 
+static double NEG_INF = -1.0/0.0;
+
 // C-implementations for different data types ----------------------------------
 // TODO: outsource and memset hash table and count vector?
 // Problem: does not work in parallel, each thread needs own intermediate vectors
 
 int mode_int(const int *restrict px, const int *restrict po, const int l, const int sorted, const int narm, const int ret) {
-  if(l == 1) return px[0];
+  if(l == 1) return sorted ? px[0] : px[po[0]-1];
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, index = 0, val, mode, max = 1, i = 0, end = l-1,
@@ -85,7 +87,10 @@ int mode_int(const int *restrict px, const int *restrict po, const int l, const 
 }
 
 int w_mode_int(const int *restrict px, const double *restrict pw, const int *restrict po, const int l, const int sorted, const int narm, const int ret) {
-  if(l == 1) return ISNAN(pw[0]) ? NA_INTEGER : px[0];
+  if(l == 1) {
+    if(sorted) return ISNAN(pw[0]) ? NA_INTEGER : px[0];
+    return ISNAN(pw[po[0]-1]) ? NA_INTEGER : px[po[0]-1];
+  }
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, index = 0, val, mode, i = 0, end = l-1,
@@ -96,7 +101,7 @@ int w_mode_int(const int *restrict px, const double *restrict pw, const int *res
   }
   int *restrict h = (int*)Calloc(M, int); // Table to save the hash values
   double *restrict sumw = (double*)Calloc(l, double); // Table to save each values sum of weights
-  double max = DBL_MIN;
+  double max = NEG_INF;
 
   if(sorted) {
     mode = px[0];
@@ -166,7 +171,7 @@ int w_mode_int(const int *restrict px, const double *restrict pw, const int *res
 
 
 int mode_fct_logi(const int *restrict px, const int *restrict po, const int l, const int nlev, const int sorted, const int narm, const int ret) {
-  if(l == 1) return px[0];
+  if(l == 1) return sorted ? px[0] : px[po[0]-1];
   int val, mode, max = 1, nlevp = nlev + 1, i = 0, end = l-1,
     minm = ret == 1, nfirstm = ret > 0, lastm = ret == 3;
   int *restrict n = (int*)Calloc(nlevp+1, int); // Table to count frequency of values
@@ -222,11 +227,14 @@ int mode_fct_logi(const int *restrict px, const int *restrict po, const int l, c
 }
 
 int w_mode_fct_logi(const int *restrict px, const double *restrict pw, const int *restrict po, const int l, const int nlev, const int sorted, const int narm, const int ret) {
-  if(l == 1) return ISNAN(pw[0]) ? NA_INTEGER : px[0];
+  if(l == 1) {
+    if(sorted) return ISNAN(pw[0]) ? NA_INTEGER : px[0];
+    return ISNAN(pw[po[0]-1]) ? NA_INTEGER : px[po[0]-1];
+  }
   int val, mode, nlevp = nlev + 1, i = 0, end = l-1,
     minm = ret == 1, nfirstm = ret > 0, lastm = ret == 3;
   double *restrict sumw = (double*)Calloc(nlevp+1, double); // Table to save each values sum of weights
-  double max = DBL_MIN;
+  double max = NEG_INF;
 
   if(sorted) {
     mode = px[0];
@@ -285,7 +293,7 @@ int w_mode_fct_logi(const int *restrict px, const double *restrict pw, const int
 
 
 double mode_double(const double *restrict px, const int *restrict po, const int l, const int sorted, const int narm, const int ret) {
-  if(l == 1) return px[0];
+  if(l == 1) return sorted ? px[0] : px[po[0]-1];
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, index = 0, max = 1, i = 0, end = l-1,
@@ -365,7 +373,10 @@ double mode_double(const double *restrict px, const int *restrict po, const int 
 }
 
 double w_mode_double(const double *restrict px, const double *restrict pw, const int *restrict po, const int l, const int sorted, const int narm, const int ret) {
-  if(l == 1) return ISNAN(pw[0]) ? NA_REAL : px[0];
+  if(l == 1) {
+    if(sorted) return ISNAN(pw[0]) ? NA_REAL : px[0];
+    return ISNAN(pw[po[0]-1]) ? NA_REAL : px[po[0]-1];
+  }
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, index = 0, i = 0, end = l-1, minm = ret == 1, nfirstm = ret > 0, lastm = ret == 3;
@@ -375,7 +386,7 @@ double w_mode_double(const double *restrict px, const double *restrict pw, const
   }
   int *restrict h = (int*)Calloc(M, int); // Table to save the hash values
   double *restrict sumw = (double*)Calloc(l, double); // Table to save each values sum of weights
-  double val, mode, max = DBL_MIN;
+  double val, mode, max = NEG_INF;
   union uno tpv;
 
   if(sorted) {
@@ -448,7 +459,7 @@ double w_mode_double(const double *restrict px, const double *restrict pw, const
 
 
 SEXP mode_string(const SEXP *restrict px, const int *restrict po, const int l, const int sorted, const int narm, const int ret) {
-  if(l == 1) return px[0];
+  if(l == 1) return sorted ? px[0] : px[po[0]-1];
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, index = 0, max = 1, i = 0, end = l-1,
@@ -525,7 +536,10 @@ SEXP mode_string(const SEXP *restrict px, const int *restrict po, const int l, c
 }
 
 SEXP w_mode_string(const SEXP *restrict px, const double *restrict pw, const int *restrict po, const int l, const int sorted, const int narm, const int ret) {
-  if(l == 1) return ISNAN(pw[0]) ? NA_STRING : px[0];
+  if(l == 1) {
+    if(sorted) return ISNAN(pw[0]) ? NA_STRING : px[0];
+    return ISNAN(pw[po[0]-1]) ? NA_STRING : px[po[0]-1];
+  }
   const size_t l2 = 2U * (size_t) l;
   size_t M = 256, id = 0;
   int K = 8, index = 0, i = 0, end = l-1, minm = ret == 1, nfirstm = ret > 0, lastm = ret == 3;
@@ -535,7 +549,7 @@ SEXP w_mode_string(const SEXP *restrict px, const double *restrict pw, const int
   }
   int *restrict h = (int*)Calloc(M, int); // Table to save the hash values
   double *restrict sumw = (double*)Calloc(l, double); // Table to save each values sum of weights
-  double max = DBL_MIN;
+  double max = NEG_INF;
   SEXP val, mode;
 
   if(sorted) {
@@ -607,55 +621,47 @@ SEXP w_mode_string(const SEXP *restrict px, const double *restrict pw, const int
 
 // Implementations for R vectors -----------------------------------------------
 
-SEXP mode_impl(SEXP x, int narm, int ret) {
+// Splitting this up to increase thread safety
+
+SEXP mode_impl_plain(SEXP x, int narm, int ret) {
   int l = length(x);
   if(l <= 1) return x;
 
-  SEXP res;
   switch(TYPEOF(x)) {
-    case REALSXP:
-      PROTECT(res = ScalarReal(mode_double(REAL(x), &l, l, 1, narm, ret)));
-      break;
-    case INTSXP:
-      PROTECT(res = ScalarInteger(isFactor(x) ? mode_fct_logi(INTEGER(x), &l, l, nlevels(x), 1, narm, ret) :
-                              mode_int(INTEGER(x), &l, l, 1, narm, ret)));
-      break;
-    case LGLSXP:
-      PROTECT(res = duplicate(ScalarLogical(mode_fct_logi(LOGICAL(x), &l, l, 1, 1, narm, ret))));
-      break;
-    case STRSXP:
-      PROTECT(res = ScalarString(mode_string(STRING_PTR(x), &l, l, 1, narm, ret)));
-      break;
-    default: error("Not Supported SEXP Type!");
+    case REALSXP: return ScalarReal(mode_double(REAL(x), &l, l, 1, narm, ret));
+    case INTSXP:  return ScalarInteger(isFactor(x) ? mode_fct_logi(INTEGER(x), &l, l, nlevels(x), 1, narm, ret) :
+                                    mode_int(INTEGER(x), &l, l, 1, narm, ret));
+    case LGLSXP: return duplicate(ScalarLogical(mode_fct_logi(LOGICAL(x), &l, l, 1, 1, narm, ret)));
+    case STRSXP: return ScalarString(mode_string(STRING_PTR(x), &l, l, 1, narm, ret));
+    default: error("Not Supported SEXP Type: '%s'", type2char(TYPEOF(x)));
   }
+}
 
+SEXP mode_impl(SEXP x, int narm, int ret) {
+  if(length(x) <= 1) return x;
+  SEXP res = PROTECT(mode_impl_plain(x, narm, ret));
   copyMostAttrib(x, res);
   UNPROTECT(1);
   return res;
 }
 
-SEXP w_mode_impl(SEXP x, double *pw, int narm, int ret) {
+SEXP w_mode_impl_plain(SEXP x, double *pw, int narm, int ret) {
   int l = length(x);
   if(l <= 1) return x;
 
-  SEXP res;
   switch(TYPEOF(x)) {
-    case REALSXP:
-      PROTECT(res = ScalarReal(w_mode_double(REAL(x), pw, &l, l, 1, narm, ret)));
-      break;
-    case INTSXP:
-      PROTECT(res = ScalarInteger(isFactor(x) ? w_mode_fct_logi(INTEGER(x), pw, &l, l, nlevels(x), 1, narm, ret) :
-                             w_mode_int(INTEGER(x), pw, &l, l, 1, narm, ret)));
-      break;
-    case LGLSXP:
-      PROTECT(res = duplicate(ScalarLogical(w_mode_fct_logi(LOGICAL(x), pw, &l, l, 1, 1, narm, ret))));
-      break;
-    case STRSXP:
-      PROTECT(res = ScalarString(w_mode_string(STRING_PTR(x), pw, &l, l, 1, narm, ret)));
-      break;
-    default: error("Not Supported SEXP Type!");
+    case REALSXP: return ScalarReal(w_mode_double(REAL(x), pw, &l, l, 1, narm, ret));
+    case INTSXP:  return ScalarInteger(isFactor(x) ? w_mode_fct_logi(INTEGER(x), pw, &l, l, nlevels(x), 1, narm, ret) :
+                                    w_mode_int(INTEGER(x), pw, &l, l, 1, narm, ret));
+    case LGLSXP:  return duplicate(ScalarLogical(w_mode_fct_logi(LOGICAL(x), pw, &l, l, 1, 1, narm, ret)));
+    case STRSXP:  return ScalarString(w_mode_string(STRING_PTR(x), pw, &l, l, 1, narm, ret));
+    default: error("Not Supported SEXP Type: '%s'", type2char(TYPEOF(x)));
   }
+}
 
+SEXP w_mode_impl(SEXP x, double *pw, int narm, int ret) {
+  if(length(x) <= 1) return x;
+  SEXP res = PROTECT(w_mode_impl_plain(x, pw, narm, ret));
   copyMostAttrib(x, res);
   UNPROTECT(1);
   return res;
@@ -706,7 +712,7 @@ SEXP mode_g_impl(SEXP x, int ng, int *pgs, int *po, int *pst, int sorted, int na
           pres[gr] = pgs[gr] == 0 ? NA_STRING : mode_string(px + pst[gr]-1, po, pgs[gr], 1, narm, ret);
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
   } else { // Not sorted. Perhaps reordering x is faster??
     switch(tx) {
@@ -745,7 +751,7 @@ SEXP mode_g_impl(SEXP x, int ng, int *pgs, int *po, int *pst, int sorted, int na
           pres[gr] = pgs[gr] == 0 ? NA_STRING : mode_string(px, po + pst[gr]-1, pgs[gr], 0, narm, ret);
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
   }
 
@@ -799,7 +805,7 @@ SEXP w_mode_g_impl(SEXP x, double *pw, int ng, int *pgs, int *po, int *pst, int 
           pres[gr] = pgs[gr] == 0 ? NA_STRING : w_mode_string(px + pst[gr]-1, pw + pst[gr]-1, po, pgs[gr], 1, narm, ret);
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
   } else { // Not sorted. Perhaps reordering x is faster??
     switch(tx) {
@@ -838,7 +844,7 @@ SEXP w_mode_g_impl(SEXP x, double *pw, int ng, int *pgs, int *po, int *pst, int 
           pres[gr] = pgs[gr] == 0 ? NA_STRING : w_mode_string(px, pw, po + pst[gr]-1, pgs[gr], 0, narm, ret);
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
   }
 
@@ -859,9 +865,9 @@ SEXP fmodeC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rret, SEXP Rnthreads) {
     if(length(w) != l) error("length(w) must match length(x)");
     if(TYPEOF(w) != REALSXP) {
       if(!(TYPEOF(w) == INTSXP || TYPEOF(w) == LGLSXP)) error("weights need to be double or integer/logical (internally coerced to double)");
-      SEXP wd = PROTECT(coerceVector(w, REALSXP)); ++nprotect;
-      pw = REAL(wd);
-    } else pw = REAL(w);
+      w = PROTECT(coerceVector(w, REALSXP)); ++nprotect;
+    }
+    pw = REAL(w);
   }
   if(nullg) {
     // if(TYPEOF(w) != REALSXP)
@@ -870,7 +876,7 @@ SEXP fmodeC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rret, SEXP Rnthreads) {
   }
   if(TYPEOF(g) != VECSXP || !inherits(g, "GRP")) error("g needs to be an object of class 'GRP', see ?GRP");
   const SEXP *restrict pg = SEXPPTR(g), o = pg[6];
-  int sorted = LOGICAL(pg[5])[1] == 1, ng = INTEGER(pg[0])[0], *restrict pgs = INTEGER(pg[2]), *restrict po, *restrict pst;
+  int sorted = LOGICAL(pg[5])[1] == 1, ng = INTEGER(pg[0])[0], *restrict pgs = INTEGER(pg[2]), *restrict po, *restrict pst, nthreads = asInteger(Rnthreads);
   if(l != length(pg[1])) error("length(g) must match length(x)");
   if(isNull(o)) {
     int *cgs = (int *) R_alloc(ng+2, sizeof(int)), *restrict pgv = INTEGER(pg[1]); cgs[1] = 1;
@@ -891,23 +897,31 @@ SEXP fmodeC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rret, SEXP Rnthreads) {
   // if(TYPEOF(w) != REALSXP) UNPROTECT(nprotect);
   // return w_mode_g_impl(x, pw, ng, pgs, po, pst, sorted, asLogical(Rnarm), asInteger(Rret), asInteger(Rnthreads));
   // Thomas Kalibera Patch:
+  if(nthreads > max_threads) nthreads = max_threads;
   SEXP res;
-  if(nullw) res = mode_g_impl(x, ng, pgs, po, pst, sorted, asLogical(Rnarm), asInteger(Rret), asInteger(Rnthreads));
-  else res = w_mode_g_impl(x, pw, ng, pgs, po, pst, sorted, asLogical(Rnarm), asInteger(Rret), asInteger(Rnthreads));
+  if(nullw) res = mode_g_impl(x, ng, pgs, po, pst, sorted, asLogical(Rnarm), asInteger(Rret), nthreads);
+  else res = w_mode_g_impl(x, pw, ng, pgs, po, pst, sorted, asLogical(Rnarm), asInteger(Rret), nthreads);
   UNPROTECT(nprotect);
   return res;
 }
+
 
 // TODO: allow column-level parallelism??
 SEXP fmodelC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rret, SEXP Rnthreads) {
   int nullg = isNull(g), nullw = isNull(w), l = length(x), ng = 0, nprotect = 1,
     narm = asLogical(Rnarm), ret = asInteger(Rret), nthreads = asInteger(Rnthreads);
   if(l < 1) return x;
+  if(nthreads > max_threads) nthreads = max_threads;
   SEXP out = PROTECT(allocVector(VECSXP, l)), *restrict pout = SEXPPTR(out), *restrict px = SEXPPTR(x);
   if(nullg && nthreads > l) nthreads = l;
   if(nullg && nullw) {
-    #pragma omp parallel for num_threads(nthreads)
-    for(int j = 0; j < l; ++j) pout[j] = mode_impl(px[j], narm, ret);
+    if(nthreads <= 1) {
+      for(int j = 0; j != l; ++j) pout[j] = mode_impl(px[j], narm, ret);
+    } else {
+      #pragma omp parallel for num_threads(nthreads)
+      for(int j = 0; j < l; ++j) pout[j] = mode_impl_plain(px[j], narm, ret);
+      for(int j = 0; j != l; ++j) copyMostAttrib(px[j], pout[j]); // Not thread safe and thus taken out...
+    }
   } else {
     int nrx = length(px[0]);
     double tmp = 0.0, *restrict pw = &tmp;
@@ -915,13 +929,18 @@ SEXP fmodelC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rret, SEXP Rnthreads) {
       if(length(w) != nrx) error("length(w) must match nrow(x)");
       if(TYPEOF(w) != REALSXP) {
         if(!(TYPEOF(w) == INTSXP || TYPEOF(w) == LGLSXP)) error("weights need to be double or integer/logical (internally coerced to double)");
-        SEXP wd = PROTECT(coerceVector(w, REALSXP)); ++nprotect;
-        pw = REAL(wd);
-      } else pw = REAL(w);
+        w = PROTECT(coerceVector(w, REALSXP)); ++nprotect;
+      }
+      pw = REAL(w);
     }
     if(nullg) {
-      #pragma omp parallel for num_threads(nthreads)
-      for(int j = 0; j < l; ++j) pout[j] = w_mode_impl(px[j], pw, narm, ret);
+      if(nthreads <= 1) {
+        for(int j = 0; j != l; ++j) pout[j] = w_mode_impl(px[j], pw, narm, ret);
+      } else {
+        #pragma omp parallel for num_threads(nthreads)
+        for(int j = 0; j < l; ++j) pout[j] = w_mode_impl_plain(px[j], pw, narm, ret);
+        for(int j = 0; j != l; ++j) copyMostAttrib(px[j], pout[j]); // Not thread safe and thus taken out...
+      }
     } else {
       if(TYPEOF(g) != VECSXP || !inherits(g, "GRP")) error("g needs to be an object of class 'GRP', see ?GRP");
       const SEXP *restrict pg = SEXPPTR(g), o = pg[6];
@@ -955,6 +974,7 @@ SEXP fmodelC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rret, SEXP Rnthreads) {
   return out;
 }
 
+
 SEXP fmodemC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rdrop, SEXP Rret, SEXP Rnthreads) {
   SEXP dim = getAttrib(x, R_DimSymbol);
   if(isNull(dim)) error("x is not a matrix");
@@ -962,6 +982,7 @@ SEXP fmodemC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rdrop, SEXP Rret, SEXP Rnt
       narm = asLogical(Rnarm), ret = asInteger(Rret), nthreads = asInteger(Rnthreads),
       nullg = isNull(g), nullw = isNull(w), nprotect = 1;
   if(l <= 1) return x; // Prevents seqfault for numeric(0) #101
+  if(nthreads > max_threads) nthreads = max_threads;
   if(nthreads > col) nthreads = col;
 
   double tmp = 0.0, *restrict pw = &tmp;
@@ -969,9 +990,9 @@ SEXP fmodemC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rdrop, SEXP Rret, SEXP Rnt
     if(length(w) != l) error("length(w) must match nrow(x)");
     if(TYPEOF(w) != REALSXP) {
       if(!(TYPEOF(w) == INTSXP || TYPEOF(w) == LGLSXP)) error("weights need to be double or integer/logical (internally coerced to double)");
-      SEXP wd = PROTECT(coerceVector(w, REALSXP)); ++nprotect;
-      pw = REAL(wd);
-    } else pw = REAL(w);
+      w = PROTECT(coerceVector(w, REALSXP)); ++nprotect;
+    }
+    pw = REAL(w);
   }
 
   if(nullg) {
@@ -1022,7 +1043,7 @@ SEXP fmodemC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rdrop, SEXP Rret, SEXP Rnt
         }
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
 
     matCopyAttr(res, x, Rdrop, /*ng=*/0);
@@ -1127,7 +1148,7 @@ SEXP fmodemC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rdrop, SEXP Rret, SEXP Rnt
         }
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
   } else { // Not sorted
     switch(tx) {
@@ -1203,7 +1224,7 @@ SEXP fmodemC(SEXP x, SEXP g, SEXP w, SEXP Rnarm, SEXP Rdrop, SEXP Rret, SEXP Rnt
         }
         break;
       }
-      default: error("Not Supported SEXP Type!");
+      default: error("Not Supported SEXP Type: '%s'", type2char(tx));
     }
   }
 
