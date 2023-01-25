@@ -1,6 +1,25 @@
+# collapse 1.9.2
+
+* Further fix to an Address Sanitizer issue as required by CRAN (eliminating an unused out of bounds access at the end of a loop). 
+
+* `qsu()` finally has a grouped_df method. 
+
+* Added options `option("collapse_nthreads")` and `option("collapse_na.rm")`, which allow you to load *collapse* with different defaults e.g. through an `.Rprofile` or `.fastverse` configuration file. Once *collapse* is loaded, these options take no effect, and users need to use `set_collapse()` to change `.op[["nthreads"]]` and `.op[["na.rm"]]` interactively. 
+
+* Exported method `plot.psmat()` (can be useful to plot time series matrices).
+
+
+# collapse 1.9.1
+
+* Fixed minor C/C++ issues flagged by CRAN's detailed checks.
+
+* Added functions `set_collapse()` and `get_collapse()`, allowing you to globally set defaults for the `nthreads` and `na.rm` arguments to all functions in the package. E.g. `set_collapse(nthreads = 4, na.rm = FALSE)` could be a suitable setting for larger data without missing values. This is implemented using an internal environment by the name of `.op`, such that these defaults are received using e.g. `.op[["nthreads"]]`, at the computational cost of a few nanoseconds (8-10x faster than `getOption("nthreads")` which would take about 1 microsecond). `.op` is not accessible by the user, so function `get_collapse()` can be used to retrieve settings. Exempt from this are functions `.quantile`, and a new function `.range` (alias of `frange`), which go directly to C for maximum performance in repeated executions, and are not affected by these global settings. Function `descr()`, which internally calls a bunch of statistical functions, is also not affected by these settings. 
+
+* Further improvements in thread safety for `fsum()` and `fmean()` in grouped computations across data frame columns. All OpenMP enabled functions in *collapse* can now be considered thread safe i.e. they pass the full battery of tests in multithreaded mode. 
+
 # collapse 1.9.0
 
-*collapse* 1.9.0 released min of January 2023, provides improvements in performance and versatility in many areas, as well as greater statistical capabilities, most notably efficient (grouped, weighted) estimation of sample quantiles. 
+*collapse* 1.9.0 released mid of January 2023, provides improvements in performance and versatility in many areas, as well as greater statistical capabilities, most notably efficient (grouped, weighted) estimation of sample quantiles. 
 
 ### Changes to functionality
 
@@ -28,7 +47,7 @@
 
 * Added function `fdist()`: A fast and versatile replacement for `stats::dist`. It computes a full euclidian distance matrix around 4x faster than `stats::dist` in serial mode, with additional gains possible through multithreading along the distance matrix columns (decreasing thread loads as the matrix is lower triangular). It also supports computing the distance of a matrix with a single row-vector, or simply between two vectors. E.g. `fdist(mat, mat[1, ])` is the same as `sqrt(colSums((t(mat) - mat[1, ])^2)))`, but about 20x faster in serial mode, and `fdist(x, y)` is the same as `sqrt(sum((x-y)^2))`, about 3x faster in serial mode. In both cases (sub-column level) multithreading is available. *Note* that `fdist` does not skip missing values i.e. `NA`'s will result in `NA` distances. There is also no internal implementation for integers or data frames. Such inputs will be coerced to numeric matrices. 
 
-* Added function `GRPid` to easily fetch the group id from a grouping object, especially inside grouped `fmutate()` calls. This addition was warranted especially by the new improved `fnth.default()` method which allows orderings to be supplied for performance improvements. See commends on `fnth()` and the example provided below. 
+* Added function `GRPid()` to easily fetch the group id from a grouping object, especially inside grouped `fmutate()` calls. This addition was warranted especially by the new improved `fnth.default()` method which allows orderings to be supplied for performance improvements. See commends on `fnth()` and the example provided below. 
 
 * `fsummarize()` was added as a synonym to `fsummarise`. Thanks @arthurgailes for the PR. 
 
@@ -53,7 +72,7 @@
 
 * `collap()`, which internally uses `BY` with non-*Fast Statistical Functions*, now also supports arbitrary further arguments passed down to functions to be split by groups. Thus users can also apply custom weighted functions with `collap()`. Furthermore, the parsing of the `FUN`, `catFUN` and `wFUN` arguments was improved and brought in-line with the parsing of `.fns` in `across()`. The main benefit of this is that *Fast Statistical Functions* are now also detected and optimizations carried out when passed in a list providing a new name e.g. `collap(data, ~ id, list(mean = fmean))` is now optimized! Thanks @ttrodrigz (#358) for requesting this.    
 
-* `descr()`, by virtue of `fquantile` and the improvements to `BY`, supports full-blown grouped and weighted descriptions of data. This is implemented through additional `by` and `w` arguments. The function has also be turned into an S3 generic, with a default and a 'grouped_df' method. The 'descr' methods `as.data.frame` and `print` also feature various improvements, and a new `compact` argument to `print.descr`, allowing a more compact printout. Users will also notice improved performance, mainly due to `fquantile`: on the M1 `descr(wlddev)` is now 2x faster than `summary(wlddev)`, and 41x faster than `Hmisc::describe(wlddev)`. Thanks @statshero (#355).
+* `descr()`, by virtue of `fquantile` and the improvements to `BY`, supports full-blown grouped and weighted descriptions of data. This is implemented through additional `by` and `w` arguments. The function has also been turned into an S3 generic, with a default and a 'grouped_df' method. The 'descr' methods `as.data.frame` and `print` also feature various improvements, and a new `compact` argument to `print.descr`, allowing a more compact printout. Users will also notice improved performance, mainly due to `fquantile`: on the M1 `descr(wlddev)` is now 2x faster than `summary(wlddev)`, and 41x faster than `Hmisc::describe(wlddev)`. Thanks @statzhero for the request (#355).
 
 
 * `radixorder` is about 25% faster on characters and doubles. This also benefits grouping performance. Note that `group()` may still be substantially faster on unsorted data, so if performance is critical try the `sort = FALSE` argument to functions like `fgroup_by` and compare. 
