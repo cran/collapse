@@ -385,6 +385,8 @@ importFrom("stats", "as.formula", "complete.cases", "cor", "cov", "var", "pt",
  export(funique.default)
  export(funique.data.frame)
  export(fnunique)
+ export(fduplicated)
+ export(any_duplicated)
  export(finteraction)
  export(itn)
  export(fnrow)

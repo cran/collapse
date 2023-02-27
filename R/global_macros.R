@@ -4,7 +4,7 @@ set_collapse <- function(...) {
   opts <- if(...length() == 1L && is.list(..1)) ..1 else list(...)
   op_old <- as.list(.op)
   nam <- names(opts)
-  if(any(nam %!in% c("nthreads", "na.rm"))) stop("Currently only supports options 'nthreads' and 'na.rm'")
+  if(any(nam %!in% c("nthreads", "na.rm", "sort"))) stop("Currently only supports options 'nthreads', 'na.rm' and 'sort'")
   if(length(opts$nthreads)) {
     nthreads <- as.integer(opts$nthreads)
     if(is.na(nthreads) || nthreads <= 0L) stop("nthreads needs to be a positive integer")
@@ -14,6 +14,11 @@ set_collapse <- function(...) {
     na.rm <- as.logical(opts$na.rm)
     if(is.na(na.rm)) stop("na.rm needs to be TRUE or FALSE")
     .op$na.rm <- na.rm
+  }
+  if(length(opts$sort)) {
+    sort <- as.logical(opts$sort)
+    if(is.na(sort)) stop("sort needs to be TRUE or FALSE")
+    .op$sort <- sort
   }
   invisible(op_old)
 }
@@ -59,7 +64,7 @@ get_collapse <- function(opts = NULL) if(is.null(opts)) as.list(.op) else if(len
                                "fcount", "fcountv", "fcumsum", "fdiff", "fdim", "fdist", "fdroplevels", "ffirst", "fFtest",
                                "fgroup_by", "fgroup_vars", "fgrowth", "fhdbetween", "fhdwithin", "findex", "findex_by",
                                "finteraction", "flag", "flast", "flm", "fmax", "fmean", "fmedian", "fmin", "fmode", "fmutate",
-                               "fncol", "fndistinct", "fnlevels", "fnobs", "fnrow", "fnth", "fnunique", "fprod", "fquantile",
+                               "fncol", "fndistinct", "fnlevels", "fnobs", "fnrow", "fnth", "fnunique", "fduplicated", "fprod", "fquantile",
                                "frange", "frename", "fscale", "fsd", "fselect", "fselect<-", "fsubset", "fsum", "fsummarise",
                                "fsummarize", "ftransform", "ftransform<-", "ftransformv", "fungroup", "funique", "fvar",
                                "fwithin", "G", "gby", "get_elem", "get_vars", "get_vars<-", "GGDC10S", "greorder", "group",
@@ -80,7 +85,7 @@ get_collapse <- function(opts = NULL) if(is.null(opts)) as.list(.op) else if(len
                            "fhdwithin","flag","flast","fmax","fmean","fmedian","fnth","fmin","fmode","varying",
                            "fndistinct","fnobs","fprod","fscale","fsd","fsum","fcumsum","fvar","fwithin","funique",
                            "G","GRP","HDB","HDW","L","psacf","psccf","psmat","pspacf","qsu", "rsplit","fdroplevels",
-                           "STD","TRA","W")))
+                           "STD","TRA","W", "descr")))
 
 .COLLAPSE_DATA <- c("GGDC10S", "wlddev")
 
