@@ -1,6 +1,3 @@
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 #include "collapse_c.h"
 // #include <R_ext/Altrep.h>
 
@@ -8,22 +5,26 @@
 
 double fmean_double_impl(const double *restrict px, const int narm, const int l) {
   if(narm) {
-    int j = l-1, n = 1;
-    double mean = px[j];
-    while(ISNAN(mean) && j!=0) mean = px[--j];
-    if(j != 0) for(int i = j; i--; ) {
-      if(ISNAN(px[i])) continue;
-      mean += px[i];
-      ++n;
+    int j = 1, n = 1;
+    double mean = px[0];
+    while(ISNAN(mean) && j!=l) mean = px[j++];
+    if(j != l) {
+      #pragma omp simd reduction(+:mean,n)
+      for(int i = j; i < l; ++i) {
+          int tmp = NISNAN(px[i]);
+          mean += tmp ? px[i] : 0.0;
+          n += tmp ? 1 : 0;
+      }
     }
     return  mean / n;
   }
   double mean = 0;
-  for(int i = 0; i != l; ++i) {
-    if(ISNAN(px[i])) {
-      mean = px[i];
-      break;
-    }
+  #pragma omp simd reduction(+:mean)
+  for(int i = 0; i < l; ++i) {
+    // if(ISNAN(px[i])) {
+    //   mean = px[i];
+    //   break;
+    // }
     mean += px[i];
   }
   return mean / l;
@@ -33,15 +34,15 @@ double fmean_double_omp_impl(const double *restrict px, const int narm, const in
   double mean = 0;
   if(narm) {
     int n = 0;
-    #pragma omp parallel for num_threads(nthreads) reduction(+:mean,n)
+    #pragma omp parallel for simd num_threads(nthreads) reduction(+:mean,n)
     for(int i = 0; i < l; ++i) {
-      if(ISNAN(px[i])) continue;
-      mean += px[i];
-      ++n;
+      int tmp = NISNAN(px[i]);
+      mean += tmp ? px[i] : 0.0;
+      n += tmp ? 1 : 0;
     }
     return n == 0 ? NA_REAL : mean / n;
   }
-  #pragma omp parallel for num_threads(nthreads) reduction(+:mean)
+  #pragma omp parallel for simd num_threads(nthreads) reduction(+:mean)
   for(int i = 0; i < l; ++i) mean += px[i];
   return mean / l;
 }
@@ -72,22 +73,26 @@ void fmean_double_g_impl(double *restrict pout, const double *restrict px, const
 double fmean_weights_impl(const double *restrict px, const double *restrict pw, const int narm, const int l) {
   double mean, sumw;
   if(narm) {
-    int j = l-1;
-    while((ISNAN(px[j]) || ISNAN(pw[j])) && j!=0) --j;
+    int j = 0, end = l-1;
+    while((ISNAN(px[j]) || ISNAN(pw[j])) && j!=end) ++j;
     sumw = pw[j];
     mean = px[j] * sumw;
-    if(j != 0) for(int i = j; i--; ) {
-      if(ISNAN(px[i]) || ISNAN(pw[i])) continue;
-      mean += px[i] * pw[i];
-      sumw += pw[i];
+    if(j != end) {
+      #pragma omp simd reduction(+:mean,sumw)
+      for(int i = j+1; i < l; ++i) {
+        int tmp = NISNAN(px[i]) && NISNAN(pw[i]);
+        mean += tmp ? px[i] * pw[i] : 0.0;
+        sumw += tmp ? pw[i] : 0.0;
+      }
     }
   } else {
     mean = 0, sumw = 0;
-    for(int i = 0; i != l; ++i) {
-      if(ISNAN(px[i]) || ISNAN(pw[i])) {
-        mean = px[i] + pw[i];
-        break;
-      }
+    #pragma omp simd reduction(+:mean,sumw)
+    for(int i = 0; i < l; ++i) {
+      // if(ISNAN(px[i]) || ISNAN(pw[i])) {
+      //   mean = px[i] + pw[i];
+      //   break;
+      // }
       mean += px[i] * pw[i];
       sumw += pw[i];
     }
@@ -98,15 +103,15 @@ double fmean_weights_impl(const double *restrict px, const double *restrict pw, 
 double fmean_weights_omp_impl(const double *restrict px, const double *restrict pw, const int narm, const int l, const int nthreads) {
   double mean = 0, sumw = 0;
   if(narm) {
-    #pragma omp parallel for num_threads(nthreads) reduction(+:mean,sumw)
+    #pragma omp parallel for simd num_threads(nthreads) reduction(+:mean,sumw)
     for(int i = 0; i < l; ++i) {
-      if(ISNAN(px[i]) || ISNAN(pw[i])) continue;
-      mean += px[i] * pw[i];
-      sumw += pw[i];
+      int tmp = NISNAN(px[i]) && NISNAN(pw[i]);
+      mean += tmp ? px[i] * pw[i] : 0.0;
+      sumw += tmp ? pw[i] : 0.0;
     }
     if(mean == 0 && sumw == 0) sumw = NA_REAL;
   } else {
-    #pragma omp parallel for num_threads(nthreads) reduction(+:mean,sumw)
+    #pragma omp parallel for simd num_threads(nthreads) reduction(+:mean,sumw)
     for(int i = 0; i < l; ++i) {
       mean += px[i] * pw[i];
       sumw += pw[i];
@@ -170,15 +175,15 @@ double fmean_int_omp_impl(const int *restrict px, const int narm, const int l, c
   double dmean;
   if(narm) {
     int n = 0;
-    #pragma omp parallel for num_threads(nthreads) reduction(+:mean,n)
+    #pragma omp parallel for simd num_threads(nthreads) reduction(+:mean,n)
     for(int i = 0; i < l; ++i) {
-      if(px[i] == NA_INTEGER) continue;
-      mean += px[i];
-      ++n;
+      int tmp = px[i] != NA_INTEGER;
+      mean += tmp ? px[i] : 0;
+      n += tmp ? 1 : 0;
     }
     dmean = n == 0 ? NA_REAL : (double)mean / n;
   } else {
-    #pragma omp parallel for num_threads(nthreads) reduction(+:mean)
+    #pragma omp parallel for simd num_threads(nthreads) reduction(+:mean)
     for(int i = 0; i < l; ++i) mean += px[i];
     dmean = (double)mean / l;
   }
@@ -510,7 +515,8 @@ SEXP fmeanlC(SEXP x, SEXP Rng, SEXP g, SEXP gs, SEXP w, SEXP Rnarm, SEXP Rdrop, 
   }
 
   if(ng == 0 && asLogical(Rdrop)) {
-    SEXP out = PROTECT(allocVector(REALSXP, l)), *restrict px = SEXPPTR(x);
+    SEXP out = PROTECT(allocVector(REALSXP, l));
+    const SEXP *restrict px = SEXPPTR_RO(x);
     double *restrict pout = REAL(out);
     COLWISE_FMEAN_LIST(fmean_impl_dbl, fmean_w_impl_dbl);
     setAttrib(out, R_NamesSymbol, getAttrib(x, R_NamesSymbol));
@@ -518,7 +524,9 @@ SEXP fmeanlC(SEXP x, SEXP Rng, SEXP g, SEXP gs, SEXP w, SEXP Rnarm, SEXP Rdrop, 
     return out;
   }
 
-  SEXP out = PROTECT(allocVector(VECSXP, l)), *restrict pout = SEXPPTR(out), *restrict px = SEXPPTR(x);
+  SEXP out = PROTECT(allocVector(VECSXP, l)), *restrict pout = SEXPPTR(out);
+  const SEXP *restrict px = SEXPPTR_RO(x);
+
 
   if(ng == 0) {
     COLWISE_FMEAN_LIST(fmean_impl_SEXP, fmean_w_impl_SEXP);
@@ -566,7 +574,7 @@ SEXP fmeanlC(SEXP x, SEXP Rng, SEXP g, SEXP gs, SEXP w, SEXP Rnarm, SEXP Rdrop, 
           if(ATTRIB(xj) != R_NilValue && !(isObject(xj) && inherits(xj, "ts"))) copyMostAttrib(xj, outj);
           if(TYPEOF(xj) != REALSXP) {
             if(TYPEOF(xj) != INTSXP && TYPEOF(xj) != LGLSXP) error("Unsupported SEXP type: '%s'", type2char(TYPEOF(xj)));
-            if(dup == 0) {x = PROTECT(shallow_duplicate(x)); ++nprotect; px = SEXPPTR(x); dup = 1;}
+            if(dup == 0) {x = PROTECT(shallow_duplicate(x)); ++nprotect; px = SEXPPTR_RO(x); dup = 1;}
             SET_VECTOR_ELT(x, j, coerceVector(xj, REALSXP));
           }
         }
