@@ -1,7 +1,7 @@
 Package: collapse
 Title: Advanced and Fast Data Transformation
-Version: 1.9.4
-Date: 2023-03-30
+Version: 1.9.5
+Date: 2023-04-03
 Authors@R: c(
            person("Sebastian", "Krantz", role = c("aut", "cre"), 
                   email = "sebastian.krantz@graduateinstitute.ch"),
@@ -46,7 +46,7 @@ Suggests: fastverse, data.table, magrittr, kit, xts, zoo, plm, fixest,
         microbenchmark, testthat, covr, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2023-03-30 10:08:25 UTC; sebastiankrantz
+Packaged: 2023-04-03 17:55:48 UTC; sebastiankrantz
 Author: Sebastian Krantz [aut, cre],
   Matt Dowle [ctb],
   Arun Srinivasan [ctb],
@@ -59,4 +59,4 @@ Author: Sebastian Krantz [aut, cre],
   1999-2016 The R Core Team [cph]
 Maintainer: Sebastian Krantz <sebastian.krantz@graduateinstitute.ch>
 Repository: CRAN
-Date/Publication: 2023-03-31 17:40:02 UTC
+Date/Publication: 2023-04-07 18:10:02 UTC
