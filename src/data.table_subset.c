@@ -3,6 +3,7 @@
  and licensed under a Mozilla Public License 2.0 (MPL-2.0) license.
 */
 
+#include "collapse_c.h"
 #include "data.table.h"
 
 // selfref stuff is taken from data.tables assign.c
@@ -175,12 +176,14 @@ static void subsetVectorRaw(SEXP ans, SEXP source, SEXP idx, const bool anyNA)
 
   #define PARLOOP(_NAVAL_)                                        \
   if (anyNA) {                                                    \
-    for (int i = 0; i != n; ++i) {                                \
+    _Pragma("omp simd")                                           \
+    for (int i = 0; i < n; ++i) {                                 \
       int elem = idxp[i];                                         \
       ap[i] = elem==NA_INTEGER ? _NAVAL_ : sp[elem];              \
     }                                                             \
   } else {                                                        \
-    for (int i = 0; i != n; ++i) {                                \
+    _Pragma("omp simd")                                           \
+    for (int i = 0; i < n; ++i) {                                 \
       ap[i] = sp[idxp[i]];                                        \
     }                                                             \
   }
@@ -245,17 +248,26 @@ static const char *check_idx(SEXP idx, int max, bool *anyNA_out) // , bool *orde
 // single cache efficient sweep with prefetch, so very low priority to go parallel
 {
   if (!isInteger(idx)) error("Internal error. 'idx' is type '%s' not 'integer'", type2char(TYPEOF(idx))); // # nocov
-    bool anyNA = false; // anyLess=false,
+    bool anyNA = false, stop = false; // anyLess=false,
   // int last = INT32_MIN;
   int *idxp = INTEGER(idx), n = LENGTH(idx);
-  for (int i = 0; i != n; ++i) {
+
+  #pragma omp simd reduction(|:stop,anyNA)
+  for (int i = 0; i < n; ++i) {
     int elem = idxp[i];
-    if (elem<=0 && elem!=NA_INTEGER) return "Internal inefficiency: idx contains negatives or zeros. Should have been dealt with earlier.";  // e.g. test 762  (TODO-fix)
-    if (elem>max) return "Internal inefficiency: idx contains an item out-of-range. Should have been dealt with earlier.";                   // e.g. test 1639.64
-    anyNA |= elem==NA_INTEGER;
-    // anyLess |= elem<last;
-    // last = elem;
+    stop |= (elem<1 && elem!=NA_INTEGER) || elem>max;
+    anyNA |= elem == NA_INTEGER;
   }
+  if(stop) return "Internal inefficiency: idx contains an item out-of-range. Should have been dealt with earlier.";
+  // previous solution: slower
+  // for (int i = 0; i != n; ++i) {
+  //   int elem = idxp[i];
+  //   if (elem<=0 && elem!=NA_INTEGER) return "Internal inefficiency: idx contains negatives or zeros. Should have been dealt with earlier.";  // e.g. test 762  (TODO-fix)
+  //   if (elem>max) return "Internal inefficiency: idx contains an item out-of-range. Should have been dealt with earlier.";                   // e.g. test 1639.64
+  //   anyNA |= elem==NA_INTEGER;
+  //   // anyLess |= elem<last;
+  //   // last = elem;
+  // }
   *anyNA_out = anyNA;
   // *orderedSubset_out = !anyLess; // for the purpose of ordered keys elem==last is allowed
   return NULL;
@@ -277,10 +289,10 @@ SEXP convertNegAndZeroIdx(SEXP idx, SEXP maxArg, SEXP allowOverMax)
 
                   bool stop = false;
                   // #pragma omp parallel for num_threads(getDTthreads())
-                  for (int i = 0; i != n; ++i) {
-                    if (stop) continue;
+                  #pragma omp simd reduction(|:stop)
+                  for (int i = 0; i < n; ++i) {
                     int elem = idxp[i];
-                    if ((elem<1 && elem!=NA_INTEGER) || elem>max) stop=true;
+                    stop |= (elem<1 && elem!=NA_INTEGER) || elem>max;
                   }
                   if (!stop) return(idx); // most common case to return early: no 0, no negative; all idx either NA or in range [1-max]
 
@@ -595,10 +607,13 @@ SEXP subsetDT(SEXP x, SEXP rows, SEXP cols, SEXP checkrows) { // , SEXP fastret
 SEXP subsetVector(SEXP x, SEXP idx, SEXP checkidx) { // idx is 1-based passed from R level
   bool anyNA = false; //, orderedSubset=false;
   int nprotect=0;
-  if (isNull(x))
-    error("Internal error: NULL can not be subset. It is invalid for a data.table to contain a NULL column.");      // # nocov
-  if (asLogical(checkidx) && check_idx(idx, length(x), &anyNA) != NULL) // , &orderedSubset
-    error("Internal error: CsubsetVector is internal-use-only but has received negatives, zeros or out-of-range");  // # nocov
+  if (isNull(x)) error("Internal error: NULL can not be subset. It is invalid for a data.table to contain a NULL column.");      // # nocov
+  if (asLogical(checkidx) && check_idx(idx, length(x), &anyNA) != NULL) { // , &orderedSubset
+    SEXP max = PROTECT(ScalarInteger(length(x))); nprotect++;
+    idx = PROTECT(convertNegAndZeroIdx(idx, max, ScalarLogical(TRUE))); nprotect++;
+    const char *err = check_idx(idx, length(x), &anyNA); // , &orderedSubset
+    if (err != NULL) error(err);
+  }
   SEXP ans = PROTECT(allocVector(TYPEOF(x), length(idx))); nprotect++;
   copyMostAttrib(x, ans);
   subsetVectorRaw(ans, x, idx, anyNA);

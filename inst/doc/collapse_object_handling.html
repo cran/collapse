@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Sebastian Krantz" />
+
+<meta name="date" content="2023-05-28" />
+
+<title>collapse’s Handling of R Objects</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore"><em>collapse</em>’s Handling of R
+Objects</h1>
+<h3 class="subtitle">A Quick View Behind the Scenes of Class-Agnostic R
+Programming</h3>
+<h4 class="author">Sebastian Krantz</h4>
+<h4 class="date">2023-05-28</h4>
+
+
+
+<p>This much-requested vignette provides some details about how
+<em>collapse</em> deals with various R objects. It is principally a
+digest of cumulative details provided in the <a href="https://sebkrantz.github.io/collapse/news/index.html">NEWS</a> for
+various releases since v1.4.0.</p>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p><em>collapse</em> is a class-agnostic programming framework that can
+deal with a broad range of R objects. It provides explicit support for
+base R classes and data types (<em>integer</em>, <em>double</em>,
+<em>character</em>, <em>logical</em>, <em>list</em>,
+<em>data.frame</em>, <em>matrix</em>, <em>factor</em>, <em>Date</em>,
+<em>POSIXct</em>, <em>ts</em>), as well as <em>data.table</em>,
+<em>tibble</em>, <em>grouped_df</em>, <em>xts</em>, <em>pseries</em>,
+<em>pdata.frame</em>, and <em>sf</em> (no geometric operations).</p>
+<p>It also introduces <a href="https://sebkrantz.github.io/collapse/reference/GRP.html"><em>GRP_df</em></a>
+as a more performant and class-agnostic grouped data frame, and <a href="https://sebkrantz.github.io/collapse/reference/indexing.html"><em>indexed_series</em>
+and <em>indexed_frame</em></a> classes as modern class-agnostic
+successors of <em>pseries</em>, <em>pdata.frame</em>. These objects
+inherit the classes they succeed and are handled through
+<code>.pseries</code>, <code>.pdata.frame</code>, and
+<code>.grouped_df</code> methods, which also support the original
+(<em>plm</em> / <em>dplyr</em>) implementations (more details at the
+end).</p>
+<p>All other objects are handled internally at the C or R level using
+general principles extended by specific considerations for some of the
+above classes. I start with summarizing the general principles, which
+enable the usage of <em>collapse</em> with further classes it was not
+designed for.</p>
+</div>
+<div id="general-principles" class="section level2">
+<h2>General Principles</h2>
+<p>In general, in <em>collapse</em>, attributes and classes of R objects
+are preserved in statistical and data manipulation operations unless
+their preservation involves a <strong>high-risk</strong> of yielding
+something wrong/useless. Risky operations are those that change the
+dimensions or internal data type (<code>typeof()</code>) of an R
+object.</p>
+<p>To <em>collapse</em>’s R and C code, there exist 3 principal types of
+objects: atomic vectors, matrices, and lists - which are often assumed
+to be data frames. Most data manipulation functions in <em>collapse</em>
+like <code>fmutate()</code> only support lists, whereas statistical
+functions - notably the S3 generic <a href="https://sebkrantz.github.io/collapse/reference/fast-statistical-functions.html"><em>Fast
+Statistical Functions</em></a> like <code>fmean()</code> - generally
+support all 3 types of objects.</p>
+<p>S3 generic functions initially dispatch to <code>.default</code>,
+<code>.matrix</code>, <code>.data.frame</code>, and (hidden)
+<code>.list</code> methods. The <code>.default</code> method has an
+internal check and dispatches to the <code>.matrix</code> method if
+<code>is.matrix(x) &amp;&amp; !inherits(x, &quot;matrix&quot;)</code><a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. The
+<code>.list</code> method generally dispatches to the
+<code>.data.frame</code> method. These basic methods, and other
+non-generic functions in <em>collapse</em>, then decide how exactly to
+handle the object based on the statistical operation performed and
+attribute handling principles mostly implemented in C.</p>
+<p>The simplest case arises when an operation preserves the dimensions
+of the object, such as <code>fscale(x)</code> or
+<code>fmutate(data, across(a:c, log))</code>. In this case, all
+attributes of <code>x / data</code> are preserved<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+<p>Another simple case for matrices and lists arises when a statistical
+operation reduces them to a single dimension such as
+<code>fmean(x)</code>, where, under the <code>drop = TRUE</code> default
+of <a href="https://sebkrantz.github.io/collapse/reference/fast-statistical-functions.html"><em>Fast
+Statistical Functions</em></a>, all attributes apart from (column-)names
+are dropped and a (named) vector of means is returned.</p>
+<p>For atomic vectors, a statistical operation like
+<code>fmean(x)</code> will preserve the attributes (except for
+<em>ts</em> objects), as the object could have useful properties such as
+labels or units.</p>
+<p>More complex cases involve changing the dimensions (number of rows or
+columns) of an object. If the number of rows is preserved
+e.g. <code>fmutate(data, a_b = a / b)</code> or
+<code>flag(x, -1:1)</code>, only the (column-)names attribute of the
+object is modified. If the number of rows is reduced
+e.g. <code>fmean(x, g)</code>, all attributes are also retained under
+suitable modifications of the (row-)names attribute. However, if
+<code>x</code> is a matrix, other attributes than row- or column-names
+are only retained if <code>!is.object(x)</code>, that is, if the matrix
+does not have a ‘class’ attribute. For atomic vectors, attributes are
+retained if <code>!inherits(x, &quot;ts&quot;)</code>, as aggregating a time
+series will break the class<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>. This also applies to columns in a data
+frame being aggregated.</p>
+<p>When data is transformed using statistics as provided by the <a href="https://sebkrantz.github.io/collapse/reference/TRA.html"><code>TRA()</code>
+function</a> e.g. <code>TRA(x, STATS, operation, groups)</code> and the
+like-named argument to the <a href="https://sebkrantz.github.io/collapse/reference/fast-statistical-functions.html"><em>Fast
+Statistical Functions</em></a>, operations that simply modify the input
+(<code>x</code>) in a statistical sense (<code>&quot;replace_NA&quot;</code>,
+<code>&quot;-&quot;</code>, <code>&quot;-+&quot;</code>, <code>&quot;/&quot;</code>, <code>&quot;+&quot;</code>,
+<code>&quot;*&quot;</code>, <code>&quot;%%&quot;</code>, <code>&quot;-%%&quot;</code>) just copy the
+attributes to the transformed object. Operations
+<code>&quot;replace_fill&quot;</code> and <code>&quot;replace&quot;</code> are more tricky,
+since here <code>x</code> is replaced with <code>STATS</code>, which
+could be of a different class or data type. The following rules apply:
+(1) the result has the same data type as <code>STATS</code>; (2) if
+<code>is.object(STATS)</code>, the attributes of <code>STATS</code> are
+preserved; (3) otherwise the attributes of <code>x</code> are preserved
+unless <code>is.object(x) &amp;&amp; typeof(x) != typeof(STATS)</code>;
+(4) an exemption to this rule is made if <code>x</code> is a factor and
+an integer replacement is offered to STATS
+e.g. <code>fnobs(factor, group, TRA = &quot;replace_fill&quot;)</code>. In that
+case, the attributes of <code>x</code> are copied except for the ‘class’
+and ‘levels’ attributes. These rules were devised considering the
+possibility that <code>x</code> may have important information attached
+to it which should be preserved in data transformations, such as a
+<code>&quot;label&quot;</code> attribute.</p>
+<p>Another rather complex case arises when manipulating data with
+<em>collapse</em> using base R functions,
+e.g. <code>BY(mtcars$mpg, mtcars$cyl, mad)</code> or
+<code>mtcars |&gt; fgroup_by(cyl, vs, am) |&gt; fsummarise(mad_mpg = mad(mpg))</code>.
+In this case, <em>collapse</em> internally uses base R functions
+<code>lapply</code> and <code>unlist()</code>, following efficient
+splitting with <code>gsplit()</code> (which preserves all attributes).
+Concretely, the result is computed as
+<code>y = unlist(lapply(gsplit(x, g), FUN, ...), FALSE, FALSE)</code>,
+where in the examples <code>x</code> is <code>mtcars$mpg</code>,
+<code>g</code> is the grouping variable(s), <code>FUN = mad</code>, and
+<code>y</code> is <code>mad(x)</code> in each group. To follow its
+policy of attribute preservation as closely as possible,
+<em>collapse</em> then calls an internal function
+<code>y_final = copyMostAttributes(y, x)</code>, which copies the
+attributes of <code>x</code> to <code>y</code> if both are deemed
+compatible<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> (<span class="math inline">\(\approx\)</span> of the same data type). If they
+are deemed incompatible, <code>copyMostAttributes</code> still checks if
+<code>x</code> has a <code>&quot;label&quot;</code> attribute and copies that one
+to <code>y</code>.</p>
+<p>So to summarize the general principles: <em>collapse</em> just tries
+to preserve attributes in all cases except for where it is likely to
+break something, beholding the way most commonly used R classes and
+objects behave. The most likely operations that break something are when
+aggregating matrices which have a class (such as <em>xts</em>) or
+univariate time series (<em>ts</em>), when data is to be replaced by
+another object, or when applying an unknown function to a vector by
+groups and assembling the result with <code>unlist()</code>. In the
+latter cases, particular attention is paid to integer vectors and
+factors, as we often count something generating integers, and malformed
+factors need to be avoided.</p>
+<p>The following section provides some further details for some
+<em>collapse</em> functions and supported classes.</p>
+</div>
+<div id="specificic-functions-and-classes" class="section level2">
+<h2>Specificic Functions and Classes</h2>
+<div id="object-conversions" class="section level4">
+<h4>Object Conversions</h4>
+<p><a href="https://sebkrantz.github.io/collapse/reference/quick-conversion.html">Quick
+conversion functions</a> <code>qDF</code>, <code>qDT</code>,
+<code>qTBL()</code> and <code>qM</code> (to create data.frame’s,
+<em>data.table</em>’s, <em>tibble</em>’s and matrices from arbitrary R
+objects) by default (<code>keep.attr = FALSE</code>) perform very strict
+conversions, where all attributes non-essential to the class are dropped
+from the input object. This is to ensure that, following conversion,
+objects behave exactly the way users expect. This is different from the
+behavior of functions like <code>as.data.frame()</code>,
+<code>as.data.table()</code>, <code>as_tibble()</code> or
+<code>as.matrix()</code> e.g. <code>as.matrix(EuStockMarkets)</code>
+just returns <code>EuStockMarkets</code> whereas
+<code>qM(EuStockMarkets)</code> returns a plain matrix without time
+series attributes. This behavior can be changed by setting
+<code>keep.attr = TRUE</code>,
+i.e. <code>qM(EuStockMarkets, keep.attr = TRUE)</code>.</p>
+</div>
+<div id="selecting-columns-by-data-type" class="section level4">
+<h4>Selecting Columns by Data Type</h4>
+<p>Functions <a href="https://sebkrantz.github.io/collapse/reference/select_replace_vars.html"><code>num_vars()</code>,
+<code>cat_vars()</code> (the opposite of <code>num_vars()</code>),
+<code>char_vars()</code> etc.</a> are implemented in C to quickly select
+columns by data type without the need to check data frame columns by
+applying a function such as <code>is.numeric()</code> in R. For
+<code>is.numeric</code>, the C implementation is equivalent to
+<code>is_numeric_C &lt;- function(x) typeof(x) %in% c(&quot;integer&quot;, &quot;double&quot;) &amp;&amp; (!is.object(x) || inherits(x, &quot;ts&quot;) || inherits(x, &quot;units&quot;))</code>.
+This of course does not respect the behavior of other classes that
+define methods for <code>is.numeric</code>
+e.g. <code>is.numeric.foo &lt;- function(x) TRUE</code>, then for
+<code>y = structure(rnorm(100), class = &quot;foo&quot;)</code>,
+<code>is.numeric(y)</code> is <code>TRUE</code> but
+<code>num_vars(data.frame(y))</code> returns an empty frame. Correct
+behavior in this case requires
+<code>get_vars(data.frame(y), is.numeric)</code>. A particular case to
+be aware of here is when using <code>collap()</code> with the
+<code>FUN</code> and <code>catFUN</code> arguments, where the C code
+(<code>is_numeric_C</code>) is used internally to decide whether a
+column is numeric or categorical. Thus numeric columns with a class
+attribute other than “ts” or “units” are not recognized as numeric by
+<code>collap()</code>. <em>collapse</em> also does not support
+statistical operations on complex data.</p>
+</div>
+<div id="parsing-of-time-ids" class="section level4">
+<h4>Parsing of Time-IDs</h4>
+<p><a href="https://sebkrantz.github.io/collapse/reference/time-series-panel-series.html"><em>Time
+Series Functions</em></a> <code>flag</code>, <code>fdiff</code>,
+<code>fgrowth</code> and <code>psacf/pspacf/psccf</code> (and the
+operators <code>L/F/D/Dlog/G</code>) have a <code>t</code> argument to
+pass time-ids for fully identified temporal operations on time series
+and panel data. If <code>t</code> is a plain numeric vector or a factor,
+it is coerced to integer using <code>as.integer()</code>, and the
+integer steps are used as time steps. This is premised on the
+observation that the most common form of temporal identifier is a
+numeric variable denoting calendar years. If on the other hand
+<code>t</code> is a numeric time object such that
+<code>is.object(t) &amp;&amp; is.numeric(unclass(t))</code> (e.g. Date,
+POSIXct, etc.), then it is passed through <code>timeid()</code> which
+computes the greatest common divisor of the vector and generates an
+integer time-id in that way. Users are therefore advised to use
+appropriate classes to represent time steps e.g. for monthly data
+<code>zoo::yearmon</code> would be appropriate. It is also possible to
+pass non-numeric <code>t</code>, such as character or list/data.frame.
+In such cases ordered grouping is applied to generate an integer
+time-id, but this should rather be avoided.</p>
+</div>
+<div id="support-for-sf" class="section level4">
+<h4>Support for <em>sf</em></h4>
+<p><em>collapse</em> internally supports <em>sf</em> by seeking to avoid
+undue destruction of <em>sf</em> objects through removal of the
+‘geometry’ column in data manipulation operations. This is simply
+implemented through an additional check in the C programs used to subset
+columns of data: if the object is an <em>sf</em> data frame, the
+‘geometry’ column is added to the column selection. Other functions like
+<code>funique()</code> or <code>roworder()</code> have internal
+facilities to avoid sorting or grouping on the ‘geometry’ column. Again
+other functions like <code>descr()</code> and <code>qsu()</code> simply
+omit the geometry column in their statistical calculations. A short <a href="https://sebkrantz.github.io/collapse/articles/collapse_and_sf.html">vignette</a>
+describes the integration of <em>collapse</em> and <em>sf</em> in a bit
+more detail. In summary: <em>collapse</em> supports <em>sf</em> by
+seeking to appropriately deal with the ‘geometry’ column. It cannot
+perform any geometrical operations, for example after subsetting
+<em>sf</em> with <code>fsubset()</code>, the bounding box attribute of
+the geometry is unaltered and likely too large.</p>
+</div>
+<div id="support-for-data.table" class="section level4">
+<h4>Support for <em>data.table</em></h4>
+<p><em>collapse</em> provides quite thorough support for
+<em>data.table</em>. The simplest level of support is that it avoids
+assigning descriptive (character) row names to <em>data.table</em>’s
+e.g. <code>fmean(mtcars, mtcars$cyl)</code> has row-names corresponding
+to the groups but <code>fmean(qDT(mtcars), mtcars$cyl)</code> does
+not.</p>
+<p><em>collapse</em> further supports <em>data.table</em>’s reference
+semantics (<code>set*</code>, <code>:=</code>). To be able to add
+columns by reference (e.g. <code>DT[, new := 1]</code>),
+<em>data.table</em>’s are implemented as overallocated lists<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>.
+<em>collapse</em> copied some C code from <em>data.table</em> to do the
+overallocation and generate the <code>&quot;.internal.selfref&quot;</code>
+attribute, so that <code>qDT()</code> creates a valid and fully
+functional <em>data.table</em>. To enable seamless data manipulation
+combining <em>collapse</em> and <em>data.table</em>, all data
+manipulation functions in <em>collapse</em> call this C code at the end
+and return a valid (overallocated) <em>data.table</em>. However, because
+this overallocation comes at a computational cost of 2-3 microseconds, I
+have opted against also adding it to the <code>.data.frame</code>
+methods of statistical functions. Concretely, this means that
+<code>res &lt;- DT |&gt; fgroup_by(id) |&gt; fsummarise(mu_a = fmean(a))</code>
+gives a fully functional <em>data.table</em>
+i.e. <code>res[, new := 1]</code> works, but
+<code>res2 &lt;- DT |&gt; fgroup_by(id) |&gt; fmean()</code> gives a
+non-overallocated <em>data.table</em> such that
+<code>res2[, new := 1]</code> will still work but issue a warning. In
+this case,
+<code>res2 &lt;- DT |&gt; fgroup_by(id) |&gt; fmean() |&gt; qDT()</code>
+can be used to avoid the warning. This, to me, seems a reasonable
+trade-off between flexibility and performance. More details and examples
+are provided in the <a href="https://sebkrantz.github.io/collapse/articles/collapse_and_data.table.html"><em>collapse</em>
+and <em>data.table</em> vignette</a>.</p>
+</div>
+<div id="class-agnostic-grouped-and-indexed-data-frames" class="section level4">
+<h4>Class-Agnostic Grouped and Indexed Data Frames</h4>
+<p>As indicated in the introductory remarks, <em>collapse</em> provides
+a fast <a href="https://sebkrantz.github.io/collapse/reference/GRP.html">class-agnostic
+grouped data frame</a> created with <code>fgroup_by()</code>, and fast
+<a href="https://sebkrantz.github.io/collapse/reference/indexing.html">class-agnostic
+indexed time series and panel data</a>, created with
+<code>findex_by()</code>/<code>reindex()</code>. Class-agnostic means
+that the object that is grouped/indexed continues to behave as before
+except in <em>collapse</em> operations utilizing the ‘groups’/‘index_df’
+attributes.</p>
+<p>The grouped data frame is implemented as follows:
+<code>fgroup_by()</code> saves the class of the input data, calls
+<code>GRP()</code> on the columns being grouped, and attaches the
+resulting ‘GRP’ object in a <code>&quot;groups&quot;</code> attribute. It then
+assigns a class attribute as follows</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>clx <span class="ot">&lt;-</span> <span class="fu">class</span>(.X) <span class="co"># .X is the data frame being grouped, clx is its class</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="fu">c</span>(<span class="st">&quot;GRP_df&quot;</span>, <span class="st">&quot;grouped_df&quot;</span>, <span class="st">&quot;data.frame&quot;</span>), clx, <span class="at">nomatch =</span> 0L)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(.X) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GRP_df&quot;</span>,  <span class="cf">if</span>(<span class="fu">length</span>(mp <span class="ot">&lt;-</span> m[m <span class="sc">!=</span> 0L])) clx[<span class="sc">-</span>mp] <span class="cf">else</span> clx, <span class="st">&quot;grouped_df&quot;</span>, <span class="cf">if</span>(m[3L]) <span class="st">&quot;data.frame&quot;</span>) </span></code></pre></div>
+<p>In words: a class <code>&quot;GRP_df&quot;</code> is added in front, followed
+by the classes of the original object<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a>, followed by <code>&quot;grouped_df&quot;</code> and
+finally <code>&quot;data.frame&quot;</code>, if present. The first class
+<code>&quot;GRP_df&quot;</code> is for dealing appropriately with the object
+through methods for <code>print()</code> and subsetting (<code>[</code>,
+<code>[[</code>), e.g. <code>print.GRP_df</code> fetches the grouping
+object, prints <code>fungroup(.X)</code><a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a>, and then prints a
+summary of the grouping. <code>[.GRP_df</code> works similarly: it saves
+the groups, calls <code>[</code> on <code>fungroup(.X)</code>, and
+attaches the groups again if the result is a list with the same number
+of rows. So <em>collapse</em> has no issues printing and handling
+grouped <em>data.table</em>’s, <em>tibbles</em>, <em>sf</em> data
+frames, etc.: they continue to behave as usual. Now <em>collapse</em>
+has various functions with a <code>.grouped_df</code> method to deal
+with grouped data frames. For example <code>fmean.grouped_df</code>, in
+a nutshell, fetches the attached ‘GRP’ object using
+<code>GRP.grouped_df</code>, and calls <code>fmean.data.frame</code> on
+<code>fungroup(data)</code>, passing the ‘GRP’ object to the
+<code>g</code> argument for grouped computation. Here the general
+principles outlined above apply so that the resulting object has the
+same classes and attributes as the original one.</p>
+<p>This architecture has an additional advantage: it allows
+<code>GRP.grouped_df</code> to examine the grouping object and check if
+it was created by <em>collapse</em> (class ‘GRP’) or by <em>dplyr</em>.
+If the latter is the case, an efficient C routine is called to convert
+the <em>dplyr</em> grouping object to a ‘GRP’ object so that all
+<code>.grouped_df</code> methods in <em>collapse</em> apply to data
+frames created with either <code>dplyr::group_by()</code> or
+<code>fgroup_by()</code>.</p>
+<p>The <em>indexed_frame</em> works more or less in the same way. It
+inherits from <em>pdata.frame</em> so that <code>.pdata.frame</code>
+methods in <em>collapse</em> deal with both <em>indexed_frame</em>’s of
+arbitrary classes and <em>pdata.frame</em>’s created with
+<em>plm</em>.</p>
+<p>A notable difference to both <em>grouped_df</em> and
+<em>pdata.frame</em> is that <em>indexed_frame</em> is a deeply indexed
+data structure: each variable inside an <em>indexed_frame</em> is an
+<em>indexed_series</em> which contains in its <em>index_df</em>
+attribute an external pointer to the <em>index_df</em> attribute of the
+frame. Functions with <em>pseries</em> methods operating on
+<em>indexed_series</em> stored inside the frame (such as
+<code>with(data, flag(column))</code>) can fetch the index from this
+pointer. This allows worry-free application inside arbitrary data
+masking environments (<code>with</code>, <code>%$%</code>,
+<code>attach</code>, etc..) and estimation commands (<code>glm</code>,
+<code>feols</code>, <code>lmrob</code> etc..) without duplication of the
+index in memory. As you may have guessed, <em>indexed_series</em> are
+also class-agnostic and inherit from <em>pseries</em>. Any vector or
+matrix of any class can become an <em>indexed_series</em>.</p>
+<p>Further levels of generality are that indexed series and frames allow
+one, two or more variables in the index to support both time series and
+complex panels, natively deal with irregularity in time<a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a>, and provide a rich
+set of methods for subsetting and manipulation which also subset the
+<em>index_df</em> attribute, including internal methods for
+<code>fsubset()</code>, <code>funique()</code>, <code>roworder(v)</code>
+and <code>na_omit()</code>. So <em>indexed_frame</em> and
+<em>indexed_series</em> is a rich and general structure permitting fully
+time-aware computations on nearly any R object. See <a href="https://sebkrantz.github.io/collapse/reference/indexing.html"><code>?indexing</code></a>
+for more information.</p>
+</div>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p><em>collapse</em> handles R objects in a preserving and fairly
+intelligent manner, allowing seamless compatibility with many common
+data classes in R, and statistical workflows that preserve attributes
+(labels, units, etc.) of the data. This is done by general principles
+and some specific considerations/exemptions mostly implemented in C - as
+detailed in this vignette.</p>
+<p>The main benefits of this design are generality and execution speed:
+<em>collapse</em> has much fewer R-level method dispatches and function
+calls than other frameworks used to perform statistical or data
+manipulation operations, it behaves predictably, and may also work well
+with your simple new class.</p>
+<p>The main disadvantage is that many of the general principles and
+exemptions are hard-coded in C and thus may not work with specific
+classes. A prominent example where <em>collapse</em> simply fails is
+<em>lubridate</em>’s <em>interval</em> class (<a href="https://github.com/SebKrantz/collapse/issues/186">#186</a>, <a href="https://github.com/SebKrantz/collapse/issues/418">#418</a>), which
+has a <code>&quot;starts&quot;</code> attribute of the same length as the data
+that is preserved but not subset in <em>collapse</em> operations.</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>This guards against the automatic application of the
+<code>.default</code> method to matrix-like objects which do not inherit
+the “matrix” class (such as <em>xts</em>) while still allowing the user
+to manually call the default method on matrices.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>Preservation implies a shallow copy of the attribute
+lists from the original object to the result object. A shallow copy is
+memory-efficient and means we are copying the list containing the
+attributes in memory, but not the attributes themselves. Whenever I talk
+about copying attributes, I mean a shallow copy, not a deep copy. You
+can perform shallow copies with <a href="https://sebkrantz.github.io/collapse/reference/small-helpers.html">helper
+functions</a> <code>copyAttrib()</code> or
+<code>copyMostAttrib()</code>, and directly set attribute lists using
+<code>setAttrib()</code> or <code>setattrib()</code>.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>Note that <em>xts</em> are based on matrices, so by the
+former, aggregating them also returns a plain matrix.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>Concretely, attributes are copied
+<code>if (typeof(x) == typeof(y) &amp;&amp; (identical(class(x), class(y)) || typeof(y) != &quot;integer&quot; || inherits(x, c(&quot;IDate&quot;, &quot;ITime&quot;))) &amp;&amp; !(length(x) != length(y) &amp;&amp; inherits(x, &quot;ts&quot;)))</code>.
+The first part of the condition is easy: if <code>x</code> and
+<code>y</code> are of different data types we do not copy attributes.
+The second condition states that to copy attributes we also need to
+ensure that <code>x</code> and <code>y</code> are either or the same
+class or <code>y</code> is not integer or <code>x</code> is not an
+integer-based date or time (= classes provided by <em>data.table</em>).
+The main reason for this clause is to guard against cases where we are
+counting something on an integer-based variable such as a factor
+e.g. <code>BY(factor, group, function(x) length(unique(x)))</code>. The
+case where the result is also a factor
+e.g. <code>BY(factor, group, function(x) x[1])</code> is dealt with
+because <code>unlist()</code> preserves factors, so
+<code>identical(class(x), class(y))</code> is <code>TRUE</code>. The
+last part of the expression again guards against reducing the length of
+univariate time series and then copying the attributes.<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>Notably, additional (hidden) column pointers are
+allocated to be able to add columns without taking a shallow copy of the
+<em>data.table</em>, and an <code>&quot;.internal.selfref&quot;</code> attribute
+containing an external pointer is used to check if any shallow copy was
+made using base R commands like <code>&lt;-</code>.<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>Removing
+<code>c(&quot;GRP_df&quot;, &quot;grouped_df&quot;, &quot;data.frame&quot;)</code> if present to avoid
+duplicate classes and allowing grouped data to be re-grouped.<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>Which reverses the changes of <code>fgroup_by()</code>
+so that the print method for the original object <code>.X</code> is
+called.<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn8"><p>This is done through the creation of a time-factor in
+the <em>index_df</em> attribute whose levels represent time steps
+i.e. the factor will have unused levels for gaps in time.<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
