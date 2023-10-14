@@ -1,4 +1,83 @@
+# collapse 2.0.2
+
+* Added global option 'stub' (default `TRUE`) to `set_collapse`. It is passed to the `stub(s)` arguments of the statistical operations, `B`, `W`, `STD`, `HDW`, `HDW`, `L`, `D`, `Dlog`, `G` (in `.OPERATOR_FUN`). By default these operators add a prefix/stub to matrix or data.frame columns transformed by them. Setting `set_collapse(stub = FALSE)` now allows to switch off this behavior such that columns are not prepended with a prefix by default. 
+
+* `roworder[v]()` now also supports grouped data frames, but prints a message indicating that this is inefficient (also for indexed data). An additional argument `verbose` can be set to `0` to avoid such messages. 
+
+
+# collapse 2.0.1
+
+* `%in%` with `set_collapse(mask = "%in%")` does not warn anymore about overidentification when used with data frames (i.e. using `overid = 2` in `fmatch()`). 
+
+* Fixed several typos in the documentation. 
+
+# collapse 2.0.0
+
+*collapse* 2.0, released in Mid-October 2023, introduces fast table joins and data reshaping capabilities alongside other convenience functions, and enhances the packages global configurability, including interactive namespace control. 
+
+### Potentially breaking changes
+
+* In a grouped setting, if `.data` is used inside `fsummarise()` and `fmutate()`, and `.cols = NULL`, `.data` will contain all columns except for grouping columns (in-line with the `.SD` syntax of *data.table*). Before, `.data` contained all columns. The selection in `.cols` still refers to all columns, thus it is still possible to select all columns using e.g. `grouped_data %>% fsummarise(some_expression_involving(.data), .cols = seq_col(.))`. 
+
+### Other changes
+
+* In `qsu()`, argument `vlabels` was renamed to `labels`. But `vlabels` will continue to work. 
+
+### Bug Fixes
+
+* Fixed a bug in the integer methods of `fsum()`, `fmean()` and `fprod()` that returned `NA` if and only if there was a single integer followed by `NA`'s e.g `fsum(c(1L, NA, NA))` erroneously gave `NA`. This was caused by a C-level shortcut that returned `NA` when the first element of the vector had been reached (moving from back to front) without encountering any non-NA-values. The bug consisted in the content of the first element not being evaluated in this case. Note that this bug did not occur with real numbers, and also not in grouped execution. Thanks @blset for reporting (#432).   
+
+### Additions
+
+* Added `join()`: class-agnostic, vectorized, and (default) verbose joins for R, modeled after the *polars* API. Two different join algorithms are implemented: a hash-join (default, if `sort = FALSE`) and a sort-merge-join (if `sort = TRUE`).
+
+* Added `pivot()`: fast and easy data reshaping! It supports longer, wider and recast pivoting, including handling of variable labels, through a uniform and parsimonious API. It does not perform data aggregation, and by default does not check if the data is uniquely identified by the supplied ids. Underidentification for 'wide' and 'recast' pivots results in the last value being taken within each group. Users can toggle a duplicates check by setting `check.dups = TRUE`. 
+
+* Added `rowbind()`: a fast class-agnostic alternative to `rbind.data.frame()` and `data.table::rbindlist()`. 
+
+* Added `fmatch()`: a fast `match()` function for vectors and data frames/lists. It is the workhorse function of `join()`, and also benefits `ckmatch()`, `%!in%`, and new operators `%iin%` and `%!iin%` (see below). It is also possible to `set_collapse(mask = "%in%")` to replace `base::"%in%"` using `fmatch()`. Thanks to `fmatch()`, these operators also all support data frames/lists of vectors, which are compared row-wise. 
+
+* Added operators `%iin%` and `%!iin%`: these directly return indices, i.e. `%[!]iin%` is equivalent to `which(x %[!]in% table)`. This is useful especially for subsetting where directly supplying indices is more efficient e.g. `x[x %[!]iin% table]` is faster than `x[x %[!]in% table]`. Similarly `fsubset(wlddev, iso3c %iin% c("DEU", "ITA", "FRA"))` is very fast. 
+
+* Added `vec()`: efficiently turn matrices or data frames / lists into a single atomic vector. I am aware of multiple implementations in other packages, which are mostly inefficient. With atomic objects, `vec()` simply removes the attributes without copying the object, and with lists it directly calls `C_pivot_longer`. 
+
+
+### Improvements
+
+* `set_collapse()` now supports options 'mask' and 'remove', giving *collapse* a flexible namespace in the broadest sense that can be changed at any point within the active session:
+
+  - 'mask' supports base R or *dplyr* functions that can be masked into the faster *collapse* versions. E.g. `library(collapse); set_collapse(mask = "unique")` (or, equivalently, `set_collapse(mask = "funique")`) will create `unique <- funique` in the *collapse* namespace, export `unique()` from the namespace, and detach and attach the namespace again so R can find it. The re-attaching also ensures that *collapse* comes right after the global environment, implying that all it's functions will take priority over other libraries. Users can use `fastverse::fastverse_conflicts()` to check which functions are masked after using `set_collapse(mask = ...)`. The option can be changed at any time. Using `set_collapse(mask = NULL)` removes all masked functions from the namespace, and can also be called simply to ensure *collapse* is at the top of the search path.  
+  
+  - 'remove' allows removing arbitrary functions from the *collapse* namespace. E.g. `set_collapse(remove = "D")` will remove the difference operator `D()`, which also exists in *stats* to calculate symbolic and algorithmic derivatives (this is a convenient example but not necessary since `collapse::D` is S3 generic and will call `stats::D()` on R calls, expressions or names). This is safe to do as it only modifies which objects are exported from the namespace (it does not truly remove objects from the namespace). This option can also be changed at any time. `set_collapse(remove = NULL)` will restore the exported namespace. 
+
+  For both options there exist a number of convenient keywords to bulk-mask / remove functions. For example `set_collapse(mask = "manip", remove = "shorthand")` will mask all data manipulation functions such as `mutate <- fmutate` and remove all function shorthands such as `mtt` (i.e. abbreviations for frequently used functions that *collapse* supplies for faster coding / prototyping).
+
+<!-- This can also be done before loading the package through `options(collapse_remove = ...)` e.g. via an `.Rprofile` or `.fastverse` configuration file, but this possibility is *dangerous* because you can also remove essential *collapse* functions such as `GRP()` which will cause *collapse* to stop working.
+
+**Note** that this option set using `options()` is **non-reversible**, you need to unload *collapse* using `detach("package:collapse", unload = TRUE)` and load it again. 
+-->
+
+* `set_collapse()` also supports options 'digits', 'verbose' and 'stable.algo', enhancing the global configurability of *collapse*. 
+
+* `qM()` now also has a `row.names.col` argument in the second position allowing generation of rownames when converting data frame-like objects to matrix e.g. `qM(iris, "Species")` or `qM(GGDC10S, 1:5)` (interaction of id's). 
+
+* `as_factor_GRP()` and `finteraction()` now have an argument `sep = "."` denoting the separator used for compound factor labels.
+
+* `alloc()` now has an additional argument `simplify = TRUE`. `FALSE` always returns list output. 
+
+* `frename()` supports both `new = old` (*pandas*, used to far) and `old = new` (*dplyr*) style renaming conventions.
+
+* `across()` supports negative indices, also in grouped settings: these will select all variables apart from grouping variables. 
+
+* `TRA()` allows shorthands `"NA"` for `"replace_NA"` and `"fill"` for `"replace_fill"`. 
+
+* `group()` experienced a minor speedup with >= 2 vectors as the first two vectors are now hashed jointly. 
+
+* `fquantile()` with `names = TRUE` adds up to 1 digit after the comma in the percent-names, e.g. `fquantile(airmiles, probs = 0.001)` generates appropriate names (not 0% as in the previous version).
+
 # collapse 1.9.6
+
+* New vignette on [*collapse*'s Handling of R Objects](https://sebkrantz.github.io/collapse/articles/collapse_object_handling.html): provides an overview of collapse’s (internal) class-agnostic R programming framework.
 
 * `print.descr()` with groups and option `perc = TRUE` (the default) also shows percentages of the group frequencies for each variable. 
 
@@ -79,7 +158,7 @@
 
 * Added function `fquantile()`: Fast (weighted) continuous quantile estimation (methods 5-9 following Hyndman and Fan (1996)), implemented fully in C based on quickselect and radixsort algorithms, and also supports an ordering vector as optional input to speed up the process. It is up to 2x faster than `stats::quantile` on larger vectors, but also especially fast on smaller data, where the R overhead of `stats::quantile` becomes burdensome. For maximum performance during repeated executions, a programmers version `.quantile()` with different defaults is also provided. 
 
-* Added function `fdist()`: A fast and versatile replacement for `stats::dist`. It computes a full euclidian distance matrix around 4x faster than `stats::dist` in serial mode, with additional gains possible through multithreading along the distance matrix columns (decreasing thread loads as the matrix is lower triangular). It also supports computing the distance of a matrix with a single row-vector, or simply between two vectors. E.g. `fdist(mat, mat[1, ])` is the same as `sqrt(colSums((t(mat) - mat[1, ])^2)))`, but about 20x faster in serial mode, and `fdist(x, y)` is the same as `sqrt(sum((x-y)^2))`, about 3x faster in serial mode. In both cases (sub-column level) multithreading is available. *Note* that `fdist` does not skip missing values i.e. `NA`'s will result in `NA` distances. There is also no internal implementation for integers or data frames. Such inputs will be coerced to numeric matrices. 
+* Added function `fdist()`: A fast and versatile replacement for `stats::dist`. It computes a full euclidean distance matrix around 4x faster than `stats::dist` in serial mode, with additional gains possible through multithreading along the distance matrix columns (decreasing thread loads as the matrix is lower triangular). It also supports computing the distance of a matrix with a single row-vector, or simply between two vectors. E.g. `fdist(mat, mat[1, ])` is the same as `sqrt(colSums((t(mat) - mat[1, ])^2)))`, but about 20x faster in serial mode, and `fdist(x, y)` is the same as `sqrt(sum((x-y)^2))`, about 3x faster in serial mode. In both cases (sub-column level) multithreading is available. *Note* that `fdist` does not skip missing values i.e. `NA`'s will result in `NA` distances. There is also no internal implementation for integers or data frames. Such inputs will be coerced to numeric matrices. 
 
 * Added function `GRPid()` to easily fetch the group id from a grouping object, especially inside grouped `fmutate()` calls. This addition was warranted especially by the new improved `fnth.default()` method which allows orderings to be supplied for performance improvements. See commends on `fnth()` and the example provided below. 
 

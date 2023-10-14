@@ -3,6 +3,8 @@
 // Faster version of base R's spit based on grouping objects..
 // Support DF's?
 // -> works for factors, Date and POSIXct, but not for POSIXlt (handeled in R)
+// TODO: SIMD / multithreading? -> I checked SIMD doesn't work, and multithreading hardly give any performance gains.
+// The largest cost anyways is lapply(), not gsplit() !!
 
 SEXP gsplit(SEXP x, SEXP gobj, SEXP toint) {
   if(TYPEOF(gobj) != VECSXP || !inherits(gobj, "GRP")) error("g needs to be an object of class 'GRP', see ?GRP");

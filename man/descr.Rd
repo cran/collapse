@@ -28,7 +28,7 @@ descr(X, \dots)
 
 \method{as.data.frame}{descr}(x, \dots, gid = "Group")
 
-\method{print}{descr}(x, n = 14, perc = TRUE, digits = 2, t.table = TRUE, total = TRUE,
+\method{print}{descr}(x, n = 14, perc = TRUE, digits = .op[["digits"]], t.table = TRUE, total = TRUE,
       compact = FALSE, summary = !compact, reverse = FALSE, stepwise = FALSE, \dots)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -118,6 +118,7 @@ as.data.frame(descr(wlddev, table = FALSE))
 descr(wlddev, w = ~ replace_NA(POP)) # replacing NA's with 0's for fquantile()
 
 ## Grouped Desciptions
+descr(GGDC10S, ~ Variable)
 descr(wlddev, ~ income)
 print(descr(wlddev, ~ income), compact = TRUE)
 

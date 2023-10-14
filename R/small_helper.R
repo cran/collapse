@@ -94,7 +94,7 @@ vlabels <- function(X, attrn = "label", use.names = TRUE) .Call(C_vlabels, X, at
 # }
 
 # Note: Shallow copy does not work as it only copies the list, but the attribute is a feature of the atomic elements inside...
-setLabels <- function(X, value, attrn = "label", cols = NULL) { # , sc = TRUE
+setLabels <- function(X, value = NULL, attrn = "label", cols = NULL) { # , sc = TRUE
   if(is.atomic(X)) return(`attr<-`(X, attrn, value))
   .Call(C_setvlabels, X, attrn, value, as.integer(cols))
 }
@@ -276,6 +276,11 @@ all_funs <- function(expr) .Call(C_all_funs, expr)
 
 cinv <- function(x) chol2inv(chol(x))
 
+vec <- function(X) {
+  if(is.atomic(X)) return(`attributes<-`(X, NULL))
+  .Call(C_pivot_long, X, NULL, FALSE)
+}
+
 interact_names <- function(l) {
   oldClass(l) <- NULL
   if(length(l) == 2L) return(`dim<-`(outer(l[[1L]], l[[2L]], paste, sep = "."), NULL))
@@ -324,9 +329,6 @@ is.Date <- function(x) {
   inherits(x, c("Date","POSIXlt","POSIXct"))
 }
 
-
-"%!in%" <- function(x, table) match(x, table, nomatch = 0L) == 0L
-
 # more consistent with base than na_rm
 # na.rm <- function(x) { # cpp version available, but not faster !
 #   if(length(attr(x, "names"))) { # gives corruped time-series !
@@ -344,7 +346,7 @@ whichNA <- function(x, invert = FALSE) .Call(C_whichv, x, NA, invert)
 
 frange <- function(x, na.rm = .op[["na.rm"]]) .Call(C_frange, x, na.rm)
 .range <- function(x, na.rm = TRUE) .Call(C_frange, x, na.rm)
-alloc <- function(value, n) .Call(C_alloc, value, n)
+alloc <- function(value, n, simplify = TRUE) .Call(C_alloc, value, n, simplify)
 vgcd <- function(x) .Call(C_vecgcd, x)
 fdist <- function(x, v = NULL, ..., method = "euclidean", nthreads = .op[["nthreads"]]) .Call(C_fdist, if(is.atomic(x)) x else qM(x), v, method, nthreads)
 
@@ -538,14 +540,22 @@ setnck <- function(x, value) {
   x
 }
 
+do_stub <- function(stub, nam, default) {
+  if(is.character(stub)) return(paste0(stub, nam))
+  if(isTRUE(stub)) paste0(default, nam) else nam
+}
 # give_nam <- function(x, gn, stub) {
 #   if(!gn) return(x)
 #   attr(x, "names") <- paste0(stub, attr(x, "names"))
 #   x
 # }
 
-ckmatch <- function(x, table, e = "Unknown columns:") if(anyNA(m <- match(x, table))) stop(paste(e, paste(x[is.na(m)], collapse = ", "))) else m
-
+fmatch <- function(x, table, nomatch = NA_integer_, count = FALSE, overid = 1L) .Call(C_fmatch, x, table, nomatch, count, overid)
+ckmatch <- function(x, table, e = "Unknown columns:", ...) if(anyNA(m <- fmatch(x, table, ...))) stop(paste(e, paste(x[is.na(m)], collapse = ", "))) else m
+"%fin%" <- function(x, table) fmatch(x, table, 0L, overid = 2L) != 0L # export through set_collapse(mask = "%in%")
+"%!in%" <- function(x, table) fmatch(x, table, 0L, overid = 2L) == 0L
+"%!iin%" <- function(x, table) whichv(fmatch(x, table, 0L, overid = 2L), 0L)
+"%iin%" <- function(x, table) whichv(fmatch(x, table, 0L, overid = 2L), 0L, invert = TRUE)
 # anyNAerror <- function(x, e) if(anyNA(x)) stop(e) else x
 
 cols2int <- function(cols, x, nam, topos = TRUE) {
@@ -612,7 +622,13 @@ cols2intrmgn <- function(gn, cols, x) {
     return(which(cols))
   }
   if(is.null(cols)) return(seq_along(unclass(x))[-gn])
-  cols2int(cols, x, attr(x, "names"))
+  if(is.numeric(cols) && cols[1L] < 0) {
+    res <- logical(length(unclass(x)))
+    res[cols] <- TRUE
+    res[gn] <- FALSE
+    return(which(res))
+  }
+  cols2int(cols, x, attr(x, "names"), FALSE)
 }
 
 colsubset <- function(x, ind, checksf = FALSE) {

@@ -12,7 +12,7 @@ Advanced and Fast Data Transformation
 \item To help make R code fast, flexible, parsimonious and programmer friendly. % \emph{collapse} is a fast  %to facilitate (advanced) data manipulation in R   % To achieve the latter,
 % collapse provides a broad set.. -> Nah, its not a misc package
 }
-It is made compatible with \emph{dplyr}, \emph{data.table}, \emph{sf} and the \emph{plm} approach to panel data, and non-destructively handles other classes such as \emph{xts}.
+It is made compatible with the \emph{tidyverse}, \emph{data.table}, \emph{sf} and the \emph{plm} approach to panel data, and non-destructively handles other classes such as \emph{xts}.
 
 }
 \section{Getting Started}{
@@ -54,7 +54,7 @@ Read the short \href{https://sebkrantz.github.io/collapse/articles/collapse_docu
 
 \section{Details}{
 % Put this below bullet points ?? % \emph{collapse} provides a carefully conceived % \emph{collapse} provides a compact set of functions % organized roughly into several topics
-\emph{collapse} provides an integrated suite of statistical and data manipulation functions. These improve, complement and extend the capabilities of base R and packages like \emph{dplyr}, \emph{data.table}, \emph{plm}, \emph{matrixStats}, \emph{Rfast} etc. In a nutshell, \emph{collapse} provides:
+\emph{collapse} provides an integrated suite of statistical and data manipulation functions that greatly extend and enhance the capabilities of base R. In a nutshell, \emph{collapse} provides:
 
 \itemize{
 \item Fast C/C++ based (grouped, weighted) computations embedded in highly optimized R code.
@@ -64,11 +64,11 @@ Read the short \href{https://sebkrantz.github.io/collapse/articles/collapse_docu
 }
 % To explain this a bit:
 The statistical functions in \emph{collapse} are S3 generic with core methods for vectors, matrices and data frames, and internally support grouped and weighted computations carried out in C/C++. %Thus functions need only be called once for column-wise and/or grouped computations, providing a lot of extra speed and full support for sampling weights.
-R code is strongly optimized and inputs are swiftly passed to compiled C/C++ code, %, with further checks run at that level.
-where various efficient algorithms are implemented. %This approach enables flexible and parsimonious programming and data manipulation in R at high speeds.
+%R code is strongly optimized and inputs are swiftly passed to compiled C/C++ code, %, with further checks run at that level.
+%where various efficient algorithms are implemented. %This approach enables flexible and parsimonious programming and data manipulation in R at high speeds.
 
 %when passed to a \emph{collapse} statistical function together with a suitable data object % To provide extra speed and programmability
-To facilitate efficient programming, core S3 methods, grouping and ordering functionality and some C-level helper functions can be accessed by the user.
+%To facilitate efficient programming, core S3 methods, grouping and ordering functionality and some C-level helper functions can be accessed by the user.
 
 %For example \code{GRP()} creates grouping objects directly passed to C++ by statistical functions. \code{fgroup_by()} attaches these objects to a data frame, yielding efficient chained calls when combined with \emph{magrittr} pipes, \link[=fast-data-manipulation]{fast manipulation functions} and \link[=fast-statistical-functions]{fast statistical functions}.
 
@@ -81,16 +81,16 @@ To facilitate efficient programming, core S3 methods, grouping and ordering func
 
 % attributes of atomic objects are preserved if the dimensions are unaltered by the computation, and data frame attributes are always preserved,
 
- Additional (hidden) S3 methods and C-level features enable broad based compatibility with \emph{dplyr} (grouped tibble), \emph{data.table}, \emph{sf} and \emph{plm} panel data classes. Functions and core methods also seek to preserve object attributes (including column attributes such as variable labels), ensuring flexibility and effective workflows with a very broad range of R objects (including most time-series classes).
+ Additional methods and C-level features enable broad based compatibility with \emph{dplyr} (grouped tibble), \emph{data.table}, \emph{sf} and \emph{plm} panel data classes. Functions and core methods seek to preserve object attributes (including column attributes such as variable labels), ensuring flexibility and effective workflows with a very broad range of R objects (including most time-series classes). See also the \href{https://sebkrantz.github.io/collapse/articles/collapse_object_handling.html}{vignette} on \emph{collapse}'s handling of R objects.
 
- Missing values are efficiently skipped at C/C++ level. The package default is \code{na.rm = TRUE}. This can be changed using \code{\link[=set_collapse]{set_collapse(na.rm = FALSE)}}. \code{na.rm = FALSE} in many cases also yields efficient checking and early termination. Missing weights are generally supported. Core functionality and all statistical functions / computations are tested with > 20,000 unit tests for Base R equivalence, exempting some improvements (e.g. \code{fsum(NA, na.rm = TRUE)} evaluates to \code{NA}, not 0 (unless \code{fill = TRUE}), similarly for \code{fmin} and \code{fmax}; no \code{NaN} values are generated from computations involving \code{NA} values). Generic functions provide some \link[=collapse-options]{security} against silent swallowing of arguments.
+ Missing values are efficiently skipped at C/C++ level. The package default is \code{na.rm = TRUE}. This can be changed using \code{\link[=set_collapse]{set_collapse(na.rm = FALSE)}}. Missing weights are generally supported. % Core functionality and all statistical functions / computations are tested with > 20,000 unit tests for Base R equivalence, exempting some improvements (e.g. \code{fsum(NA, na.rm = TRUE)} evaluates to \code{NA}, not 0 (unless \code{fill = TRUE}), similarly for \code{fmin} and \code{fmax}; no \code{NaN} values are generated from computations involving \code{NA} values). %Generic functions provide some \link[=collapse-options]{security} against silent swallowing of arguments.
 
  %Hence they also handle various date and time series classes etc., and can easily be integreated into most approaches to data transformation.
 
  %A global \code{option("collapse_unused_arg_action")} can be set to regulate the behavior when unused arguments are passed to a generic function. The default is to issue a warning.
 
 
-\emph{collapse} installs with a built-in hierarchical \link[=collapse-documentation]{documentation} facilitating the use of the package. The \href{https://sebkrantz.github.io/collapse/articles/index.html}{vignettes} are complimentary and also follow a more structured approach. % and \code{base/stats}. % extra methods warrant, provide ?
+\emph{collapse} installs with a built-in hierarchical \link[=collapse-documentation]{documentation} facilitating the use of the package. % The \href{https://sebkrantz.github.io/collapse/articles/index.html}{vignettes} are complimentary and also follow a more structured approach. % and \code{base/stats}. % extra methods warrant, provide ?
 
 %Apart from general performance considerations, \emph{collapse} excels at applications involving fast panel data transformations and techniques, fast weighted computations (e.g. weighted aggregation), fast programming and aggregation with categorical and mixed-type data, fast programming with (multivariate) time series, and programming with lists of data objects.
 
@@ -99,7 +99,7 @@ To facilitate efficient programming, core S3 methods, grouping and ordering func
 % The package largely avoids non-standard evaluation and exports core methods for maximum programmability.  % Most are S3 generic with methods for common \code{R} objects (vectors, matrices, data frames, \dots) % high computation  %(aggregation and transformations ~10x \emph{data.table} on data <1 Mio obs.).
 
 % Beyond speed, flexibility and parsimony in coding, a central objective of \emph{collapse} is to facilitate advanced / complex operations on data.
-The package is coded both in C and C++ and built with \emph{Rcpp}, but also uses C/C++ functions from \emph{data.table} (grouping, ordering, subsetting, row-binding), \emph{kit} (hash-based grouping), \emph{fixest} (centering on multiple factors), \emph{weights} (weighted pairwise correlations), \emph{stats} (ACF and PACF) and \emph{RcppArmadillo / RcppEigen} (fast linear fitting methods). % For the moment \emph{collapse} does not utilize low-level parallelism (such as OpenMP).
+The package is coded both in C and C++ and built with \emph{Rcpp}, but also uses C/C++ functions from \emph{data.table}, \emph{kit}, \emph{fixest}, \emph{weights}, \emph{stats} and \emph{RcppArmadillo / RcppEigen}. % For the moment \emph{collapse} does not utilize low-level parallelism (such as OpenMP).
 % \emph{collapse} is built with \code{Rcpp} and imports \code{C} functions from \emph{data.table}, \emph{lfe} and \emph{stats}. %, and uses \code{ggplot2} visualizations.
 
 
@@ -116,12 +116,12 @@ Other contributors from packages \emph{collapse} utilizes:
 \item Josh Pasek (\emph{weights})
 \item R Core Team and contributors worldwide (\emph{stats})
 }
-I thank Ralf Stubner, Joseph Wood and Dirk Eddelbuettel and a host of other quant people from diverse fields for helpful answers on Stackoverflow, Joris Meys for encouraging me and helping to set up the \href{https://github.com/SebKrantz/collapse}{GitHub repository} for \emph{collapse}, Matthieu Stigler, Patrice Kiener, Zhiyi Xu, Kevin Tappe and Grant McDermott for feature requests and helpful suggestions.
+I thank many people from diverse fields for helpful answers on Stackoverflow, Joris Meys for encouraging me and helping to set up the \href{https://github.com/SebKrantz/collapse}{GitHub repository} for \emph{collapse}, and many other people for feature requests and helpful suggestions.
 }
 \section{Developing / Bug Reporting}{
 \itemize{
-\item If you are interested in extending or optimizing this package, see the source code at \url{https://github.com/SebKrantz/collapse/tree/master}, fork and send pull-requests to the 'development' branch of the repository, or e-mail me.
 \item Please report issues at \url{https://github.com/SebKrantz/collapse/issues}.
+\item Please send pull-requests to the 'development' branch of the repository.
 }
 }
 
@@ -134,6 +134,9 @@ I thank Ralf Stubner, Joseph Wood and Dirk Eddelbuettel and a host of other quan
 %}
 
 \examples{
+## Note: this set of examples is is certainly non-exhaustive and does not
+## showcase many recent features, but remains a very good starting point
+
 ## Let's start with some statistical programming
 v <- iris$Sepal.Length
 d <- num_vars(iris)    # Saving numeric variables

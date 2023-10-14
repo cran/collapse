@@ -59,7 +59,7 @@ GRPN(x, expand = TRUE, \dots)        # Group sizes (default: expanded to match d
 GRPid(x, sort = FALSE, \dots)        # Group id (data length, same as GRP(.)$group.id)
 GRPnames(x, force.char = TRUE, sep = ".")  # Group names
 
-as_factor_GRP(x, ordered = FALSE)  # 'GRP'-object to (ordered) factor conversion
+as_factor_GRP(x, ordered = FALSE, sep = ".") # 'GRP'-object to (ordered) factor conversion
 
 # Efficiently split a vector using a 'GRP' object
 gsplit(x, g, use.g.names = FALSE, \dots)
@@ -199,7 +199,7 @@ Creating a factor from a 'GRP' object using \code{as_factor_GRP} does not involv
                  }
 }
 \seealso{
-\code{\link{radixorder}}, \code{\link{qF}}, \link[=fast-grouping-ordering]{Fast Grouping and Ordering}, \link[=collapse-documentation]{Collapse Overview}
+\code{\link{radixorder}}, \code{\link{group}}, \code{\link{qF}}, \link[=fast-grouping-ordering]{Fast Grouping and Ordering}, \link[=collapse-documentation]{Collapse Overview}
 }
 \examples{
 ## default method

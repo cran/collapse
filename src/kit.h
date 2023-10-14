@@ -45,6 +45,7 @@
 // #define SEXP_T ScalarLogical(TRUE)
 #define NOGE(x, l) ((x < 0) || (x >= l))
 #define HASH(key, K)  (3141592653U * (unsigned int)(key) >> (32 - (K)))
+#define HASHK(key, K)  (3141592653U * (unsigned int)(key) >> (K))
 #define N_ISNAN(x, y) (!ISNAN(x) && !ISNAN(y))
 #define B_IsNA(x, y)  (R_IsNA(x) && R_IsNA(y))
 #define B_IsNaN(x, y) (R_IsNaN(x) && R_IsNaN(y))

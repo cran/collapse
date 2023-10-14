@@ -18,26 +18,26 @@ fvar(x, \dots)
 fsd(x, \dots)
 
 \method{fvar}{default}(x, g = NULL, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
-     use.g.names = TRUE, stable.algo = TRUE, \dots)
+     use.g.names = TRUE, stable.algo = .op[["stable.algo"]], \dots)
 \method{fsd}{default}(x, g = NULL, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
-    use.g.names = TRUE, stable.algo = TRUE, \dots)
+    use.g.names = TRUE, stable.algo = .op[["stable.algo"]], \dots)
 
 \method{fvar}{matrix}(x, g = NULL, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
-     use.g.names = TRUE, drop = TRUE, stable.algo = TRUE, \dots)
+     use.g.names = TRUE, drop = TRUE, stable.algo = .op[["stable.algo"]], \dots)
 \method{fsd}{matrix}(x, g = NULL, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
-    use.g.names = TRUE, drop = TRUE, stable.algo = TRUE, \dots)
+    use.g.names = TRUE, drop = TRUE, stable.algo = .op[["stable.algo"]], \dots)
 
 \method{fvar}{data.frame}(x, g = NULL, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
-     use.g.names = TRUE, drop = TRUE, stable.algo = TRUE, \dots)
+     use.g.names = TRUE, drop = TRUE, stable.algo = .op[["stable.algo"]], \dots)
 \method{fsd}{data.frame}(x, g = NULL, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
-    use.g.names = TRUE, drop = TRUE, stable.algo = TRUE, \dots)
+    use.g.names = TRUE, drop = TRUE, stable.algo = .op[["stable.algo"]], \dots)
 
 \method{fvar}{grouped_df}(x, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
      use.g.names = FALSE, keep.group_vars = TRUE, keep.w = TRUE,
-     stable.algo = TRUE, \dots)
+     stable.algo = .op[["stable.algo"]], \dots)
 \method{fsd}{grouped_df}(x, w = NULL, TRA = NULL, na.rm = .op[["na.rm"]],
     use.g.names = FALSE, keep.group_vars = TRUE, keep.w = TRUE,
-    stable.algo = TRUE, \dots)
+    stable.algo = .op[["stable.algo"]], \dots)
 }
 \arguments{
 \item{x}{a numeric vector, matrix, data frame or grouped data frame (class 'grouped_df').}
@@ -47,7 +47,7 @@ fsd(x, \dots)
 \item{w}{a numeric vector of (non-negative) weights, may contain missing values.}
 
 \item{TRA}{an integer or quoted operator indicating the transformation to perform:
-0 - "replace_NA"     |     1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
+0 - "NA"     |     1 - "fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
 
 \item{na.rm}{logical. Skip missing values in \code{x}. Defaults to \code{TRUE} and implemented at very little computational cost. If \code{na.rm = FALSE} a \code{NA} is returned when encountered.}
 

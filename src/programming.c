@@ -58,7 +58,7 @@ SEXP Cna_rm(SEXP x) {
   error("Unsupported type '%s' passed to na_rm()", type2char(TYPEOF(x)));
 }
 
-// Helper function to find a single sting in factor levels
+// Helper function to find a single string in factor levels
 int fchmatch(SEXP x, SEXP val, int nomatch) {
   const SEXP *px = STRING_PTR(x), v = asChar(val);
   for(int i = 0, l = length(x); i != l; ++i) if(px[i] == v) return i + 1;
@@ -94,28 +94,28 @@ if(length(val) == n && n > 1) {
     const int *px = INTEGER(x);
     const int *pv = INTEGER(val);
     WHICHVLOOPLX
-      break;
+    break;
   }
   case REALSXP:
   {
     const double *px = REAL(x);
     const double *pv = REAL(val);
     WHICHVLOOPLX
-      break;
+    break;
   }
   case STRSXP:
   {
     const SEXP *px = STRING_PTR(x);
     const SEXP *pv = STRING_PTR(val);
     WHICHVLOOPLX
-      break;
+    break;
   }
   case RAWSXP :
   {
     const Rbyte *px = RAW(x);
     const Rbyte *pv = RAW(val);
     WHICHVLOOPLX
-      break;
+    break;
   }
   default: error("Unsupported type '%s' passed to whichv()", type2char(TYPEOF(x)));
   }
@@ -132,7 +132,7 @@ if(length(val) == n && n > 1) {
       v = fchmatch(getAttrib(x, R_LevelsSymbol), val, 0);
     } else v = asInteger(val);
     WHICHVLOOP
-      break;
+    break;
   }
   case REALSXP:
   {
@@ -152,16 +152,17 @@ if(length(val) == n && n > 1) {
   case STRSXP:
   {
     const SEXP *px = STRING_PTR(x);
-    const SEXP v = asChar(val);
+    const SEXP v = PROTECT(asChar(val));
     WHICHVLOOP
-      break;
+    UNPROTECT(1);
+    break;
   }
   case RAWSXP :
   {
     const Rbyte *px = RAW(x);
     const Rbyte v = RAW(val)[0];
     WHICHVLOOP
-      break;
+    break;
   }
   default: error("Unsupported type '%s' passed to whichv()", type2char(TYPEOF(x)));
   }
@@ -176,6 +177,7 @@ return(ans);
 SEXP anyallv(SEXP x, SEXP val, SEXP Rall) {
 
   int n = length(x), all = asLogical(Rall);
+  if(length(x) == 0) return ScalarLogical(all ? 1 : 0);
   if(length(val) != 1) error("value needs to be length 1");
 
 #define ALLANYVLOOP                                                      \
@@ -198,7 +200,7 @@ case LGLSXP:
     v = fchmatch(getAttrib(x, R_LevelsSymbol), val, 0);
   } else v = asInteger(val);
   ALLANYVLOOP
-    break;
+  break;
 }
 case REALSXP:
 {
@@ -206,21 +208,21 @@ case REALSXP:
   const double v = asReal(val);
   if(ISNAN(v)) error("please use allNA()");
   ALLANYVLOOP
-    break;
+  break;
 }
 case STRSXP:
 {
   const SEXP *px = STRING_PTR(x);
   const SEXP v = asChar(val);
   ALLANYVLOOP
-    break;
+  break;
 }
 case RAWSXP :
 {
   const Rbyte *px = RAW(x);
   const Rbyte v = RAW(val)[0];
   ALLANYVLOOP
-    break;
+  break;
 }
 default: error("Unsupported type '%s' passed to allv() / anyv()", type2char(TYPEOF(x)));
 }
@@ -383,8 +385,9 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
     if(lv == 1 && ind1 == 0) {
       const SEXP v = PROTECT(asChar(val));
       if(lr == 1) {
-        const SEXP r = asChar(rep);
+        const SEXP r = PROTECT(asChar(rep));
         setcopyvLOOP(r)
+        UNPROTECT(1);
       } else {
         const SEXP *restrict pr = STRING_PTR(rep);
         setcopyvLOOP(pr[i])
@@ -393,8 +396,9 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
     } else {
       const int *restrict pv = INTEGER(val); // ALTREP(val) ? (const int *)ALTVEC_DATAPTR(val) :
       if(lr == 1) {
-        const SEXP r = asChar(rep);
+        const SEXP r = PROTECT(asChar(rep));
         setcopyvLOOPLVEC1
+        UNPROTECT(1);
       } else {
         const SEXP *restrict pr = STRING_PTR(rep);
         setcopyvLOOPLVEC

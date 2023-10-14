@@ -1,5 +1,5 @@
 
-roworder <- function(X, ..., na.last = TRUE) {
+roworder <- function(X, ..., na.last = TRUE, verbose = .op[["verbose"]]) {
   ovars <- .c(...)
   if(!length(ovars)) stop("... needs to be comma-separated column names, optionally with a '-' prefix for descending order.")
   dec <- startsWith(ovars, "-")
@@ -10,11 +10,20 @@ roworder <- function(X, ..., na.last = TRUE) {
   rn <- attr(X, "row.names")
   res <- .Call(C_subsetDT, X, o, seq_along(unclass(X)), FALSE)
   if(!(is.numeric(rn) || is.null(rn) || rn[1L] == "1")) attr(res, "row.names") <- Csv(rn, o)
-  if(inherits(X, "pdata.frame")) {
+  clx <- oldClass(X)
+  if(any(clx == "pdata.frame")) {
+    if(verbose) message("Sorting an indexed frame / pdata.frame may not be the most efficient option. Consider sorting the frame before indexing it.")
     index <- findex(X)
     index_o <- .Call(C_subsetDT, index, o, seq_along(unclass(index)), FALSE)
     if(inherits(X, "indexed_frame")) return(reindex(res, index_o))
     attr(res, "index") <- index_o
+  } else if(any(clx == "grouped_df")) {
+    if(verbose) message("Sorting a grouped data frame may not be the most efficient option. Consider sorting the frame before grouping it.")
+    g <- GRP.grouped_df(X, call = FALSE)
+    g[[2L]] <- Csv(g[[2L]], o)
+    if(is.null(g[["group.starts"]])) warning("Cannot reorder a grouped data frame created with dplyr::group_by. Converting the grouping object to collapse 'GRP' object and reordering.")
+    else if(length(g[[7L]])) g[[7L]] <- Csv(g[[7L]], o) # correct ?? -> seems so!
+    attr(res, "groups") <- g
   }
   res
 }
@@ -32,7 +41,7 @@ posord <- function(sq, o, pos) switch(pos,
                                       },
                                       stop("pos must be 'front', 'end', 'exchange' or 'after'."))
 
-roworderv <- function(X, cols = NULL, neworder = NULL, decreasing = FALSE, na.last = TRUE, pos = "front") {
+roworderv <- function(X, cols = NULL, neworder = NULL, decreasing = FALSE, na.last = TRUE, pos = "front", verbose = .op[["verbose"]]) {
   if(is.null(neworder)) {
     if(is.null(cols)) {
       if(inherits(X, "sf")) {
@@ -51,11 +60,20 @@ roworderv <- function(X, cols = NULL, neworder = NULL, decreasing = FALSE, na.la
   rn <- attr(X, "row.names")
   res <- .Call(C_subsetDT, X, neworder, seq_along(unclass(X)), FALSE)
   if(!(is.numeric(rn) || is.null(rn) || rn[1L] == "1")) attr(res, "row.names") <- Csv(rn, neworder)
-  if(inherits(X, "pdata.frame")) {
+  clx <- oldClass(X)
+  if(any(clx == "pdata.frame")) {
+    if(verbose) message("Sorting an indexed frame / pdata.frame may not be the most efficient option. Consider sorting the frame before indexing it.")
     index <- findex(X)
     index_neworder <- .Call(C_subsetDT, index, neworder, seq_along(unclass(index)), FALSE)
     if(inherits(X, "indexed_frame")) return(reindex(res, index_neworder)) # pdata.frame cannot be data.table...
     attr(res, "index") <- index_neworder
+  } else if(any(clx == "grouped_df")) {
+    if(verbose) message("Sorting a grouped data frame may not be the most efficient option. Consider sorting the frame before grouping it.")
+    g <- GRP.grouped_df(X, call = FALSE)
+    g[[2L]] <- Csv(g[[2L]], neworder)
+    if(verbose && is.null(g[["group.starts"]])) warning("Cannot reorder a grouped data frame created with dplyr::group_by. Converting the grouping object to collapse 'GRP' object and reordering.")
+    else if(length(g[[7L]])) g[[7L]] <- Csv(g[[7L]], neworder) # correct ?? -> seems so!
+    attr(res, "groups") <- g
   }
   res
 }
@@ -91,28 +109,39 @@ colorderv <- function(X, neworder = radixorder(names(X)), pos = "front", regex =
                    any(ax[["class"]] == "data.table")))
 }
 
+# Internal helper for frename: allows both pandas and dplyr style rename
+repl_nam_arg <- function(namarg, args, nam) {
+  m <- match(namarg, nam)
+  if(anyNA(m)) {
+    if(allNA(m)) {
+      m <- ckmatch(as.character(args), nam)
+      nam[m] <- namarg
+    } else stop(paste("Unknown columns:", paste(namarg[is.na(m)], collapse = ", ")))
+  } else nam[m] <- as.character(args)
+  nam
+}
 
 frename_core <- function(.x, cols, .nse, ...) {
   args <- if(.nse) substitute(c(...))[-1L] else c(...)
   nam <- attr(.x, "names")
   namarg <- names(args)
-  if(is.null(namarg) || !all(nzchar(namarg))) { # The second condition is needed for a function with additional arguments to be passed.
-    arg1 <- ..1
-    if(length(cols)) ind <- cols2int(cols, .x, nam)
-    if(is.function(arg1)) {
-      FUN <- if(...length() == 1L) arg1 else # could do special case if ...length() == 2L
-        function(x) do.call(arg1, c(list(x), list(...)[-1L]))
-      if(is.null(cols)) return(FUN(nam))
-      nam[ind] <- FUN(nam[ind])
-    } else if(is.character(arg1)) {
-      if(is.null(cols)) {
-        if(length(arg1) != length(nam)) stop(sprintf("If cols = NULL, the vector or names length = %i must match the object names length = %i.", length(arg1), length(nam)))
-        return(arg1)
-      }
-      if(length(arg1) != length(ind)) stop(sprintf("The vector of names length = %s does not match the number of columns selected = %s.", length(arg1), length(ind)))
-      nam[ind] <- arg1
-    } else stop("... needs to be expressions colname = newname, a function to apply to the names of columns in cols, or a suitable character vector of names.")
-  } else nam[ckmatch(namarg, nam)] <- as.character(args)
+  if(length(namarg) && all(nzchar(namarg))) return(repl_nam_arg(namarg, args, nam)) # The second condition is needed for a function with additional arguments to be passed.
+  arg1 <- ..1
+  if(length(cols)) ind <- cols2int(cols, .x, nam)
+  if(is.function(arg1)) {
+    FUN <- if(...length() == 1L) arg1 else # could do special case if ...length() == 2L
+      function(x) do.call(arg1, c(list(x), list(...)[-1L]))
+    if(is.null(cols)) return(FUN(nam))
+    nam[ind] <- FUN(nam[ind])
+  } else if(is.character(arg1)) {
+    if(is.null(cols)) {
+      if(length(namarg <- names(arg1))) return(repl_nam_arg(namarg, arg1, nam))
+      if(length(arg1) != length(nam)) stop(sprintf("If cols = NULL, the vector or names length = %i must match the object names length = %i.", length(arg1), length(nam)))
+      return(arg1)
+    }
+    if(length(arg1) != length(ind)) stop(sprintf("The vector of names length = %s does not match the number of columns selected = %s.", length(arg1), length(ind)))
+    nam[ind] <- arg1
+  } else stop("... needs to be expressions colname = newname, a function to apply to the names of columns in cols, or a suitable character vector of names.")
   return(nam)
 }
 

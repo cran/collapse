@@ -147,6 +147,8 @@ fsubset.pdata.frame <- function(.x, subset, ..., drop.index.levels = "id") {
   res
 }
 
+fsubset.grouped_df <- function(.x, subset, ...) stop("fsubset() does not support grouped data: please subset your data before grouping it")
+
 # Example:
 # fsubset(GGDC10S, Variable == "VA" & Year > 1990, Country, Year, AGR:SUM)
 
@@ -319,7 +321,8 @@ fcomputev <- function(.data, vars, FUN, ..., apply = TRUE, keep = NULL) {
 # fmutate
 fFUN_mutate_add_groups <- function(z) {
   if(!is.call(z)) return(z)
-  cz <- l1orlst(as.character(z[[1L]]))
+  cz <- as.character(z[[1L]])
+  if(length(cz) > 1L) cz <- if(any(cz == "collapse")) cz[length(cz)] else "" # needed if collapse::fmean etc..
   if(any(cz == .FAST_FUN_MOPS)) {
     z$g <- quote(.g_)
     if(any(cz == .FAST_STAT_FUN_POLD) && is.null(z$TRA)) z$TRA <- 1L
@@ -372,8 +375,9 @@ acr_get_cols <- function(.cols, d, nam, ce) {
   cols <- eval(.cols, nl, ce)
   # Needed for programming usage, because you can pass a variable that is null
   if(is.null(cols)) return(if(is.null(d[[".g_"]])) seq_along(nam) else seq_along(nam)[nam %!in% c(".g_", ".gsplit_", d[[".g_"]]$group.vars)])
-  return(if(is.logical(cols)) which(cols) else cols2int(cols, d, nam)) # if .g_ etc. is added to data, length check for logical vectors will fail.
-  # if(is.integer(cols)) cols else (you are checking against length(cols) in setup_across)
+  if(is.logical(cols)) return(which(cols)) # if .g_ etc. is added to data, length check for logical vectors will fail
+  if(is.null(d[[".g_"]]) || is.character(cols) || (is.numeric(cols) && cols[1L] > 0)) return(cols2int(cols, d, nam))
+  cols2intrmgn(match(c(".g_", ".gsplit_", d[[".g_"]]$group.vars), nam), cols, d)
 }
 
 # Also used in collap()
@@ -652,16 +656,17 @@ do_grouped_expr <- function(ei, nfun, .data, g, pe) {
 do_grouped_expr_list <- function(ei, .data, g, pe, .cols, ax, mutate = FALSE) {
   v <- all.vars(ei)
   if(any(v == ".data")) {
-    .data[names(.data) %in% c(".g_", ".gsplit_")] <- NULL
+    .data[names(.data) %in% c(".g_", ".gsplit_", if(is.null(.cols)) g$group.vars)] <- NULL
     if(is.character(ax)) { # for fmutate
       cld <- ax
       ax <- attributes(.data)
       ax[["groups"]] <- NULL
-      ax[["names"]] <- fsetdiff(ax[["names"]], c(".g_", ".gsplit_"))
+      # ax[["names"]] <- fsetdiff(ax[["names"]], c(".g_", ".gsplit_")) # Redundant, removed above...
       ax[["class"]] <- fsetdiff(cld, c("GRP_df", "grouped_df"))
     }
-    setattributes(.data, ax)
     if(length(.cols)) .data <- colsubset(.data, .cols)
+    ax[["names"]] <- names(.data)
+    setattributes(.data, ax)
     res <- gsplit_multi_apply(.data, g, ei, pe, TRUE)
   } else if(length(v) > 1L) {
     namd <- names(.data)

@@ -12,6 +12,12 @@
 
 \item \code{\link{add_vars}} efficiently adds new columns at any position within a data frame (default at the end). This can be done vie replacement (i.e. \code{add_vars(data) <- newdata}) or returning the appended data (i.e. \code{add_vars(data, newdata1, newdata2, \dots)}). Because of the latter, \code{add_vars} is also a more efficient alternative to \code{cbind.data.frame}.
 
+\item \code{\link{rowbind}} efficiently combines data frames / lists row-wise. The implementation is derived from \code{data.table::rbindlist}, it is also a fast alternative to \code{rbind.data.frame}.
+
+\item \code{\link{join}} provides fast class-agnostic and verbose table joins.
+
+\item \code{\link{pivot}} efficiently reshapes data, supporting longer, wider and recast pivoting, as well as multi-column-pivots and taking along variable labels.
+
 \item \code{\link{fsubset}} is a much faster version of \code{\link{subset}} to efficiently subset vectors, matrices and data frames. If the non-standard evaluation offered by \code{\link{fsubset}} is not needed, the function \code{\link{ss}} is a much faster and also more secure alternative to \code{[.data.frame}.
 
 \item \code{\link{fsummarise}} is a much faster version of \code{dplyr::summarise} when used together with the \link[=fast-statistical-functions]{Fast Statistical Functions} and \code{\link{fgroup_by}}, with whom it also supports super fast weighted aggregation.
@@ -34,6 +40,9 @@
                  \code{\link[=fselect]{fselect(<-)}} \tab\tab No methods, for data frames  \tab\tab Fast select or replace columns (non-standard evaluation) \cr
                  \code{\link[=get_vars]{get_vars(<-)}}, \code{\link[=num_vars]{num_vars(<-)}}, \code{\link[=cat_vars]{cat_vars(<-)}}, \code{\link[=char_vars]{char_vars(<-)}}, \code{\link[=fact_vars]{fact_vars(<-)}}, \code{\link[=logi_vars]{logi_vars(<-)}}, \code{\link[=date_vars]{date_vars(<-)}} \tab\tab No methods, for data frames  \tab\tab Fast select or replace columns \cr
                  \code{\link[=add_vars]{add_vars(<-)}} \tab\tab No methods, for data frames  \tab\tab Fast add columns \cr
+                 \code{\link{rowbind}} \tab\tab No methods, for lists of lists/data frames \tab\tab Fast row-binding lists \cr
+                 \code{\link{join}} \tab\tab No methods, for data frames \tab\tab Fast table joins \cr
+                 \code{\link{pivot}} \tab\tab No methods, for data frames \tab\tab Fast reshaping \cr
                  \code{\link{fsubset}} \tab\tab \code{default, matrix, data.frame, pseries, pdata.frame} \tab\tab Fast subset data (non-standard evaluation) \cr
                  \code{\link{ss}} \tab\tab No methods, for data frames \tab\tab Fast subset data frames \cr
 

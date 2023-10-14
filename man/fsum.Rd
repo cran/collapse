@@ -32,7 +32,7 @@ fsum(x, \dots)
 \item{w}{a numeric vector of (non-negative) weights, may contain missing values.}
 
 \item{TRA}{an integer or quoted operator indicating the transformation to perform:
-0 - "replace_NA"     |     1 - "replace_fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
+0 - "NA"     |     1 - "fill"     |     2 - "replace"     |     3 - "-"     |     4 - "-+"     |     5 - "/"     |     6 - "\%"     |     7 - "+"     |     8 - "*"     |     9 - "\%\%"     |     10 - "-\%\%". See \code{\link{TRA}}.}
 
 \item{na.rm}{logical. Skip missing values in \code{x}. Defaults to \code{TRUE} and implemented at very little computational cost. If \code{na.rm = FALSE} a \code{NA} is returned when encountered.}
 
@@ -54,7 +54,7 @@ fsum(x, \dots)
 \details{
 % Non-grouped sum computations internally utilize long-doubles in C++, for additional numeric precision.
 
-Missing-value removal as controlled by the \code{na.rm} argument is done very efficiently by simply skipping them in the computation (thus setting \code{na.rm = FALSE} on data with no missing values doesn't give extra speed). Large performance gains can nevertheless be achieved in the presence of missing values if \code{na.rm = FALSE}, since then the corresponding computation is terminated once a \code{NA} is encountered and \code{NA} is returned (unlike \code{\link{sum}} which just runs through without any checks).
+% Missing-value removal as controlled by the \code{na.rm} argument is done very efficiently by simply skipping them in the computation (thus setting \code{na.rm = FALSE} on data with no missing values doesn't give extra speed). Large performance gains can nevertheless be achieved in the presence of missing values if \code{na.rm = FALSE}, since then the corresponding computation is terminated once a \code{NA} is encountered and \code{NA} is returned (unlike \code{\link{sum}} which just runs through without any checks).
 
 The weighted sum (e.g. survey total) is computed as \code{sum(x * w)}, but in one pass and about twice as efficient. If \code{na.rm = TRUE}, missing values will be removed from both \code{x} and \code{w} i.e. utilizing only \code{x[complete.cases(x,w)]} and \code{w[complete.cases(x,w)]}.
 
@@ -62,7 +62,7 @@ This all seamlessly generalizes to grouped computations, which are performed in 
 
 When applied to data frames with groups or \code{drop = FALSE}, \code{fsum} preserves all column attributes. The attributes of the data frame itself are also preserved.
 
-Since v1.6.0 \code{fsum} explicitly supports integers. Integers are summed using the long long type in C which is bounded at +-9,223,372,036,854,775,807 (so ~4.3 billion times greater than the minimum/maximum R integer bounded at +-2,147,483,647). If the value of the sum is outside +-2,147,483,647, a double containing the result is returned, otherwise an integer is returned. With groups, an integer overflow error is provided if the sum in any group is outside +-2,147,483,647. Data should be coerced to double beforehand in such cases.
+Since v1.6.0 \code{fsum} explicitly supports integers. Integers are summed using the long long type in C which is bounded at +-9,223,372,036,854,775,807 (so ~4.3 billion times greater than the minimum/maximum R integer bounded at +-2,147,483,647). If the value of the sum is outside +-2,147,483,647, a double containing the result is returned, otherwise an integer is returned. With groups, an integer results vector is initialized, and an integer overflow error is provided if the sum in any group is outside +-2,147,483,647. Data needs to be coerced to double beforehand in such cases.
 
 Multithreading, added in v1.8.0, applies at the column-level unless \code{g = NULL} and \code{nthreads > NCOL(x)}. Parallelism over groups is not available because sums are computed simultaneously within each group. \code{nthreads = 1L} uses a serial version of the code, not parallel code running on one thread. This serial code is always used with less than 100,000 obs (\code{length(x) < 100000} for vectors and matrices), because parallel execution itself has some overhead.
 
@@ -73,7 +73,7 @@ The (\code{w} weighted) sum of \code{x}, grouped by \code{g}, or (if \code{\link
 \section{See Also}{
 \code{\link{fprod}}, \code{\link{fmean}}, \link[=fast-statistical-functions]{Fast Statistical Functions}, \link[=collapse-documentation]{Collapse Overview}
 }
-\section{Examples}{\preformatted{
+\examples{
 ## default vector method
 mpg <- mtcars$mpg
 fsum(mpg)                         # Simple sum
@@ -99,19 +99,18 @@ fsum(m)
 fsum(m, TRA = "\%")
 fsum(m, g)
 fsum(m, g, TRA = "\%")
-% \donttest{ % No code relying on suggested package
+\donttest{ % No code relying on suggested package
 ## method for grouped data frames - created with dplyr::group_by or fgroup_by
 library(dplyr)
 mtcars \%>\% group_by(cyl,vs,am) \%>\% fsum(hp)  # Weighted grouped sum (total)
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fsum(hp) # Equivalent and faster !!
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fsum(TRA = "\%")
 mtcars \%>\% fgroup_by(cyl,vs,am) \%>\% fselect(mpg) \%>\% fsum()
-% }
 }
-}
-\section{Benchmark}{\preformatted{
+\donttest{
 ## This compares fsum with data.table (2 threads) and base::rowsum
 # Starting with small data
+library(data.table)
 mtcDT <- qDT(mtcars)
 f <- qF(mtcars$cyl)
 
@@ -120,11 +119,6 @@ microbenchmark(mtcDT[, lapply(.SD, sum), by = f],
                rowsum(mtcDT, f, reorder = FALSE),
                fsum(mtcDT, f, na.rm = FALSE), unit = "relative")
 
-                              expr        min         lq      mean    median        uq       max neval cld
- mtcDT[, lapply(.SD, sum), by = f] 145.436928 123.542134 88.681111 98.336378 71.880479 85.217726   100   c
- rowsum(mtcDT, f, reorder = FALSE)   2.833333   2.798203  2.489064  2.937889  2.425724  2.181173   100  b
-     fsum(mtcDT, f, na.rm = FALSE)   1.000000   1.000000  1.000000  1.000000  1.000000  1.000000   100 a
-
 # Now larger data
 tdata <- qDT(replicate(100, rnorm(1e5), simplify = FALSE)) # 100 columns with 100.000 obs
 f <- qF(sample.int(1e4, 1e5, TRUE))                        # A factor with 10.000 groups
@@ -132,11 +126,39 @@ f <- qF(sample.int(1e4, 1e5, TRUE))                        # A factor with 10.00
 microbenchmark(tdata[, lapply(.SD, sum), by = f],
                rowsum(tdata, f, reorder = FALSE),
                fsum(tdata, f, na.rm = FALSE), unit = "relative")
+}
+}
 
-                              expr      min       lq     mean   median       uq       max neval cld
- tdata[, lapply(.SD, sum), by = f] 2.646992 2.975489 2.834771 3.081313 3.120070 1.2766475   100   c
- rowsum(tdata, f, reorder = FALSE) 1.747567 1.753313 1.629036 1.758043 1.839348 0.2720937   100  b
-     fsum(tdata, f, na.rm = FALSE) 1.000000 1.000000 1.000000 1.000000 1.000000 1.0000000   100 a
-}}
+%\section{Benchmark}{\preformatted{
+%## This compares fsum with data.table (2 threads) and base::rowsum
+%# Starting with small data
+%mtcDT <- qDT(mtcars)
+%f <- qF(mtcars$cyl)
+%
+%library(microbenchmark)
+%microbenchmark(mtcDT[, lapply(.SD, sum), by = f],
+%               rowsum(mtcDT, f, reorder = FALSE),
+%               fsum(mtcDT, f, na.rm = FALSE), unit = "relative")
+%
+%                              expr        min         lq      mean    median        uq       max neval cld
+% mtcDT[, lapply(.SD, sum), by = f] 145.436928 123.542134 88.681111 98.336378 71.880479 85.217726   100   c
+% rowsum(mtcDT, f, reorder = FALSE)   2.833333   2.798203  2.489064  2.937889  2.425724  2.181173   100  b
+%     fsum(mtcDT, f, na.rm = FALSE)   1.000000   1.000000  1.000000  1.000000  1.000000  1.000000   100 a
+%
+%# Now larger data
+%tdata <- qDT(replicate(100, rnorm(1e5), simplify = FALSE)) # 100 columns with 100.000 obs
+%f <- qF(sample.int(1e4, 1e5, TRUE))                        # A factor with 10.000 groups
+%
+%microbenchmark(tdata[, lapply(.SD, sum), by = f],
+%               rowsum(tdata, f, reorder = FALSE),
+%               fsum(tdata, f, na.rm = FALSE), unit = "relative")
+%
+%                              expr      min       lq     mean   median       uq       max neval cld
+% tdata[, lapply(.SD, sum), by = f] 2.646992 2.975489 2.834771 3.081313 3.120070 1.2766475   100   c
+% rowsum(tdata, f, reorder = FALSE) 1.747567 1.753313 1.629036 1.758043 1.839348 0.2720937   100  b
+%     fsum(tdata, f, na.rm = FALSE) 1.000000 1.000000 1.000000 1.000000 1.000000 1.0000000   100 a
+%}
+%}
+
 \keyword{univar}
 \keyword{manip}

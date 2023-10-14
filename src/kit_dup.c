@@ -5,6 +5,7 @@
 
 #include "kit.h"
 
+#define SEXPPTR_RO(x) ((const SEXP *)DATAPTR_RO(x))  // to avoid overhead of looped VECTOR_ELT
 
 // ****************************************
 // This function groups a single vector
@@ -89,7 +90,7 @@ SEXP dupVecIndex(SEXP x) {
             pans_i[i] = pans_i[h[iid]-1];
             goto ibl;
           }
-          if(++iid >= nu) iid %= nu;
+          if(++iid >= nu) iid = 0;
         }
         h[iid] = i + 1; // need + 1 because for zero the while loop gives false..
         pans_i[i] = ++g;
@@ -118,7 +119,7 @@ SEXP dupVecIndex(SEXP x) {
             pans_i[i] = pans_i[h[id]-1]; // h[id];
             goto ibbl;
           }
-          if(++id >= M) id %= M;
+          if(++id >= M) id = 0;
         }
         h[id] = i + 1;
         pans_i[i] = ++g; // h[id];
@@ -137,7 +138,7 @@ SEXP dupVecIndex(SEXP x) {
           pans_i[i] = pans_i[h[id]-1]; // h[id];
           goto rbl;
         }
-        if(++id >= M) id %= M;
+        if(++id >= M) id = 0;
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -166,7 +167,7 @@ SEXP dupVecIndex(SEXP x) {
           pans_i[i] = pans_i[h[id]-1]; // h[id];
           goto cbl;
         }
-        if(++id >= M) id %= M; // # nocov
+        if(++id >= M) id = 0; // # nocov
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -182,7 +183,7 @@ SEXP dupVecIndex(SEXP x) {
           pans_i[i] = pans_i[h[id]-1]; // h[id];
           goto sbl;
         }
-        if(++id >= M) id %= M; // # nocov
+        if(++id >= M) id = 0; // # nocov
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -260,7 +261,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
             goto ibl;
           } // else, we move forward to the next slot, until we find an empty one... We need to keep checking against the values,
           // because if we found the same value before, we would also have put it in another slot after the initial one with the same hash value.
-          if(++id >= nu) id %= nu; // ++iid; iid %= nu; // # nocov
+          if(++id >= nu) id = 0; // ++iid; iid %= nu; // # nocov
         } // We put the index into the empty slot.
         h[iid] = i + 1; // need + 1 because for zero the while loop gives false..
         pans_i[i] = ++g; // h[id];
@@ -278,7 +279,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
             pans_i[i] = pans_i[h[id]-1]; // h[id];
             goto ibbl;
           }
-          if(++id >= M) id %= M; // ++id; id %= M;
+          if(++id >= M) id = 0; // ++id; id %= M;
         }
         h[id] = i + 1;
         pans_i[i] = ++g; // h[id];
@@ -301,7 +302,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
           pans_i[i] = pans_i[h[id]-1]; // h[id];
           goto rbl;
         }
-        if(++id >= M) id %= M; // ++id; id %= M;
+        if(++id >= M) id = 0; // ++id; id %= M;
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -329,7 +330,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
           pans_i[i] = pans_i[h[id]-1]; // h[id];
           goto cbl;
         }
-        if(++id >= M) id %= M; //++id; id %= M; // # nocov
+        if(++id >= M) id = 0; //++id; id %= M; // # nocov
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -349,7 +350,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
           pans_i[i] = pans_i[h[id]-1]; // h[id];
           goto sbl;
         }
-        if(++id >= M) id %= M; //++id; id %= M;
+        if(++id >= M) id = 0; //++id; id %= M;
       }
       h[id] = i + 1;
       pans_i[i] = ++g;
@@ -364,11 +365,209 @@ SEXP dupVecIndexKeepNA(SEXP x) {
   return ans_i;
 }
 
+
+// ****************************************
+// Group Two Vectors in One Pass
+// ****************************************
+SEXP dupVecIndexTwoVectors(SEXP x, SEXP y) {
+
+  int n = length(x), tx = TYPEOF(x), ty = TYPEOF(y), K, K2, anyNA = 0;
+  if(length(y) != n) error("length of first two columns in the data must be the same");
+  if(tx == CPLXSXP || ty == CPLXSXP) return R_NilValue;
+
+  size_t M;
+  SEXP ans = PROTECT(allocVector(INTSXP, n));
+  int *restrict pans = INTEGER(ans);
+  // Check if both are discrete
+  int both_discr = (tx == LGLSXP || (tx == INTSXP && (isFactor(x) || inherits(x, "qG")))) &&
+                   (ty == LGLSXP || (ty == INTSXP && (isFactor(y) || inherits(y, "qG"))));
+  if(both_discr) {
+    K = tx == LGLSXP ? 1 : isFactor(x) ? nlevels(x) : asInteger(getAttrib(x, install("N.groups")));
+    K2 = ty == LGLSXP ? 1 : isFactor(y) ? nlevels(y) : asInteger(getAttrib(y, install("N.groups")));
+    if(tx == LGLSXP || !inherits(x, "na.included")) {
+      K += 1; anyNA += 1;
+    }
+    if(ty == LGLSXP || !inherits(y, "na.included")) {
+      K2 += 1; anyNA += 1;
+    }
+    if((size_t)K * K2 <= (size_t)n * 3) {
+      M = anyNA ? (size_t)(K+1) * (K2+1) + 1 : (size_t)K * K2 + 1; // + 1 because of zero indexing
+    } else both_discr = 0;
+  }
+
+  if(!both_discr) {
+    const size_t n2 = 2U * (size_t)n;
+    M = 256;
+    K = 8;
+    while (M < n2) {
+      M *= 2;
+      K++;
+    }
+  }
+
+  int *restrict h = (int*)Calloc(M, int), g = 0, hid = 0; // Table to save the hash values, table has size M
+  size_t id = 0;
+
+  if(both_discr) {
+    const int *restrict px = INTEGER_RO(x), *restrict py = INTEGER_RO(y);
+    if(anyNA == 0) {
+      for (int i = 0; i != n; ++i) {
+        id = px[i] + (py[i]-1) * K; // This assumes logical vectors (with 0 = FALSE) cannot have the "na.included" attribute
+        if(h[id]) pans[i] = h[id];
+        else pans[i] = h[id] = ++g;
+      }
+    } else {
+      K += 1;
+      for (int i = 0, xi, yi; i != n; ++i) {
+        xi = (px[i] == NA_INTEGER) ? K : px[i]+1;
+        yi = (py[i] == NA_INTEGER) ? K2 : py[i];
+        id = xi + yi * K; // Problem: if logical xi = 0, yi = 1 and xi = K, yi = 0 give the same..
+        if(h[id]) pans[i] = h[id];
+        else pans[i] = h[id] = ++g;
+      }
+    }
+  } else {
+    if(tx == LGLSXP) tx = INTSXP;
+    if(ty == LGLSXP) ty = INTSXP;
+
+    // 6 cases: 3 same type and 3 different types
+    if(tx == ty) { // same type
+      switch(tx) {
+        case INTSXP: {
+          const int *restrict px = INTEGER_RO(x), *restrict py = INTEGER_RO(y);
+          for (int i = 0; i != n; ++i) {
+            id = HASH(px[i] + (64988430769U * (unsigned)py[i]), K); // Multiplication doesn't work here: too few unique values
+            // Another large prime taken from https://oeis.org/wiki/Higher-order_prime_numbers
+            while(h[id]) {
+              hid = h[id]-1;
+              if(px[hid] == px[i] && py[hid] == py[i]) {
+                pans[i] = pans[hid];
+                goto iibl;
+              }
+              if(++id >= M) id = 0;
+            }
+            h[id] = i + 1;
+            pans[i] = ++g;
+            iibl:;
+          }
+        } break;
+        case STRSXP: {
+          const SEXP *restrict px = STRING_PTR_RO(x), *restrict py = STRING_PTR_RO(y);
+          for (int i = 0; i != n; ++i) {
+            id = HASH(64988430769U * ((intptr_t)px[i] & 0xffffffff) + ((intptr_t)py[i] & 0xffffffff), K); // Best combination it seems
+            while(h[id]) {
+              hid = h[id]-1;
+              if(px[hid] == px[i] && py[hid] == py[i]) {
+                pans[i] = pans[hid];
+                goto ssbl;
+              }
+              if(++id >= M) id = 0;
+            }
+            h[id] = i + 1;
+            pans[i] = ++g;
+            ssbl:;
+          }
+        } break;
+        case REALSXP: {
+          const double *restrict px = REAL_RO(x), *restrict py = REAL_RO(y);
+          union uno tpx, tpy;
+          // fill hash table with indices of 'table'
+          for (int i = 0; i != n; ++i) {
+            tpx.d = px[i]; tpy.d = py[i];
+            id = HASH((64988430769 * (tpx.u[0] + tpx.u[1])) + tpy.u[0] + tpy.u[1], K); // Best combination it seems
+            while(h[id]) {
+              hid = h[id]-1;
+              if(REQUAL(px[hid], px[i]) && REQUAL(py[hid], py[i])) {
+                pans[i] = pans[hid];
+                goto rrbl;
+              }
+              if(++id >= M) id = 0;
+            }
+            h[id] = i + 1;
+            pans[i] = ++g;
+            rrbl:;
+          }
+        } break;
+        default: error("Type %s is not supported.", type2char(tx));
+      }
+    } else { // different types
+      // First case: integer and real
+      if((tx == INTSXP && ty == REALSXP) || (tx == REALSXP && ty == INTSXP)) {
+        const int *restrict pi = INTEGER_RO(tx == INTSXP ? x : y);
+        const double *restrict pr = REAL_RO(tx == REALSXP ? x : y);
+        union uno tpv;
+        for (int i = 0; i != n; ++i) {
+          tpv.d = pr[i];
+          id = HASH((64988430769U * (unsigned)pi[i]) + tpv.u[0] + tpv.u[1], K); // Best combination it seems
+          while(h[id]) {
+            hid = h[id]-1;
+            if(pi[hid] == pi[i] && REQUAL(pr[hid], pr[i])) {
+              pans[i] = pans[hid];
+              goto irbl;
+            }
+            if(++id >= M) id = 0;
+          }
+          h[id] = i + 1;
+          pans[i] = ++g;
+          irbl:;
+        }
+        // Second case: real and string
+      } else if ((tx == REALSXP && ty == STRSXP) || (tx == STRSXP && ty == REALSXP)) {
+        const SEXP *restrict ps = STRING_PTR_RO(tx == STRSXP ? x : y);
+        const double *restrict pr = REAL_RO(tx == REALSXP ? x : y);
+        union uno tpv;
+        for (int i = 0; i != n; ++i) {
+          tpv.d = pr[i];
+          id = HASH((tpv.u[0] + tpv.u[1]) * ((intptr_t)ps[i] & 0xffffffff), K); // Best combination it seems
+          while(h[id]) {
+            hid = h[id]-1;
+            if(REQUAL(pr[hid], pr[i]) && ps[hid] == ps[i]) { // Seems comparing reals is faster..
+              pans[i] = pans[hid];
+              goto srbl;
+            }
+            if(++id >= M) id = 0;
+          }
+          h[id] = i + 1;
+          pans[i] = ++g;
+          srbl:;
+        }
+        // Third case: integer and string
+      } else if((tx == INTSXP && ty == STRSXP) || (tx == STRSXP && ty == INTSXP)) {
+        const int *restrict pi = INTEGER_RO(tx == INTSXP ? x : y);
+        const SEXP *restrict ps = STRING_PTR_RO(tx == STRSXP ? x : y);
+        for (int i = 0; i != n; ++i) {
+          id = HASH(pi[i] * ((intptr_t)ps[i] & 0xffffffff), K); // This is the fastest safe option
+          while(h[id]) {
+            hid = h[id]-1;
+            if(pi[hid] == pi[i] && ps[hid] == ps[i]) {
+              pans[i] = pans[hid];
+              goto isbl;
+            }
+            if(++id >= M) id = 0;
+          }
+          h[id] = i + 1;
+          pans[i] = ++g;
+          isbl:;
+        }
+      } else error("Unsupported types: %s and %s", type2char(tx), type2char(ty));
+    }
+  }
+
+  Free(h);
+  SEXP ngroups_sym = install("N.groups");
+  setAttrib(ans, ngroups_sym, ScalarInteger(g));
+  UNPROTECT(1);
+  return ans;
+}
+
+
 // TODO: Only one M calculation ?
 // Think: If in the second grouping variable all entries are the same, you loop through the whole table for each value..
 
 // TODO: Faster possibility indexing by grouping vector?? -> would need multiple hash tables through which complicates things,
 // but could still end up being faster...
+
+// Idea: instead of hasing index again, just distribute it fairly through multiplying with (M/ng)
 
 // **************************************************
 // This function adds a second vector to the grouping
@@ -388,14 +587,14 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
       } else K = 0;
     }
     if(K == 0) {
-      const size_t n2 = 2U * (size_t)n;
+      const size_t n2 = 2U * (size_t)n; // + ng
       M = 256;
       K = 8;
       while (M < n2) {
         M *= 2;
         K++;
       }
-      M += ng; // Here we add the number of previous groups...
+      // M += ng; // Here we add the number of previous groups...
     }
   } else if (tx == LGLSXP) {
     M = (size_t)ng * 3 + 1;
@@ -435,15 +634,16 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   // Note: In general, combining bitwise i.e. px[i] ^ pidx[i] seems slightly faster than multiplying (px[i] * pidx[i])...
   case INTSXP: {
     const int *restrict px = INTEGER(x);
+    const unsigned int mult = (M-1) / ng; // -1 because C is zero indexed
     for (int i = 0; i != n; ++i) {
-      id = HASH((unsigned)px[i] * (unsigned)pidx[i], K) + pidx[i]; // Need multiplication here instead of bitwise, see your benchmark with 100 mio. obs where second group is just sample.int(1e4, 1e8, T), there bitwise is very slow!!
+      id = ((unsigned)pidx[i]*mult) ^ HASH(px[i], K); // HASH((unsigned)px[i] * (unsigned)pidx[i], K) + pidx[i]; // Need multiplication here instead of bitwise, see your benchmark with 100 mio. obs where second group is just sample.int(1e4, 1e8, T), there bitwise is very slow!!
       while(h[id]) {  // However multiplication causes signed integer overflow... UBSAN error.
         hid = h[id]-1;
-        if(px[hid] == px[i] && pidx[hid] == pidx[i]) {
+        if(pidx[hid] == pidx[i] && px[hid] == px[i]) { // Usually pidx has more distinct values...
           pans_i[i] = pans_i[hid];
           goto ibl;
         }
-        if(++id >= M) id %= M; // ++id; id %= M; // # nocov
+        if(++id >= M) id = 0; // ++id; id %= M; // # nocov
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -452,17 +652,18 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   } break;
   case REALSXP: {
     const double *restrict px = REAL(x);
+    const unsigned int mult = (M-1) / ng; // -1 because C is zero indexed
     union uno tpv;
     for (int i = 0; i != n; ++i) {
       tpv.d = px[i]; // R_IsNA(px[i]) ? NA_REAL : (R_IsNaN(px[i]) ? R_NaN :px[i]);
-      id = HASH((tpv.u[0] + tpv.u[1]) ^ pidx[i], K) + pidx[i]; // Note: This is much faster than just adding pidx[i] to the hash value...
+      id = ((unsigned)pidx[i]*mult) ^ HASH(tpv.u[0] + tpv.u[1], K); // HASH((tpv.u[0] + tpv.u[1]) ^ pidx[i], K) + pidx[i]; // Note: This is much faster than just adding pidx[i] to the hash value...
       while(h[id]) { // Problem: This value might be seen before, but not in combination with that pidx value...
         hid = h[id]-1; // The issue here is that REQUAL(px[hid], px[i]) could be true but pidx[hid] == pidx[i] fails, although the same combination of px and pidx could be seen earlier before...
-        if(REQUAL(px[hid], px[i]) && pidx[hid] == pidx[i]) {
+        if(pidx[hid] == pidx[i] && REQUAL(px[hid], px[i])) {
           pans_i[i] = pans_i[hid];
           goto rbl;
         }
-        if(++id >= M) id %= M; //++id; id %= M;
+        if(++id >= M) id = 0; //++id; id %= M;
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -471,6 +672,7 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   } break;
   case CPLXSXP: {
     const Rcomplex *restrict px = COMPLEX(x);
+    const unsigned int mult = (M-1) / ng; // -1 because C is zero indexed
     unsigned int u;
     union uno tpv;
     Rcomplex tmp;
@@ -485,14 +687,14 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
       u = tpv.u[0] ^ tpv.u[1];
       tpv.d = tmp.i;
       u ^= tpv.u[0] ^ tpv.u[1];
-      id = HASH(u ^ pidx[i], K) + pidx[i];
+      id = ((unsigned)pidx[i]*mult) ^ HASH(u, K);
       while(h[id]) {
         hid = h[id]-1;
-        if(CEQUAL(px[hid], px[i]) && pidx[hid] == pidx[i]) {
+        if(pidx[hid] == pidx[i] && CEQUAL(px[hid], px[i])) {
           pans_i[i] = pans_i[hid];
           goto cbl;
         }
-        if(++id >= M) id %= M; //++id; id %= M; // # nocov
+        if(++id >= M) id = 0; //++id; id %= M; // # nocov
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -501,15 +703,16 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   } break;
   case STRSXP: {
     const SEXP *restrict px = STRING_PTR(x);
+    const unsigned int mult = (M-1) / ng; // -1 because C is zero indexed
     for (int i = 0; i != n; ++i) {
-      id = HASH(((intptr_t) px[i] & 0xffffffff) ^ pidx[i], K) + pidx[i];
+      id = ((unsigned)pidx[i]*mult) ^ HASH(((intptr_t) px[i] & 0xffffffff), K); // HASH(((intptr_t) px[i] & 0xffffffff) ^ pidx[i], K) + pidx[i];
       while(h[id]) {
         hid = h[id]-1;
-        if(px[hid] == px[i] && pidx[hid] == pidx[i]) {
+        if(pidx[hid] == pidx[i] && px[hid] == px[i]) {
           pans_i[i] = pans_i[hid];
           goto sbl;
         }
-        if(++id >= M) id %= M; //++id; id %= M; // # nocov
+        if(++id >= M) id = 0; //++id; id %= M; // # nocov
       }
       h[id] = i + 1;
       pans_i[i] = ++g; // h[id];
@@ -521,6 +724,7 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   return g;
 }
 
+
 // ************************************************************************
 // This function brings everything together for vectors or lists of vectors
 // ************************************************************************
@@ -530,23 +734,27 @@ SEXP groupVec(SEXP X, SEXP starts, SEXP sizes) {
     start = asLogical(starts), size = asLogical(sizes), nprotect = 0;
   // Better not exceptions to fundamental algorithms, when a couple of user-level functions return qG objects...
   // if(islist == 0 && OBJECT(X) != 0 && inherits(X, "qG") && inherits(X, "na.included")) return X; // return "qG" objects
-  SEXP idx = islist ? dupVecIndex(VECTOR_ELT(X, 0)) : dupVecIndex(X);
-  if(!(islist && l > 1) && start == 0 && size == 0) return idx; // l == 1 &&
+  const SEXP *px = islist ? SEXPPTR_RO(X) : &X;
+  SEXP idx = islist == 0 ? dupVecIndex(X) : l > 1 ? dupVecIndexTwoVectors(px[0], px[1]) : dupVecIndex(px[0]);
+  if(isNull(idx)) { // One of the vectors is complex valued
+    idx = dupVecIndex(px[0]);
+    l += 1; px -= 1;
+  } else if(!(islist && l > 2) && start == 0 && size == 0) return idx; // l == 1 &&
   PROTECT(idx); ++nprotect;
   SEXP sym_ng = install("N.groups"), res;
   int ng = asInteger(getAttrib(idx, sym_ng)), n = length(idx);
-  if(islist && l > 1) {
+  if(islist && l > 2) {
     SEXP ans = PROTECT(allocVector(INTSXP, n)); ++nprotect;
-    int i = 1, *pidx = INTEGER(idx), *pans = INTEGER(ans);
+    int i = 2, *pidx = INTEGER(idx), *pans = INTEGER(ans);
     for( ; i < l; ++i) {
       if(ng == n) break;
       if(i % 2) {
-        ng = dupVecSecond(pidx, pans, VECTOR_ELT(X, i), n, ng);
+        ng = dupVecSecond(pans, pidx, px[i], n, ng);
       } else {
-        ng = dupVecSecond(pans, pidx, VECTOR_ELT(X, i), n, ng);
+        ng = dupVecSecond(pidx, pans, px[i], n, ng);
       }
     }
-    res = i % 2 ? idx : ans;
+    res = i % 2 ? ans : idx;
     setAttrib(res, sym_ng, ScalarInteger(ng));
   } else res = idx;
   // Cumpoting group starts and sizes attributes
@@ -691,7 +899,7 @@ SEXP funiqueC(SEXP x) {
         if(iid >= nu) iid %= nu;
         while(h[iid]) {
           if(px[h[iid]-1] == px[i]) goto ibl;
-          if(++iid >= nu) iid %= nu;
+          if(++iid >= nu) iid = 0;
         }
         h[iid] = i + 1;
         st[g++] = i;
@@ -702,7 +910,7 @@ SEXP funiqueC(SEXP x) {
         id = HASH(px[i], K);
         while(h[id]) {
           if(px[h[id]-1] == px[i]) goto ibbl;
-          if(++id >= M) id %= M;
+          if(++id >= M) id = 0;
         }
         h[id] = i + 1;
         st[g++] = i;
@@ -726,7 +934,7 @@ SEXP funiqueC(SEXP x) {
       id = HASH(tpv.u[0] + tpv.u[1], K);
       while(h[id]) {
         if(REQUAL(px[h[id]-1], px[i])) goto rbl;
-        if(++id >= M) id %= M;
+        if(++id >= M) id = 0;
       }
       h[id] = i + 1;
       st[g++] = i;
@@ -760,7 +968,7 @@ SEXP funiqueC(SEXP x) {
       id = HASH(u, K);
       while(h[id]) {
         if(CEQUAL(px[h[id]-1], px[i])) goto cbl;
-        if(++id >= M) id %= M; // # nocov
+        if(++id >= M) id = 0; // # nocov
       }
       h[id] = i + 1;
       st[g++] = i;
@@ -781,7 +989,7 @@ SEXP funiqueC(SEXP x) {
       id = HASH(((intptr_t) px[i] & 0xffffffff), K);
       while(h[id]) {
         if(px[h[id]-1] == px[i]) goto sbl;
-        if(++id >= M) id %= M; // # nocov
+        if(++id >= M) id = 0; // # nocov
       }
       h[id] = i + 1;
       st[g++] = i;

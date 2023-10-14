@@ -9,7 +9,7 @@
 (Pairwise, Weighted) Correlations, Covariances and Observation Counts
 }
 \description{
-Computes (pairwise, weighted) Pearsons correlations, covariances and observation counts. Pairwise correlations and covariances can be computed together with observation counts and p-values, and output as 3D array (default) or list of matrices. \code{pwcor} and \code{pwcov} offer an elaborate print method.
+Computes (pairwise, weighted) Pearson's correlations, covariances and observation counts. Pairwise correlations and covariances can be computed together with observation counts and p-values, and output as 3D array (default) or list of matrices. \code{pwcor} and \code{pwcov} offer an elaborate print method.
 }
 \usage{
 pwcor(X, \dots, w = NULL, N = FALSE, P = FALSE, array = TRUE, use = "pairwise.complete.obs")
@@ -18,11 +18,11 @@ pwcov(X, \dots, w = NULL, N = FALSE, P = FALSE, array = TRUE, use = "pairwise.co
 
 pwnobs(X)
 
-\method{print}{pwcor}(x, digits = 2L, sig.level = 0.05, show = c("all","lower.tri","upper.tri"),
-      spacing = 1L, return = FALSE, \dots)
+\method{print}{pwcor}(x, digits = .op[["digits"]], sig.level = 0.05,
+      show = c("all","lower.tri","upper.tri"), spacing = 1L, return = FALSE, \dots)
 
-\method{print}{pwcov}(x, digits = 2L, sig.level = 0.05, show = c("all","lower.tri","upper.tri"),
-      spacing = 1L, return = FALSE, \dots)
+\method{print}{pwcov}(x, digits = .op[["digits"]], sig.level = 0.05,
+      show = c("all","lower.tri","upper.tri"), spacing = 1L, return = FALSE, \dots)
 
 }
 %- maybe also 'usage' for other objects documented here.

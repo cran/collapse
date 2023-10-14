@@ -9,15 +9,15 @@ Fast Reordering of Data Frame Rows
 A fast substitute for \code{dplyr::arrange}. It returns a sorted copy of the data frame, unless the data is already sorted in which case no copy is made. In addition, rows can be manually re-ordered. Use \code{data.table::setorder} to sort a data frame without creating a copy. %\code{roworder} also does not support grouped tibbles or pdata.frame's, i.e. every data frame is treated the same.
 }
 \usage{
-roworder(X, \dots, na.last = TRUE)
+roworder(X, \dots, na.last = TRUE, verbose = .op[["verbose"]])
 
 roworderv(X, cols = NULL, neworder = NULL, decreasing = FALSE,
-          na.last = TRUE, pos = "front")
+          na.last = TRUE, pos = "front", verbose = .op[["verbose"]])
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{a data frame or list of equal-length columns. }
-  \item{\dots}{comma-separated columns of \code{X} to sort by e.g. \code{var1, var2}. Negatives i.e. \code{-var1, var2} can be used to sort in decreasing order of \code{var1}.}
+  \item{\dots}{comma-separated columns of \code{X} to sort by e.g. \code{var1, var2}. Negatives i.e. \code{-var1, var2} can be used to sort in decreasing order of \code{var1}. Internally all expressions are turned into strings and \code{startsWith(expr, "-")} is used to detect this, thus it does not negate the actual values (which may as well be strings), and you cannot apply any other functions to columns inside \code{roworder()} to induce different sorting behavior.}
   \item{cols}{select columns to sort by using a function, column names, indices or a logical vector. The default \code{NULL} sorts by all columns in order of occurrence (from left to right). }
   \item{na.last}{logical. If \code{TRUE}, missing values in the sorting columns are placed last; if \code{FALSE}, they are placed first; if \code{NA} they are removed (argument passed to \code{\link{radixorderv}}).}
   \item{decreasing}{logical. Should the sort order be increasing or decreasing? Can also be a vector of length equal to the number of arguments in \code{cols} (argument passed to \code{\link{radixorderv}}).}
@@ -31,6 +31,7 @@ roworderv(X, cols = NULL, neworder = NULL, decreasing = FALSE,
 
   }
   }
+  \item{verbose}{logical. \code{TRUE} (default) prints a message when ordering a grouped or indexed frame, indicating that this is not efficient and encouraging reordering the data prior to the grouping/indexing step.}
 
 }
 
