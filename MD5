@@ -1,7 +1,7 @@
-82e5fbff13b7da3e9f3ec9e261f1d59a *DESCRIPTION
+60fb941252ee17139e6966200e307a16 *DESCRIPTION
 60fbeb63059a10588f6bec7e3af7e8ae *LICENSE
 1ff2bab151ad09e2e0635b5bf04cb20e *NAMESPACE
-2fe8970a9729ea54c4ae8f68be64c29f *NEWS.md
+d1a20416e59f6a6e98636a96110d2c1a *NEWS.md
 0ff6298ba2800773134b9520565cf2dc *R/BY.R
 d4eea5179afe3d67f185d07321193707 *R/GRP.R
 bd9208da1e32190290ec523429ca8c2b *R/RcppExports.R
@@ -33,7 +33,7 @@ dd6a7f3e4ba2241532f909730bad6630 *R/fscale.R
 0d0cf965e73574d54ff8f0912a9f869c *R/fvar_fsd.R
 5b0d53de81989189bc86d492443437b6 *R/global_macros.R
 bc5d93d1118b623c77516c5c7a0b0142 *R/indexing.R
-227d4180d7c50e8990dd6c6e8fd6dcd0 *R/join.R
+c2f13c3eee3cca3fab0c4254068cf995 *R/join.R
 14a70a5d1b0e387afdeab73ff5870786 *R/list_functions.R
 21c8e649ac0b6118425a81bc6e09717b *R/my_RcppExports.R
 47e515d2726c240deda296b14683ea9f *R/pivot.R
@@ -55,11 +55,11 @@ c4e61f5ae57845ae891f7d45990fe8d7 *R/zzz.R
 a5742d7c7117d4198a262b7079ef3b58 *data/GGDC10S.rda
 c0728676845d1671c4342e712cad7673 *data/wlddev.rda
 bf63360020407d882026aea49966e619 *inst/CITATION
-be74dab796057e5e88f5a2115aa8a5a8 *inst/doc/collapse_documentation.Rmd
-b66da4e61156d733aeae03fe41c86d8f *inst/doc/collapse_documentation.html
+f8ec83d596dd2097799309b057daff10 *inst/doc/collapse_documentation.Rmd
+4070b9e96cf550cf5490edc54bd17ab9 *inst/doc/collapse_documentation.html
 d40c789c70c0c3e89177f7c499e93cd4 *inst/doc/collapse_for_tidyverse_users.R
 f35e5b3aca4e3313138bb4e85c573243 *inst/doc/collapse_for_tidyverse_users.Rmd
-e4155c076daaf1dc8d6569a9f9bf30a9 *inst/doc/collapse_for_tidyverse_users.html
+723ae7c84f4cc0a9d2c81f4392bc639c *inst/doc/collapse_for_tidyverse_users.html
 3c9e2d06e8560272e30c98b0c827478b *inst/doc/collapse_object_handling.R
 d5949580ef92ff93dd1f53a6f28642ca *inst/doc/collapse_object_handling.Rmd
 74e0c95e66f587a71209981cf5a31850 *inst/doc/collapse_object_handling.html
@@ -70,7 +70,7 @@ a3aa94f8b1110609988eda6be63c9323 *man/BY.Rd
 2bde74488df0ea0de5e0410b48293edb *man/across.Rd
 406a8a90aeed845f579f8e551f979f7b *man/arithmetic.Rd
 11a7c6c6b5d9457505f2204df7a18356 *man/collap.Rd
-247f9dd502c85a08908fdc49d8b349ab *man/collapse-documentation.Rd
+90f6cbc56cd01390850f64c64f9d0902 *man/collapse-documentation.Rd
 db8a88054ff1ad3634c5e2c4de15641f *man/collapse-options.Rd
 6351722287f8de94f506e5bf8cfabe93 *man/collapse-package.Rd
 0b1a1765b666b677db29437ce5856e13 *man/collapse-renamed.Rd
@@ -118,7 +118,7 @@ a480f95c0667754559ce10fc2845c081 *man/groupid.Rd
 38650aceb48ea70033c4bc74193b9bf0 *man/is_unlistable.Rd
 b776039fd2238877e75ce4dc813c04e8 *man/join.Rd
 0942768ce29a30c3ba4c16c19de88dde *man/ldepth.Rd
-d3a7cc231b7a5c59c815dad3d4ac50e7 *man/list-processing.Rd
+b70f1a0e09afc66cc3c47e8342eca18c *man/list-processing.Rd
 b0cd1ce00434a85e79d5b0a3723c07d9 *man/pad.Rd
 f5090b80a4e629f35df80e8ffcd1ec77 *man/pivot.Rd
 8fd3e00589870241d43242556f28a5c0 *man/psacf.Rd
@@ -180,8 +180,8 @@ c53bcc4287c85d5d6336ad3c58cdcd62 *src/fvar_fsd.cpp
 b98ef038da240a34fc57f0ee661b6c59 *src/handle_attributes.c
 8c58a048bed5999339d46abcefa962b3 *src/join.c
 dd1c9bdd8f37efb119f406eecfd47ad0 *src/kit.h
-3761b5d067af0cba39b923ac9d9d6da3 *src/kit_dup.c
-0340629abaa1ea365832d10a7bf92691 *src/match.c
+8defdf24196dea78570dcd198c81178c *src/kit_dup.c
+e8e9edbd4594eef8ac68864a178e2934 *src/match.c
 86065a72eb88a35e8429aa37f3b517b8 *src/mrtl_mctl.cpp
 58d13a73a489381b3509173c62ba6c14 *src/pivot.c
 93480d0edda5935e4b9bacc924adf1a3 *src/programming.c
@@ -241,6 +241,6 @@ f2d61a12ea2cd63a8801f824217e6628 *tests/testthat/test-sf.R
 3a8d80eceb43606ca6fb39357db36ef8 *tests/testthat/test-varying.R
 ab883d2fe4b061144236c6ffc4e22e25 *tests/testthat/test-whichv.R
 e7112ade3a5bc1e7437efd48779a26ec *tests/testthat/testthat-problems.rds
-be74dab796057e5e88f5a2115aa8a5a8 *vignettes/collapse_documentation.Rmd
+f8ec83d596dd2097799309b057daff10 *vignettes/collapse_documentation.Rmd
 f35e5b3aca4e3313138bb4e85c573243 *vignettes/collapse_for_tidyverse_users.Rmd
 d5949580ef92ff93dd1f53a6f28642ca *vignettes/collapse_object_handling.Rmd
