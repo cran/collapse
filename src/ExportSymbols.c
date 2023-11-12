@@ -125,7 +125,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"C_vecgcd", (DL_FUNC) &vecgcd, 1},
   {"C_issorted", (DL_FUNC) &Cissorted, 2},
   {"C_all_funs", (DL_FUNC) &all_funs, 1},
-  {"C_unlock_collapse_namespace", (DL_FUNC) &unlock_collapse_namespace, 1},
+  {"C_unlock_collapse_namespace", (DL_FUNC) &unlock_collapse_namespace, 2},
   {"C_pivot_long", (DL_FUNC) &pivot_long, 3},
   {"C_pivot_wide", (DL_FUNC) &pivot_wide, 5},
   {"C_sort_merge_join", (DL_FUNC) &sort_merge_join, 4},

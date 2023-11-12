@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2023-10-16" />
+<meta name="date" content="2023-11-12" />
 
 <title>collapse for tidyverse Users</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">collapse for tidyverse Users</h1>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2023-10-16</h4>
+<h4 class="date">2023-11-12</h4>
 
 
 <div id="TOC">
@@ -543,7 +543,7 @@ minimum of <code>qsec</code> to the result, whereas</p>
 <span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co"># 3   8 29.60000</span></span></code></pre></div>
 <p>both give the mean + the minimum within each group, but calculated in
 different ways: the former is equivalent to
-<code>fmean(mpg, g = cyl) / fmean(qsec, g = cyl)</code>, whereas the
+<code>fmean(mpg, g = cyl) / fmin(qsec, g = cyl)</code>, whereas the
 latter is equal to
 <code>sapply(gsplit(mpg, cyl), function(x) mean(x) + min(x))</code>.</p>
 <p>See <code>?fsummarise</code> and <code>?fmutate</code> for more
@@ -567,7 +567,7 @@ example,
 is permissible but inefficient code as it filters and reorders grouped
 data, requiring modifications to both the data frame and the attached
 grouping object. <em>collapse</em> does not allow calls to
-<code>fsubset()</code> on grouped data and messages about it
+<code>fsubset()</code> on grouped data, and messages about it in
 <code>roworder()</code>, encouraging you to write more efficient
 code.</p>
 <p>The above example can also be optimized because we are subsetting the

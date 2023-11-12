@@ -42,7 +42,7 @@ set_collapse <- function(...) {
   }
   if(any(mrl <- c("mask", "remove") %in% nam)) { # either can be NULL
     clpns <- getNamespace("collapse")
-    .Call(C_unlock_collapse_namespace, clpns)
+    .Call(C_unlock_collapse_namespace, clpns, TRUE)
     if(mrl[1L] && !identical(op_old$mask, opts$mask)) {
       if(length(op_old$mask)) do_collapse_unmask(clpns)
       if(length(opts$mask)) do_collapse_mask(clpns, opts$mask)

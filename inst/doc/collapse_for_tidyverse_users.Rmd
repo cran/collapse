@@ -128,7 +128,7 @@ mtcars |> group_by(cyl) |> summarise(mpg = fmean(mpg) + fmin(qsec)) # Vectorized
 mtcars |> group_by(cyl) |> summarise(mpg = mean(mpg) + min(qsec))   # Not vectorized
 ```
 
-both give the mean + the minimum within each group, but calculated in different ways: the former is equivalent to `fmean(mpg, g = cyl) / fmean(qsec, g = cyl)`, whereas the latter is equal to `sapply(gsplit(mpg, cyl), function(x) mean(x) + min(x))`. 
+both give the mean + the minimum within each group, but calculated in different ways: the former is equivalent to `fmean(mpg, g = cyl) / fmin(qsec, g = cyl)`, whereas the latter is equal to `sapply(gsplit(mpg, cyl), function(x) mean(x) + min(x))`. 
 
 See `?fsummarise` and `?fmutate` for more detailed examples. This *eager vectorization* approach is intentional as it allows users to vectorize complex expressions and fall back to base R if this is not desired. 
 
@@ -136,7 +136,7 @@ To take full advantage of *collapse*, it is highly recommended to use the *Fast 
 
 ## Writing Efficient Code
 
-It is also performance-critical to correctly sequence operations and limit excess computations. *tidyverse* code is often inefficient simply because the *tidyverse* allows you to do everything. For example, `mtcars |> group_by(cyl) |> filter(mpg > 13) |> arrange(mpg)` is permissible but inefficient code as it filters and reorders grouped data, requiring modifications to both the data frame and the attached grouping object. *collapse* does not allow calls to `fsubset()` on grouped data and messages about it `roworder()`, encouraging you to write more efficient code. 
+It is also performance-critical to correctly sequence operations and limit excess computations. *tidyverse* code is often inefficient simply because the *tidyverse* allows you to do everything. For example, `mtcars |> group_by(cyl) |> filter(mpg > 13) |> arrange(mpg)` is permissible but inefficient code as it filters and reorders grouped data, requiring modifications to both the data frame and the attached grouping object. *collapse* does not allow calls to `fsubset()` on grouped data, and messages about it in `roworder()`, encouraging you to write more efficient code. 
 
 The above example can also be optimized because we are subsetting the whole frame and then doing computations on a subset of columns. It would be more efficient to select all required columns during the subset operation: 
 
