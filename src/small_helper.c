@@ -249,8 +249,6 @@ SEXP vlabels(SEXP x, SEXP attrn, SEXP usenam) {
 }
 
 // Note: ind can be NULL...
-// TODO: option to shallow copy attributes list for setLabels / relabel !!!!
-
 SEXP setvlabels(SEXP x, SEXP attrn, SEXP value, SEXP ind) { // , SEXP sc
  if(!isString(attrn)) error("'attrn' must be of mode character");
  if(length(attrn) != 1) error("exactly one attribute 'attrn' must be given");
@@ -565,27 +563,13 @@ SEXP fnrowC(SEXP x) {
 #define CLP_FRAME_IS_LOCKED(e) (ENVFLAGS(e) & CLP_FRAME_LOCK_MASK)
 #define CLP_UNLOCK_FRAME(e) SET_ENVFLAGS(e, ENVFLAGS(e) & (~CLP_FRAME_LOCK_MASK))
 
-SEXP unlock_collapse_namespace(SEXP env, SEXP macros) {
+SEXP unlock_collapse_namespace(SEXP env) {
   if(TYPEOF(env) != ENVSXP) error("Unsupported object passed to C_unlock_collapse_namespace: %s", type2char(TYPEOF(env)));
   CLP_UNLOCK_FRAME(env);
-  if(asLogical(macros)) {
-    R_unLockBinding(install(".FAST_STAT_FUN_EXT"), env);
-    R_unLockBinding(install(".FAST_STAT_FUN_POLD"), env);
-    R_unLockBinding(install(".FAST_FUN_MOPS"), env);
-    R_unLockBinding(install(".COLLAPSE_ALL_EXPORTS"), env);
-  }
+  R_unLockBinding(install(".FAST_STAT_FUN_EXT"), env);
+  R_unLockBinding(install(".FAST_STAT_FUN_POLD"), env);
+  R_unLockBinding(install(".FAST_FUN_MOPS"), env);
+  R_unLockBinding(install(".COLLAPSE_ALL_EXPORTS"), env);
   return CLP_FRAME_IS_LOCKED(env) == 0 ? ScalarLogical(1) : ScalarLogical(0);
 }
 
-
-// SEXP dot_return(SEXP x) {
-//   SEXP nam = getAttrib(x, R_NamesSymbol);
-//   if(TYPEOF(nam) == STRSXP) {
-//     int l = length(nam);
-//     SEXP *pnam = STRING_PTR(nam);
-//     for (int i = 0; i < l; ++i) if(length(pnam[i]) == 0) pnam[i] = 0;
-//
-//     substitute(x, R_NilValue);
-//
-//   }
-// }

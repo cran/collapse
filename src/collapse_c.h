@@ -95,11 +95,13 @@ SEXP fcrosscolon(SEXP x, SEXP ngp, SEXP y, SEXP ckna);
 SEXP fwtabulate(SEXP x, SEXP w, SEXP ngp, SEXP ckna);
 SEXP vecgcd(SEXP x);
 SEXP all_funs(SEXP x);
-SEXP unlock_collapse_namespace(SEXP env, SEXP macros);
+SEXP unlock_collapse_namespace(SEXP env);
 void writeValueByIndex(SEXP target, SEXP source, const int from, SEXP index);
 SEXP pivot_long(SEXP data, SEXP ind, SEXP idcol);
 SEXP pivot_wide(SEXP index, SEXP id, SEXP column, SEXP fill, SEXP Rnthreads);
 SEXP sort_merge_join(SEXP x, SEXP table, SEXP ot, SEXP count);
+SEXP replace_outliers(SEXP x, SEXP limits, SEXP value, SEXP single_limit, SEXP set);
+SEXP multi_match(SEXP m, SEXP g);
 // fnobs rewritten in C:
 SEXP fnobsC(SEXP x, SEXP Rng, SEXP g);
 SEXP fnobsmC(SEXP x, SEXP Rng, SEXP g, SEXP Rdrop);
