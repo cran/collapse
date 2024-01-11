@@ -100,7 +100,11 @@ if(length(val) == n && n > 1) {
   {
     const double *px = REAL(x);
     const double *pv = REAL(val);
-    WHICHVLOOPLX
+    if(invert) {
+      for(int i = 0; i != n; ++i) if(px[i] != pv[i] && (NISNAN(px[i]) || NISNAN(pv[i]))) buf[j++] = i+1;
+    } else {
+      for(int i = 0; i != n; ++i) if(px[i] == pv[i] || (ISNAN(px[i]) && ISNAN(pv[i]))) buf[j++] = i+1;
+    }
     break;
   }
   case STRSXP:
@@ -260,13 +264,15 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
     if(lr != 1 && lr != n) error("If length(v) == 1, length(r) must be 1 or length(x)");
   }
 
-  if(lr > 1 && tr != tx) { // lr == n &&
+  if(tr != tx) { // lr == n &&
     if(!((tx == INTSXP && tr == LGLSXP) || (tx == LGLSXP && tr == INTSXP))) {
-      // PROTECT_INDEX ipx;
-      // PROTECT_WITH_INDEX(rep = coerceVector(rep, tx), &ipx);
-      tr = tx;
-      rep = PROTECT(coerceVector(rep, tx));
-      ++nprotect;
+      if(tr > tx && !(lr == 1 && tx == INTSXP && tr == REALSXP && REAL_ELT(rep, 0) == (int)REAL_ELT(rep, 0)))
+         warning("Type of R (%s) is larger than X (%s) and thus coerced. This incurs loss of information, such as digits of real numbers being truncated upon coercion to integer. To avoid this, make sure X has a larger type than R: character > double > integer > logical.", type2char(tr), type2char(tx));
+      if(lr > 1) {
+        tr = tx;
+        rep = PROTECT(coerceVector(rep, tx));
+        ++nprotect;
+      }
     } // error("typeof(x) needs to match typeof(r)");
   }
 
@@ -719,6 +725,139 @@ SEXP replace_outliers(SEXP x, SEXP limits, SEXP value, SEXP single_limit, SEXP s
   return res;
 }
 
+SEXP na_locf(SEXP x, SEXP Rset) {
+  int n = length(x), copy = asLogical(Rset) == 0;
+  if(isMatrix(x)) warning("na_locf() does not (yet) have explicit support for matrices, i.e., it treats a matrix as a single vector. Use dapply(M, na_locf) if column-wise processing is desired");
+  if(copy) x = PROTECT(shallow_duplicate(x));
+
+  switch (TYPEOF(x)) {
+  case INTSXP:
+  case LGLSXP:
+  {
+    int *data = INTEGER(x);
+    int last = data[0];
+    for (int i = 0; i < n; i++) {
+      if (data[i] == NA_INTEGER) {
+        data[i] = last;
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  case REALSXP:
+  {
+    double *data = REAL(x);
+    double last = data[0];
+    for (int i = 0; i < n; i++) {
+      if (ISNAN(data[i])) {
+        data[i] = last;
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  case STRSXP:
+  {
+    SEXP *data = STRING_PTR(x);
+    SEXP last = data[0];
+    for (int i = 0; i < n; i++) {
+      if (data[i] == NA_STRING) {
+        data[i] = last;
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  case VECSXP:
+  {
+    const SEXP *data = SEXPPTR_RO(x);
+    SEXP last = data[0];
+    for (int i = 0; i < n; i++) {
+      if (length(data[i]) == 0) {
+        SET_VECTOR_ELT(x, i, last);
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  default:
+    error("na_locf() does not support type '%s'", type2char(TYPEOF(x)));
+  }
+  UNPROTECT(copy);
+  return x;
+}
+
+SEXP na_focb(SEXP x, SEXP Rset) {
+  int n = length(x), copy = asLogical(Rset) == 0;
+  if(isMatrix(x)) warning("na_focb() does not (yet) have explicit support for matrices, i.e., it treats a matrix as a single vector. Use dapply(M, na_focb) if column-wise processing is desired");
+  if(copy) x = PROTECT(shallow_duplicate(x));
+
+  switch (TYPEOF(x)) {
+  case INTSXP:
+  case LGLSXP:
+  {
+    int *data = INTEGER(x);
+    int last = data[0];
+    for (int i = n; i--; ) {
+      if (data[i] == NA_INTEGER) {
+        data[i] = last;
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  case REALSXP:
+  {
+    double *data = REAL(x);
+    double last = data[0];
+    for (int i = n; i--; ) {
+      if (ISNAN(data[i])) {
+        data[i] = last;
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  case STRSXP:
+  {
+    SEXP *data = STRING_PTR(x);
+    SEXP last = data[0];
+    for (int i = n; i--; ) {
+      if (data[i] == NA_STRING) {
+        data[i] = last;
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  case VECSXP:
+  {
+    const SEXP *data = SEXPPTR_RO(x);
+    SEXP last = data[0];
+    for (int i = n; i--; ) {
+      if (length(data[i]) == 0) {
+        SET_VECTOR_ELT(x, i, last);
+      } else {
+        last = data[i];
+      }
+    }
+    break;
+  }
+  default:
+    error("na_focb() does not support type '%s'", type2char(TYPEOF(x)));
+  }
+  UNPROTECT(copy);
+  return x;
+}
+
+
 SEXP vtypes(SEXP x, SEXP isnum) {
   int tx = TYPEOF(x);
   if(tx != VECSXP) return ScalarInteger(tx);
@@ -865,8 +1004,8 @@ SEXP vlengths(SEXP x, SEXP usenam) {
 
 
 // faster version of base::range, which calls both min() and max()
-SEXP frange(SEXP x, SEXP Rnarm) {
-  int l = length(x), narm = asLogical(Rnarm), tx = TYPEOF(x);
+SEXP frange(SEXP x, SEXP Rnarm, SEXP Rfinite) {
+  int l = length(x), narm = asLogical(Rnarm), finite = asLogical(Rfinite), tx = TYPEOF(x);
 
   SEXP out = PROTECT(allocVector(tx, 2));
 
@@ -913,14 +1052,25 @@ SEXP frange(SEXP x, SEXP Rnarm) {
         break;
       }
       double min, max, tmp, *px = REAL(x);
-      if(narm) {
+      if(narm || finite) {
         int j = l-1;
-        while(ISNAN(px[j]) && j!=0) --j;
+        if(finite) while(!R_FINITE(px[j]) && j!=0) --j;
+        else while(ISNAN(px[j]) && j!=0) --j;
         min = max = px[j];
-        if(j != 0) for(int i = j; i--; ) {
-          tmp = px[i];
-          if(min > tmp) min = tmp;
-          if(max < tmp) max = tmp;
+        if(j != 0) {
+          if(finite) {
+            for(int i = j; i--; ) {
+              tmp = px[i];
+              if(min > tmp && tmp > R_NegInf) min = tmp;
+              if(max < tmp && tmp < R_PosInf) max = tmp;
+            }
+          } else {
+            for(int i = j; i--; ) {
+              tmp = px[i];
+              if(min > tmp) min = tmp;
+              if(max < tmp) max = tmp;
+            }
+          }
         }
       } else {
         min = max = px[0];

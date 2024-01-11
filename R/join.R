@@ -75,17 +75,6 @@ join <- function(x, y,
                    fmatch(x[ixon], y[iyon], nomatch = NA_integer_, count = count, ...)
   }
 
-  if(multiple) {
-    g <- group(if(rjoin) x[ixon] else y[iyon], group.sizes = TRUE)
-    m <- multi_match(m, g)
-    if(is.list(m)) {
-      if(rjoin) y <- .Call(C_subsetDT, y, m[[1L]], seq_along(y), FALSE)
-      else x <- .Call(C_subsetDT, x, m[[1L]], seq_along(x), FALSE)
-      m <- m[[2L]]
-      if(how == "left" && length(ax[["row.names"]])) ax[["row.names"]] <- .set_row_names(length(m))
-    }
-  }
-
   # TODO: validate full join...
   switch(validate,
     "m:m" = TRUE,
@@ -111,6 +100,17 @@ join <- function(x, y,
     },
     stop("validate must be one of '1:1', '1:m', 'm:1' or 'm:m'")
   )
+
+  if(multiple) {
+    g <- group(if(rjoin) x[ixon] else y[iyon], group.sizes = TRUE)
+    m <- multi_match(m, g)
+    if(is.list(m)) {
+      if(rjoin) y <- .Call(C_subsetDT, y, m[[1L]], seq_along(y), FALSE)
+      else x <- .Call(C_subsetDT, x, m[[1L]], seq_along(x), FALSE)
+      m <- m[[2L]]
+      if(how == "left" && length(ax[["row.names"]])) ax[["row.names"]] <- .set_row_names(length(m))
+    }
+  }
 
   if(verbose) {
     nx <- length(m) - attr(m, "N.nomatch")
@@ -230,12 +230,14 @@ join <- function(x, y,
     right = {
       x_res <- .Call(C_subsetDT, x, m, seq_along(x)[-ixon], if(count) attr(m, "N.nomatch") else TRUE)
       # if(length(ax[["row.names"]])) ax[["row.names"]] <- .set_row_names(length(m))
+      y_on <- y[iyon]
+      names(y_on) <- xon
       if(keep.col.order) {
-        add_vars(x_res, pos = ixon) <- y[iyon]
+        add_vars(x_res, pos = ixon) <- y_on
         c(x_res, y[-iyon])
       } else {
         keep.col.order <- 2L # has global effects !!
-        c(y[iyon], x_res, y[-iyon])
+        c(y_on, x_res, y[-iyon])
       }
     },
     semi = { # = return rows in x that have matching values in y

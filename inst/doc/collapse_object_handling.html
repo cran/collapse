@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -624,8 +624,8 @@ attributes.</p>
 resulting ‘GRP’ object in a <code>&quot;groups&quot;</code> attribute. It then
 assigns a class attribute as follows</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>clx <span class="ot">&lt;-</span> <span class="fu">class</span>(.X) <span class="co"># .X is the data frame being grouped, clx is its class</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="fu">c</span>(<span class="st">&quot;GRP_df&quot;</span>, <span class="st">&quot;grouped_df&quot;</span>, <span class="st">&quot;data.frame&quot;</span>), clx, <span class="at">nomatch =</span> 0L)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">class</span>(.X) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GRP_df&quot;</span>,  <span class="cf">if</span>(<span class="fu">length</span>(mp <span class="ot">&lt;-</span> m[m <span class="sc">!=</span> 0L])) clx[<span class="sc">-</span>mp] <span class="cf">else</span> clx, <span class="st">&quot;grouped_df&quot;</span>, <span class="cf">if</span>(m[3L]) <span class="st">&quot;data.frame&quot;</span>) </span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="fu">c</span>(<span class="st">&quot;GRP_df&quot;</span>, <span class="st">&quot;grouped_df&quot;</span>, <span class="st">&quot;data.frame&quot;</span>), clx, <span class="at">nomatch =</span> <span class="dv">0</span><span class="dt">L</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">class</span>(.X) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;GRP_df&quot;</span>,  <span class="cf">if</span>(<span class="fu">length</span>(mp <span class="ot">&lt;-</span> m[m <span class="sc">!=</span> <span class="dv">0</span><span class="dt">L</span>])) clx[<span class="sc">-</span>mp] <span class="cf">else</span> clx, <span class="st">&quot;grouped_df&quot;</span>, <span class="cf">if</span>(m[<span class="dv">3</span><span class="dt">L</span>]) <span class="st">&quot;data.frame&quot;</span>) </span></code></pre></div>
 <p>In words: a class <code>&quot;GRP_df&quot;</code> is added in front, followed
 by the classes of the original object<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a>, followed by <code>&quot;grouped_df&quot;</code> and
 finally <code>&quot;data.frame&quot;</code>, if present. The first class

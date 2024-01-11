@@ -52,7 +52,7 @@ void writeNA(SEXP, const int, const int);
 void matCopyAttr(SEXP out, SEXP x, SEXP Rdrop, int ng);
 void DFcopyAttr(SEXP out, SEXP x, int ng);
 SEXP falloc(SEXP, SEXP, SEXP);
-SEXP frange(SEXP x, SEXP Rnarm);
+SEXP frange(SEXP x, SEXP Rnarm, SEXP Rfinite);
 SEXP fdist(SEXP x, SEXP vec, SEXP Rret, SEXP Rnthreads);
 SEXP fnrowC(SEXP x);
 // SEXP CasChar(SEXP x);
@@ -101,6 +101,8 @@ SEXP pivot_long(SEXP data, SEXP ind, SEXP idcol);
 SEXP pivot_wide(SEXP index, SEXP id, SEXP column, SEXP fill, SEXP Rnthreads);
 SEXP sort_merge_join(SEXP x, SEXP table, SEXP ot, SEXP count);
 SEXP replace_outliers(SEXP x, SEXP limits, SEXP value, SEXP single_limit, SEXP set);
+SEXP na_locf(SEXP x, SEXP Rset);
+SEXP na_focb(SEXP x, SEXP Rset);
 SEXP multi_match(SEXP m, SEXP g);
 // fnobs rewritten in C:
 SEXP fnobsC(SEXP x, SEXP Rng, SEXP g);

@@ -236,14 +236,14 @@ for(int i = 0, k = 0; i < np; ++i) {                  \
     if(k == 0 || k == l || h == 0.0) {                \
       pres[i] = a; continue;                          \
     }                                                 \
-    wb = pw[po[k]];                                   \
+    wb = pw[po[k-1]];                                 \
     /* If zero weights, need to move forward*/        \
-    if(wb == 0.0) {                                   \
+    if(pw[po[k]] == 0.0) {                            \
     /* separate indices as possible: h < wsum(i-1) */ \
-      int kp = k, lm = l-1;                           \
-      while(kp < lm && wb == 0.0) wb = pw[po[++kp]];  \
-      if(wb == 0.0) {                                 \
-        k = kp; pres[i] = a; continue;                \
+      int kp = k+1;                                   \
+      while(kp < l && pw[po[kp]] == 0.0) ++kp;        \
+      if(kp == l) {                                   \
+        k = kp-1; pres[i] = a; continue;              \
       }                                               \
       b = px[po[kp]];                                 \
     } else b = px[po[k]];                             \
@@ -318,7 +318,7 @@ SEXP fquantileC(SEXP x, SEXP Rprobs, SEXP w, SEXP o, SEXP Rnarm, SEXP Rtype, SEX
   } else if(np <= 2 && isNull(o) && (probs[0] == 0.0 || probs[0] == 1.0) && (np <= 1 || probs[1] == 1.0)) {
 
     // TODO: could also check weights here, but this case is presumably very rare anyway..
-    SEXP rng = PROTECT(frange(x, Rnarm)); ++nprotect;
+    SEXP rng = PROTECT(frange(x, Rnarm, ScalarLogical(FALSE))); ++nprotect;
     if(TYPEOF(rng) != REALSXP) {
       rng = PROTECT(coerceVector(rng, REALSXP)); ++nprotect;
     }
@@ -539,15 +539,14 @@ if(ret < 3) { /* lower (2), or average (1) element*/                       \
   return (a + wb) / wsum;                                                  \
 }                                                                          \
 wb = h + eps;                                                              \
-while(wsum <= wb) wsum += pw[po[k++]];                                      \
+while(wsum <= wb) wsum += pw[po[k++]];                                     \
 a = px[po[k-1]];                                                           \
 if(ret == 3 || k == l || h == 0.0)                                         \
   return a;                                                                \
-wb = pw[po[k]];                                                            \
-if(wb == 0.0) { /* If zero weights, need to move forward*/                 \
-  while(k < l-1 && wb == 0.0) wb = pw[po[++k]];                            \
-  if(wb == 0.0) return a;                                                  \
-}                                                                          \
+wb = pw[po[k-1]];                                                          \
+/* If zero weights, need to move forward*/                                 \
+while(k < l && pw[po[k]] == 0.0) ++k;                                      \
+if(k == l) return a;                                                       \
 h = (wsum - h) / wb;                                                       \
 wb = px[po[k]];                                                            \
 return wb + h * (a - wb);
@@ -576,10 +575,10 @@ if(ret < 3) { /* lower (2), or average (1) element*/                         \
   if(ret == 3 || k == n || h == 0.0) {                                       \
     res = a;                                                                 \
   } else {                                                                   \
-    wb = pw[i_cc[k]];                                                        \
-    if(wb == 0.0)  /* If zero weights, need to move forward*/                \
-       while(k < n-1 && wb == 0.0) wb = pw[i_cc[++k]];                       \
-    if(wb == 0.0) res = a;                                                   \
+    wb = pw[i_cc[k-1]];                                                      \
+    /* If zero weights, need to move forward*/                               \
+    while(k < n && pw[i_cc[k]] == 0.0) ++k;                                  \
+    if(k == n) res = a;                                                      \
     else {                                                                   \
       h = (wsum - h) / wb;                                                   \
       wb = x_cc[k];                                                          \
