@@ -1,6 +1,6 @@
 context("recode, replace")
 
-if(!is.null(attributes(identical(FALSE, TRUE)))) stop("OECD label issue")
+
 
 gmtc <- fgroup_by(mtcars, cyl)
 

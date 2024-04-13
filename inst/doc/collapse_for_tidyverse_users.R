@@ -1,7 +1,7 @@
-## ---- echo=FALSE----------------------------------------------------------------------------------
+## ----echo=FALSE-----------------------------------------------------------------------------------
 oldopts <- options(width = 100L)
 
-## ---- echo = FALSE, message = FALSE, warning=FALSE------------------------------------------------
+## ----echo = FALSE, message = FALSE, warning=FALSE-------------------------------------------------
 knitr::opts_chunk$set(error = FALSE, message = FALSE, warning = FALSE, 
                       comment = "#", tidy = FALSE, cache = TRUE, collapse = TRUE,
                       fig.width = 8, fig.height = 5, 
@@ -70,6 +70,6 @@ mtcars |>
   group_by(cyl, vs, am, sort = FALSE) |> 
   fmean(nthreads = 3, na.rm = FALSE)
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 options(oldopts)
 
