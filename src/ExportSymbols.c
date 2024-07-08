@@ -128,7 +128,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"C_all_funs", (DL_FUNC) &all_funs, 1},
   {"C_unlock_collapse_namespace", (DL_FUNC) &unlock_collapse_namespace, 1},
   {"C_pivot_long", (DL_FUNC) &pivot_long, 3},
-  {"C_pivot_wide", (DL_FUNC) &pivot_wide, 5},
+  {"C_pivot_wide", (DL_FUNC) &pivot_wide, 7},
   {"C_sort_merge_join", (DL_FUNC) &sort_merge_join, 4},
   {"C_replace_outliers", (DL_FUNC) &replace_outliers, 5},
   {"C_na_locf", (DL_FUNC) &na_locf, 2},
@@ -160,7 +160,7 @@ void R_init_collapse(DllInfo *dll) {
      recommend you contact me if you want to use a C function in a package. I am always happy to answer questions
      regarding the arguments and use of certain C functions. */
 
-  // Funtions that fully operate on R vectors (SEXP)                           // Corresponding R function(s)
+  // Functions that fully operate on R vectors (SEXP)                           // Corresponding R function(s)
   R_RegisterCCallable("collapse", "cp_TRA", (DL_FUNC) &TRAC);                  // TRA.default()
   R_RegisterCCallable("collapse", "cp_setop", (DL_FUNC) &setop);               // setop()
   R_RegisterCCallable("collapse", "cp_range", (DL_FUNC) &frange);              // frange()

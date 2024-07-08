@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2024-05-20" />
+<meta name="date" content="2024-06-25" />
 
 <title>collapse for tidyverse Users</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">collapse for tidyverse Users</h1>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2024-05-20</h4>
+<h4 class="date">2024-06-25</h4>
 
 
 <div id="TOC">
@@ -363,6 +363,8 @@ pre[class] {
 max-height: 500px;
 }
 </style>
+<p>collapse_for_tidyverse_users.R</p>
+<p>collapse_for_tidyverse_users.R</p>
 <p><em>collapse</em> is a C/C++ based package for data transformation
 and statistical computing in R that aims to enable greater performance
 and statistical complexity in data manipulation tasks and offers a
@@ -394,7 +396,7 @@ Other functions like <code>fsubset</code>, <code>ftransform</code>, and
 <code>get_vars</code> are inspired by base R, while again other
 functions like <code>join</code>, <code>pivot</code>,
 <code>roworder</code>, <code>colorder</code>, <code>rowbind</code>, etc.
-are inspired by other data manipulation libraries such das
+are inspired by other data manipulation libraries such as
 <em>data.table</em> and <em>polars</em>.</p>
 <p>By virtue of the f- prefixes, the <em>collapse</em> namespace has no
 conflicts with the <em>tidyverse</em>, and these functions can easily be
@@ -404,6 +406,7 @@ option to mask functions and eliminate the prefixes with
 <code>set_collapse</code>. For example</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(collapse)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">set_collapse</span>(<span class="at">mask =</span> <span class="st">&quot;manip&quot;</span>) <span class="co"># version &gt;= 2.0.0 </span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>makes available functions <code>select</code>, <code>group_by</code>,
 <code>summarise</code>, <code>mutate</code>, <code>rename</code>,
 <code>count</code>, <code>subset</code>, and <code>transform</code> in
@@ -423,6 +426,7 @@ package, such that the following code is executed by
 <span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co"># 5   6  1  0 19.12500 2.500000 115.25000 19.21275</span></span>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co"># 6   8  0  0 15.98000 2.900000 191.00000 17.01239</span></span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co"># 7   8  0  1 15.40000 6.000000 299.50000 14.55297</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p><em>Note</em> that the correct documentation still needs to be called
 with prefixes, i.e., <code>?fsubset</code>. See
 <code>?set_collapse</code> for further options to the package, which
@@ -477,6 +481,7 @@ data:</p>
 <span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co"># [21] 25.93504 14.80643 14.80643 14.80643 14.80643 25.93504 25.93504 25.93504 14.80643 19.64578</span></span>
 <span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co"># [31] 14.80643 25.93504</span></span>
 <span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co"># etc...</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>The data manipulation functions of <em>collapse</em> are integrated
 with these <em>Fast Statistical Functions</em> to enable vectorized
 statistical operations. For example, the following code</p>
@@ -493,6 +498,7 @@ statistical operations. For example, the following code</p>
 <span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co"># 5   6  1  0 19.12500 2.500000 115.25000 19.21275</span></span>
 <span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># 6   8  0  0 15.98000 2.900000 191.00000 17.01239</span></span>
 <span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co"># 7   8  0  1 15.40000 6.000000 299.50000 14.55297</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>gives exactly the same result as above, but the execution is much
 faster (especially on larger data), because with <em>Fast Statistical
 Functions</em>, the data does not need to be split by groups, and there
@@ -516,6 +522,7 @@ grouped data, so if we did not want to calculate the weighted mean of
 <span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co"># 5   6  1  0 19.12500 2.500000 115.25000</span></span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co"># 6   8  0  0 15.98000 2.900000 191.00000</span></span>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># 7   8  0  1 15.40000 6.000000 299.50000</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>Note that all functions in <em>collapse</em>, including the <em>Fast
 Statistical Functions</em>, have the default <code>na.rm = TRUE</code>,
 i.e., missing values are skipped in calculations. This can be changed
@@ -529,6 +536,7 @@ vectorized execution wherever they are used. E.g.</p>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co"># 1   4 41.16364</span></span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># 2   6 34.24286</span></span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># 3   8 29.60000</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>calculates a grouped mean of <code>mpg</code> but adds the overall
 minimum of <code>qsec</code> to the result, whereas</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>mtcars <span class="sc">|&gt;</span> <span class="fu">group_by</span>(cyl) <span class="sc">|&gt;</span> <span class="fu">summarise</span>(<span class="at">mpg =</span> <span class="fu">fmean</span>(mpg) <span class="sc">+</span> <span class="fu">fmin</span>(qsec)) <span class="co"># Vectorized</span></span>
@@ -541,6 +549,7 @@ minimum of <code>qsec</code> to the result, whereas</p>
 <span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co"># 1   4 43.36364</span></span>
 <span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co"># 2   6 35.24286</span></span>
 <span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co"># 3   8 29.60000</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>both give the mean + the minimum within each group, but calculated in
 different ways: the former is equivalent to
 <code>fmean(mpg, g = cyl) / fmin(qsec, g = cyl)</code>, whereas the
@@ -587,6 +596,7 @@ operation:</p>
 <span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co"># 5   6  1  0 19.12500 2.500000 115.25000 19.21275</span></span>
 <span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co"># 6   8  0  0 15.98000 2.900000 191.00000 17.01239</span></span>
 <span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co"># 7   8  0  1 15.40000 6.000000 299.50000 14.55297</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>Without the weighted mean of <code>qsec</code>, this would simplify
 to</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>mtcars <span class="sc">|&gt;</span></span>
@@ -601,6 +611,7 @@ to</p>
 <span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># 5   6  1  0 19.12500 2.500000 115.25000</span></span>
 <span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># 6   8  0  0 15.98000 2.900000 191.00000</span></span>
 <span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co"># 7   8  0  1 15.40000 6.000000 299.50000</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>Finally, we could set the following options to toggle unsorted
 grouping, no missing value skipping, and multithreading across the three
 columns for more efficient execution.</p>
@@ -616,6 +627,7 @@ columns for more efficient execution.</p>
 <span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co"># 5   4  1  0 22.90000 1.666667  84.66667</span></span>
 <span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># 6   4  0  1 26.00000 2.000000  91.00000</span></span>
 <span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co"># 7   8  0  1 15.40000 6.000000 299.50000</span></span></code></pre></div>
+<p>collapse_for_tidyverse_users.R</p>
 <p>Setting these options globally using
 <code>set_collapse(sort = FALSE, nthreads = 3, na.rm = FALSE)</code>
 avoids the need to set them repeatedly.</p>
@@ -634,6 +646,7 @@ closely examine the <a href="https://fastverse.github.io/fastverse/"><em>fastver
 suite of packages. <em>collapse</em> alone may not always suffice, but
 99% of <em>tidyverse</em> code can be replaced with an efficient and
 lightweight <em>fastverse</em> solution.</p>
+<p>collapse_for_tidyverse_users.R</p>
 </div>
 <div class="footnotes footnotes-end-of-document">
 <hr />
