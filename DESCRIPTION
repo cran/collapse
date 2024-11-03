@@ -1,7 +1,7 @@
 Package: collapse
 Title: Advanced and Fast Data Transformation
-Version: 2.0.16
-Date: 2024-08-20
+Version: 2.0.17
+Date: 2024-11-03
 Authors@R: c(
            person("Sebastian", "Krantz", role = c("aut", "cre"), 
                   email = "sebastian.krantz@graduateinstitute.ch", 
@@ -31,8 +31,7 @@ Description: A C/C++ based package for advanced data transformation and
     It is well integrated with base R classes, 'dplyr'/'tibble', 'data.table', 'sf', 'units', 
     'plm' (panel-series and data frames), and 'xts'/'zoo'.
 URL: https://sebkrantz.github.io/collapse/,
-        https://github.com/SebKrantz/collapse,
-        https://twitter.com/collapse_R
+        https://github.com/SebKrantz/collapse, https://x.com/collapse_R
 BugReports: https://github.com/SebKrantz/collapse/issues
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
@@ -45,7 +44,7 @@ Suggests: fastverse, data.table, magrittr, kit, xts, zoo, plm, fixest,
         microbenchmark, testthat, covr, knitr, rmarkdown, withr
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2024-08-20 08:47:44 UTC; sebastiankrantz
+Packaged: 2024-11-02 21:20:55 UTC; sebastiankrantz
 Author: Sebastian Krantz [aut, cre] (<https://orcid.org/0000-0001-6212-5229>),
   Matt Dowle [ctb],
   Arun Srinivasan [ctb],
@@ -58,4 +57,4 @@ Author: Sebastian Krantz [aut, cre] (<https://orcid.org/0000-0001-6212-5229>),
   1999-2016 The R Core Team [cph]
 Maintainer: Sebastian Krantz <sebastian.krantz@graduateinstitute.ch>
 Repository: CRAN
-Date/Publication: 2024-08-21 10:40:02 UTC
+Date/Publication: 2024-11-03 05:40:02 UTC

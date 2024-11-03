@@ -250,16 +250,22 @@ tfmv <- ftransformv
 
 
 settransform <- function(.data, ...) {
-  assign(as.character(substitute(.data)), ftransform(.data, ...), envir = parent.frame())
-  invisible(.data)
+  name <- as.character(substitute(.data))
+  if(length(name) != 1L || name == ".") stop("Cannot assign to name: ", deparse(substitute(.data)))
+  res <- ftransform(.data, ...)
+  assign(name, res, envir = parent.frame())
+  invisible(res)
 }
 # eval.parent(substitute(.data <- get0("ftransform", envir = getNamespace("collapse"))(.data, ...))) # can use `<-`(.data, ftransform(.data,...)) but not faster ..
 
 settfm <- settransform
 
 settransformv <- function(.data, ...) {
-  assign(as.character(substitute(.data)), ftransformv(.data, ...), envir = parent.frame())
-  invisible(.data)
+  name <- as.character(substitute(.data))
+  if(length(name) != 1L || name == ".") stop("Cannot assign to name: ", deparse(substitute(.data)))
+  res <- ftransformv(.data, ...)
+  assign(name, res, envir = parent.frame())
+  invisible(res)
 }
 # eval.parent(substitute(.data <- get0("ftransformv", envir = getNamespace("collapse"))(.data, vars, FUN, ..., apply = apply)))
 
@@ -398,7 +404,7 @@ acr_get_funs <- function(.fnsexp, .fns, ...) {
         names(.fns) <- nf
         if(is.null(namfun)) namfun <- nf
       } else {
-        nf <- vapply(.fnsexp[-1L], function(x) l1orlst(all.vars(x)), character(1L), USE.NAMES = FALSE)
+        nf <- vapply(.fnsexp[-1L], function(x) l1orlst(all.vars(x)), "", USE.NAMES = FALSE)
         names(.fns) <- nf
         if(is.null(namfun)) namfun <- as.character(seq_along(.fns))
       }

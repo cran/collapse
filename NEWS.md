@@ -1,8 +1,23 @@
+# collapse 2.0.17
+
+* In `GRP.default()`, the `"group.starts"` attribute is always returned, even if there is only one group or every observation is its own group. Thanks @JamesThompsonC (#631).  
+
+* Fixed a bug in `pivot()` if `na.rm = TRUE` and `how = "wider"|"recast"` and there are multiple `value` columns with different missingness patterns. In this case `na_omit(values)` was applied with default settings to the original (long) value columns, implying potential loss of information. The fix applies `na_omit(values, prop = 1)`, i.e., only removes completely missing rows. 
+* `qDF()/qDT()/qTBL()` now allow a length-2 vector of names to `row.names.col` if `X` is a named atomic vector, e.g., `qDF(fmean(mtcars), c("cars", "mean"))` gives the same as `pivot(fmean(mtcars, drop = FALSE), names = list("car", "mean"))`. 
+
+* Added a subsection on using internal (ad-hoc) grouping to the *collapse* for *tidyverse* users vignette.  
+
+* `qsu()` now adds a `WeightSum` column giving the sum of (non-zero or missing) weights if the `w` argument is used. Thanks @mayer79 for suggesting (#650). For panel data (`pid`) the 'Between' sum of weights is also simply the number of groups, and the 'Within' sum of weights is the 'Overall' sum of weights divided by the number of groups.   
+
+* Fixed an inaccuracy in `fquantile()/fnth()` with weights: As per documentation the target sum is `sumwp = (sum(w) - min(w)) * p`, however, in practice, the weight of the minimum element of `x` was used instead of the minimum weight. Since the smallest element in the sample usually has a small weight this was unnoticed for a long while, but thanks to @Jahnic-kb now reported and fixed (#659). 
+
+* Fixed a bug in `recode_char()` when `regex = TRUE` and the `default` argument was used. Thanks @alinacherkas for both reporing and fixing (#654).
+
 # collapse 2.0.16
 
 * Fixes an installation bug on some Linux systems (conflicting types) (#613). 
 
-* *collapse* now enforces string encoding in `fmatch()` / `join()`, which caused problems if strings being matched had different encodings (#566, #579, and #618). To avoid noticeable performance implications, checks are done heuristically, i.e., the first, middle and last string of a character vector are checked, and if not UTF8, the entire vector is coerced to UTF8 strings *before* the matching process. In general, character vectors in R can contain strings of different encodings, but this is not the case with most regular data. For performance reasons, *collapse* assumes that character vectors are uniform in terms of string encoding. 
+* *collapse* now enforces string encoding in `fmatch()` / `join()`, which caused problems if strings being matched had different encodings (#566, #579, and #618). To avoid noticeable performance implications, checks are done heuristically, i.e., the first, 25th, 50th and 75th percentile and last string of a character vector are checked, and if not UTF8, the entire vector is internally coerced to UTF8 strings *before* the matching process. In general, character vectors in R can contain strings of different encodings, but this is not the case with most regular data. For performance reasons, *collapse* assumes that character vectors are uniform in terms of string encoding. Heterogeneous strings should be coerced using tools like `stringi::stri_trans_general(x, "latin-ascii")`.
 
 * Fixes a bug using qualified names for fast statistical functions inside `across()` (#621, thanks @alinacherkas). 
 

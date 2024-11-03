@@ -15,7 +15,7 @@ int need2utf8(SEXP x) {
   // }
   // return(false);
   if (xlen <= 1) return xlen == 1 ? NEED2UTF8(xd[0]) : 0;
-  return NEED2UTF8(xd[0]) || NEED2UTF8(xd[xlen/2]) || NEED2UTF8(xd[xlen-1]);
+  return NEED2UTF8(xd[0]) || NEED2UTF8(xd[xlen/4]) || NEED2UTF8(xd[xlen/2]) || NEED2UTF8(xd[(int)(xlen/1.3333)]) || NEED2UTF8(xd[xlen-1]);
 }
 
 SEXP coerceUtf8IfNeeded(SEXP x) {
@@ -35,7 +35,7 @@ SEXP coerceUtf8IfNeeded(SEXP x) {
 SEXP setnames(SEXP x, SEXP nam) {
   if(TYPEOF(nam) != STRSXP) error("names need to be character typed");
   if(INHERITS(x, char_datatable)) {
-    int n = TRUELENGTH(x), l = LENGTH(nam);
+    int n = TRULEN(x), l = LENGTH(nam);
     if(n < l) { // error("Invalid data.table (underallocated), use qDT(data) to make valid.");
       setAttrib(x, R_NamesSymbol, nam);
       // setselfref(x);
@@ -44,8 +44,8 @@ SEXP setnames(SEXP x, SEXP nam) {
     SEXP newnam = PROTECT(allocVector(STRSXP, n)),
       *pnn = SEXPPTR(newnam), *pn = SEXPPTR(nam);
     for(int i = 0; i < l; ++i) pnn[i] = pn[i];
-    SETLENGTH(newnam, l);
-    SET_TRUELENGTH(newnam, n);
+    SET_LEN(newnam, l);
+    SET_TRULEN(newnam, n);
     setAttrib(x, R_NamesSymbol, newnam);
     setselfref(x);
     UNPROTECT(1);
@@ -267,16 +267,21 @@ SEXP frankds(SEXP xorderArg, SEXP xstartArg, SEXP xlenArg, SEXP dns) {
   int *xstart = INTEGER(xstartArg), *xlen = INTEGER(xlenArg), *xorder = INTEGER(xorderArg);
   n = length(xorderArg);
   ng = length(xstartArg);
+  if(n > 0 && n == ng && asInteger(dns) == 1) return xorderArg;
   SEXP ans = PROTECT(allocVector(INTSXP, n));
   int *ians = INTEGER(ans);
   if(n > 0) {
     switch(asInteger(dns)) {
     case 0: // Not Sorted
       k=1;
-      for (i = 0; i != ng; i++) {
-        for (j = xstart[i]-1, end = xstart[i]+xlen[i]-1; j < end; j++)
-          ians[xorder[j]-1] = k;
-        k++;
+      if(n == ng) {
+        for (i = 0; i != n; i++) ians[xorder[i]-1] = i+1;
+      } else {
+        for (i = 0; i != ng; i++) {
+          for (j = xstart[i]-1, end = xstart[i]+xlen[i]-1; j < end; j++)
+            ians[xorder[j]-1] = k;
+          k++;
+        }
       }
       break;
     case 1: // Sorted
@@ -286,7 +291,7 @@ SEXP frankds(SEXP xorderArg, SEXP xstartArg, SEXP xlenArg, SEXP dns) {
         k++;
       }
       break;
-    case 2: // This is basically run-length type group-id
+    case 2: // This is basically run-length type group-id: currently not used in collapse!
       for (i = 0; i != ng; i++) {
         k=1;
         for (j = xstart[i]-1, end = xstart[i]+xlen[i]-1; j < end; j++)
@@ -297,7 +302,7 @@ SEXP frankds(SEXP xorderArg, SEXP xstartArg, SEXP xlenArg, SEXP dns) {
     }
   }
   UNPROTECT(1);
-  return(ans);
+  return ans;
 }
 
 // from data.table_assign.c:

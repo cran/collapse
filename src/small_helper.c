@@ -6,13 +6,6 @@
 #include "base_radixsort.h"
 #include <math.h>
 
-// // Function to check if two strings have the same encoding
-// int are_encodings_equal(SEXP str1, SEXP str2) {
-//   cetype_t enc1 = Rf_getCharCE(STRING_ELT(str1, 0));
-//   cetype_t enc2 = Rf_getCharCE(STRING_ELT(str2, 0));
-//   return enc1 == enc2;
-// }
-
 void matCopyAttr(SEXP out, SEXP x, SEXP Rdrop, int ng) {
   SEXP dn = getAttrib(x, R_DimNamesSymbol);
   SEXP cn = isNull(dn) ? R_NilValue : VECTOR_ELT(dn, 1); // PROTECT ??
