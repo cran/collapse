@@ -1,3 +1,15 @@
+# collapse 2.0.19
+
+* `fmatch(factor(NA), NA)` now gives `1` instead of `NA`. Thanks @NicChr (#675).
+
+* New developer focused vignette on [developing with *collapse*](https://sebkrantz.github.io/collapse/articles/developing_with_collapse.html).
+
+* Fixed minor CRAN issues (#676, #702). 
+
+* Fixed bug with integer64 types in `rowbind()`. Thanks @arthurgailes for reporting and @aitap for providing a fix (#697). 
+
+* *collapse* now also has a Bluesky account at https://bsky.app/profile/rcollapse.bsky.social.
+
 # collapse 2.0.18
 
 * Cases in `pivot(..., how = "longer")` with no `values` columns now no longer give an error. Thanks @alvarocombo for flagging this (#663).
@@ -19,7 +31,7 @@
 
 * Fixed an inaccuracy in `fquantile()/fnth()` with weights: As per documentation the target sum is `sumwp = (sum(w) - min(w)) * p`, however, in practice, the weight of the minimum element of `x` was used instead of the minimum weight. Since the smallest element in the sample usually has a small weight this was unnoticed for a long while, but thanks to @Jahnic-kb now reported and fixed (#659). 
 
-* Fixed a bug in `recode_char()` when `regex = TRUE` and the `default` argument was used. Thanks @alinacherkas for both reporing and fixing (#654).
+* Fixed a bug in `recode_char()` when `regex = TRUE` and the `default` argument was used. Thanks @alinacherkas for both reporting and fixing (#654).
 
 # collapse 2.0.16
 
