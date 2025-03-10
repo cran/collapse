@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2025-01-07" />
+<meta name="date" content="2025-03-10" />
 
 <title>collapse for tidyverse Users</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">collapse for tidyverse Users</h1>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2025-01-07</h4>
+<h4 class="date">2025-03-10</h4>
 
 
 <div id="TOC">
@@ -382,8 +382,8 @@ provides many <em>tidyverse</em>-like functions for data manipulation.
 It can thus be used to write <em>tidyverse</em>-like data manipulation
 code that, thanks to low-level vectorization of many statistical
 operations and optimized R code, typically runs much faster than native
-<em>tidyverse</em> code (in addition to being much more lightweight in
-dependencies).</p>
+<em>tidyverse</em> code, in addition to being much more lightweight in
+dependencies.</p>
 <p>Its aim is not to create a faster <em>tidyverse</em>, i.e., it does
 not implements all aspects of the rich <em>tidyverse</em> grammar or
 changes to it<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, and also takes inspiration from other
@@ -394,13 +394,13 @@ parsimony, complexity, and robustness in data manipulation for R.</p>
 <p><em>collapse</em> data manipulation functions familiar to
 <em>tidyverse</em> users include <code>fselect</code>,
 <code>fgroup_by</code>, <code>fsummarise</code>, <code>fmutate</code>,
-<code>across</code>, <code>frename</code>, and <code>fcount</code>.
-Other functions like <code>fsubset</code>, <code>ftransform</code>, and
-<code>get_vars</code> are inspired by base R, while again other
-functions like <code>join</code>, <code>pivot</code>,
-<code>roworder</code>, <code>colorder</code>, <code>rowbind</code>, etc.
-are inspired by other data manipulation libraries such as
-<em>data.table</em> and <em>polars</em>.</p>
+<code>across</code>, <code>frename</code>, <code>fslice</code>, and
+<code>fcount</code>. Other functions like <code>fsubset</code>,
+<code>ftransform</code>, and <code>get_vars</code> are inspired by base
+R, while again other functions like <code>join</code>,
+<code>pivot</code>, <code>roworder</code>, <code>colorder</code>,
+<code>rowbind</code>, etc. are inspired by other data manipulation
+libraries such as <em>data.table</em> and <em>polars</em>.</p>
 <p>By virtue of the f- prefixes, the <em>collapse</em> namespace has no
 conflicts with the <em>tidyverse</em>, and these functions can easily be
 substituted in a <em>tidyverse</em> workflow.</p>
@@ -412,9 +412,9 @@ option to mask functions and eliminate the prefixes with
 <p>collapse_for_tidyverse_users.R</p>
 <p>makes available functions <code>select</code>, <code>group_by</code>,
 <code>summarise</code>, <code>mutate</code>, <code>rename</code>,
-<code>count</code>, <code>subset</code>, and <code>transform</code> in
-the <em>collapse</em> namespace and detaches and re-attaches the
-package, such that the following code is executed by
+<code>count</code>, <code>subset</code>, <code>slice</code>, and
+<code>transform</code> in the <em>collapse</em> namespace and detaches
+and re-attaches the package, such that the following code is executed by
 <em>collapse</em>:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>mtcars <span class="sc">|&gt;</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">subset</span>(mpg <span class="sc">&gt;</span> <span class="dv">11</span>) <span class="sc">|&gt;</span></span>

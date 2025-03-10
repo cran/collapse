@@ -3,9 +3,8 @@
  and licensed under a GPL-3.0 license.
 */
 
+#include "collapse_c.h"
 #include "kit.h"
-
-#define SEXPPTR_RO(x) ((const SEXP *)DATAPTR_RO(x))  // to avoid overhead of looped VECTOR_ELT
 
 // ****************************************
 // This function groups a single vector
@@ -27,7 +26,7 @@ SEXP dupVecIndex(SEXP x) {
   } else if(tx == INTSXP) {
     if(isFactor(x) || inherits(x, "qG")) {
       tx = 1000;
-      M = isFactor(x) ? (size_t)nlevels(x) + 2 : (size_t)asInteger(getAttrib(x, install("N.groups"))) + 2;
+      M = isFactor(x) ? (size_t)nlevels(x) + 2 : (size_t)asInteger(getAttrib(x, sym_n_groups)) + 2;
       anyNA = !inherits(x, "na.included");
     } else {
       int *restrict p = INTEGER(x);
@@ -175,7 +174,7 @@ SEXP dupVecIndex(SEXP x) {
     }
   } break;
   case STRSXP: {
-    const SEXP *restrict px = SEXPPTR(x);
+    const SEXP *restrict px = SEXPPTR_RO(x);
     for (int i = 0; i != n; ++i) {
       id = HASH(((uintptr_t) px[i] & 0xffffffff), K);
       while(h[id]) {
@@ -192,8 +191,7 @@ SEXP dupVecIndex(SEXP x) {
   } break;
   }
   R_Free(h);
-  SEXP ngroups_sym = install("N.groups");
-  setAttrib(ans_i, ngroups_sym, ScalarInteger(g));
+  setAttrib(ans_i, sym_n_groups, ScalarInteger(g));
   UNPROTECT(1);
   return ans_i;
 }
@@ -216,7 +214,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
   } else if(tx == INTSXP) {
     if(isFactor(x) || inherits(x, "qG")) {
       tx = 1000;
-      M = isFactor(x) ? (size_t)nlevels(x) + 2 : (size_t)asInteger(getAttrib(x, install("N.groups"))) + 2;
+      M = isFactor(x) ? (size_t)nlevels(x) + 2 : (size_t)asInteger(getAttrib(x, sym_n_groups)) + 2;
     } else {
       int *p = INTEGER(x);
       if(n > 10 && (NOGE(p[0], n) || NOGE(p[n/2], n) || NOGE(p[n-1], n))) goto bigint;
@@ -338,7 +336,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
     }
   } break;
   case STRSXP: {
-    const SEXP *restrict px = SEXPPTR(x);
+    const SEXP *restrict px = SEXPPTR_RO(x);
     for (int i = 0; i != n; ++i) {
       if(px[i] == NA_STRING) {
         pans_i[i] = NA_INTEGER;
@@ -359,8 +357,7 @@ SEXP dupVecIndexKeepNA(SEXP x) {
   } break;
   }
   R_Free(h);
-  SEXP ngroups_sym = install("N.groups");
-  setAttrib(ans_i, ngroups_sym, ScalarInteger(g));
+  setAttrib(ans_i, sym_n_groups, ScalarInteger(g));
   UNPROTECT(1);
   return ans_i;
 }
@@ -382,8 +379,8 @@ SEXP dupVecIndexTwoVectors(SEXP x, SEXP y) {
   int both_discr = (tx == LGLSXP || (tx == INTSXP && (isFactor(x) || inherits(x, "qG")))) &&
                    (ty == LGLSXP || (ty == INTSXP && (isFactor(y) || inherits(y, "qG"))));
   if(both_discr) {
-    K = tx == LGLSXP ? 1 : isFactor(x) ? nlevels(x) : asInteger(getAttrib(x, install("N.groups")));
-    K2 = ty == LGLSXP ? 1 : isFactor(y) ? nlevels(y) : asInteger(getAttrib(y, install("N.groups")));
+    K = tx == LGLSXP ? 1 : isFactor(x) ? nlevels(x) : asInteger(getAttrib(x, sym_n_groups));
+    K2 = ty == LGLSXP ? 1 : isFactor(y) ? nlevels(y) : asInteger(getAttrib(y, sym_n_groups));
     if(tx == LGLSXP || !inherits(x, "na.included")) {
       K += 1; anyNA += 1;
     }
@@ -554,8 +551,7 @@ SEXP dupVecIndexTwoVectors(SEXP x, SEXP y) {
   }
 
   R_Free(h);
-  SEXP ngroups_sym = install("N.groups");
-  setAttrib(ans, ngroups_sym, ScalarInteger(g));
+  setAttrib(ans, sym_n_groups, ScalarInteger(g));
   UNPROTECT(1);
   return ans;
 }
@@ -579,7 +575,7 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
   size_t M;
   if (tx == INTSXP || tx == STRSXP || tx == REALSXP || tx == CPLXSXP ) {
     if(tx == INTSXP && (isFactor(x) || inherits(x, "qG"))) {
-      K = isFactor(x) ? nlevels(x)+1 : asInteger(getAttrib(x, install("N.groups")))+1;
+      K = isFactor(x) ? nlevels(x)+1 : asInteger(getAttrib(x, sym_n_groups))+1;
       anyNA = !inherits(x, "na.included");
       if((size_t)K * ng <= (size_t)n * 3) {
         tx = 1000;
@@ -702,7 +698,7 @@ int dupVecSecond(int *restrict pidx, int *restrict pans_i, SEXP x, const int n, 
     }
   } break;
   case STRSXP: {
-    const SEXP *restrict px = SEXPPTR(x);
+    const SEXP *restrict px = SEXPPTR_RO(x);
     const unsigned int mult = (M-1) / ng; // -1 because C is zero indexed
     for (int i = 0; i != n; ++i) {
       id = (pidx[i]*mult) ^ HASH(((uintptr_t) px[i] & 0xffffffff), K); // HASH(((uintptr_t) px[i] & 0xffffffff) ^ pidx[i], K) + pidx[i];
@@ -733,7 +729,7 @@ SEXP groupVec(SEXP X, SEXP starts, SEXP sizes) {
   int l = length(X), islist = TYPEOF(X) == VECSXP,
     start = asLogical(starts), size = asLogical(sizes), nprotect = 0;
   // Better not exceptions to fundamental algorithms, when a couple of user-level functions return qG objects...
-  // if(islist == 0 && OBJECT(X) != 0 && inherits(X, "qG") && inherits(X, "na.included")) return X; // return "qG" objects
+  // if(islist == 0 && isObject(X) && inherits(X, "qG") && inherits(X, "na.included")) return X; // return "qG" objects
   const SEXP *px = islist ? SEXPPTR_RO(X) : &X;
   SEXP idx = islist == 0 ? dupVecIndex(X) : l > 1 ? dupVecIndexTwoVectors(px[0], px[1]) : dupVecIndex(px[0]);
   if(isNull(idx)) { // One of the vectors is complex valued
@@ -741,8 +737,8 @@ SEXP groupVec(SEXP X, SEXP starts, SEXP sizes) {
     l += 1; px -= 1;
   } else if(!(islist && l > 2) && start == 0 && size == 0) return idx; // l == 1 &&
   PROTECT(idx); ++nprotect;
-  SEXP sym_ng = install("N.groups"), res;
-  int ng = asInteger(getAttrib(idx, sym_ng)), n = length(idx);
+  SEXP res;
+  int ng = asInteger(getAttrib(idx, sym_n_groups)), n = length(idx);
   if(islist && l > 2) {
     SEXP ans = PROTECT(allocVector(INTSXP, n)); ++nprotect;
     int i = 2, *pidx = INTEGER(idx), *pans = INTEGER(ans);
@@ -755,16 +751,16 @@ SEXP groupVec(SEXP X, SEXP starts, SEXP sizes) {
       }
     }
     res = i % 2 ? ans : idx;
-    setAttrib(res, sym_ng, ScalarInteger(ng));
+    setAttrib(res, sym_n_groups, ScalarInteger(ng));
   } else res = idx;
   // Cumpoting group starts and sizes attributes
   if(start || size) {
     PROTECT(res); ++nprotect;
     int *pres = INTEGER(res);
     if(start && size) { // Protect res ??
-      SEXP gs, st, starts_sym = install("starts"), sizes_sym = install("group.sizes");
-      setAttrib(res, starts_sym, st = allocVector(INTSXP, ng));
-      setAttrib(res, sizes_sym, gs = allocVector(INTSXP, ng));
+      SEXP gs, st;
+      setAttrib(res, sym_starts, st = allocVector(INTSXP, ng));
+      setAttrib(res, sym_group_sizes, gs = allocVector(INTSXP, ng));
       if(ng > 0) {
         int *pgs = INTEGER(gs), *pst = INTEGER(st);
         memset(pgs, 0, sizeof(int) * ng); --pgs;
@@ -775,8 +771,8 @@ SEXP groupVec(SEXP X, SEXP starts, SEXP sizes) {
         }
       }
     } else if(start) {
-      SEXP st, starts_sym = install("starts");
-      setAttrib(res, starts_sym, st = allocVector(INTSXP, ng));
+      SEXP st;
+      setAttrib(res, sym_starts, st = allocVector(INTSXP, ng));
       if(ng > 0) {
         int *pst = INTEGER(st), k = 0;
         memset(pst, 0, sizeof(int) * ng); --pst;
@@ -788,8 +784,8 @@ SEXP groupVec(SEXP X, SEXP starts, SEXP sizes) {
         }
       }
     } else {
-      SEXP gs, sizes_sym = install("group.sizes");
-      setAttrib(res, sizes_sym, gs = allocVector(INTSXP, ng));
+      SEXP gs;
+      setAttrib(res, sym_group_sizes, gs = allocVector(INTSXP, ng));
       if(ng > 0) {
         int *pgs = INTEGER(gs);
         memset(pgs, 0, sizeof(int) * ng); --pgs;
@@ -810,9 +806,9 @@ SEXP groupAtVec(SEXP X, SEXP starts, SEXP naincl) {
   SEXP idx = nain ? dupVecIndex(X) : dupVecIndexKeepNA(X);
   if(start == 0) return idx;
   PROTECT(idx);
-  SEXP st, sym_ng = install("N.groups"), starts_sym = install("starts");
-  int ng = asInteger(getAttrib(idx, sym_ng)), n = length(idx), *pidx = INTEGER(idx);
-  setAttrib(idx, starts_sym, st = allocVector(INTSXP, ng));
+  SEXP st;
+  int ng = asInteger(getAttrib(idx, sym_n_groups)), n = length(idx), *pidx = INTEGER(idx);
+  setAttrib(idx, sym_starts, st = allocVector(INTSXP, ng));
   if(ng > 0) {
     int *pst = INTEGER(st), k = 0;
     memset(pst, 0, sizeof(int) * ng); --pst;
@@ -856,7 +852,7 @@ SEXP funiqueC(SEXP x) {
   } else if(tx == INTSXP) {
     if(isFactor(x) || inherits(x, "qG")) {
       tx = 1000;
-      M = isFactor(x) ? (size_t)nlevels(x) + 2 : (size_t)asInteger(getAttrib(x, install("N.groups"))) + 2;
+      M = isFactor(x) ? (size_t)nlevels(x) + 2 : (size_t)asInteger(getAttrib(x, sym_n_groups)) + 2;
     } else {
       int *p = INTEGER(x);
       if(n > 10 && (NOGE(p[0], n) || NOGE(p[n/2], n) || NOGE(p[n-1], n))) goto bigint;
@@ -992,7 +988,7 @@ SEXP funiqueC(SEXP x) {
     for(int i = 0; i != g; ++i) pres[i] = px[st[i]];
   } break;
   case STRSXP: {
-    const SEXP *restrict px = SEXPPTR(x);
+    const SEXP *restrict px = SEXPPTR_RO(x);
     for (int i = 0; i != n; ++i) {
       id = HASH(((uintptr_t) px[i] & 0xffffffff), K);
       while(h[id]) {

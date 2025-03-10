@@ -229,7 +229,7 @@ SEXP fmeanC(SEXP x, SEXP Rng, SEXP g, SEXP gs, SEXP w, SEXP Rnarm, SEXP Rnthread
   // default: error("ALTREP object must be integer or real typed");
   // }
   // }
-  if(l < 1) return tx == REALSXP ? x : ScalarReal(asReal(x)); // Prevents seqfault for numeric(0) #101
+  if(l < 1) return tx == REALSXP ? x : allocVector(REALSXP, 0); // Prevents seqfault for numeric(0) #101
   if(ng && l != length(g)) error("length(g) must match length(x)");
   if(nthreads > max_threads) nthreads = max_threads;
   if(l < 100000) nthreads = 1; // No improvements from multithreading on small data.
@@ -563,7 +563,7 @@ SEXP fmeanlC(SEXP x, SEXP Rng, SEXP g, SEXP gs, SEXP w, SEXP Rnarm, SEXP Rdrop, 
           if(ATTRIB(xj) != R_NilValue && !(isObject(xj) && inherits(xj, "ts"))) copyMostAttrib(xj, outj);
         }
         #pragma omp parallel for num_threads(nthreads)
-        for(int j = 0; j < l; ++j) fmean_g_omp_impl(px[j], DATAPTR(pout[j]), ng, pg, pgs, narm);
+        for(int j = 0; j < l; ++j) fmean_g_omp_impl(px[j], DPTR(pout[j]), ng, pg, pgs, narm);
       } else {
         for(int j = 0; j != l; ++j) pout[j] = fmean_g_impl(px[j], ng, pg, pgs, narm);
       }

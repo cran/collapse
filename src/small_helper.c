@@ -3,7 +3,7 @@
 // #ifndef USE_RINTERNALS
 // #define USE_RINTERNALS
 // #endif
-#include "base_radixsort.h"
+// #include "base_radixsort.h"
 #include <math.h>
 
 void matCopyAttr(SEXP out, SEXP x, SEXP Rdrop, int ng) {
@@ -23,14 +23,14 @@ void matCopyAttr(SEXP out, SEXP x, SEXP Rdrop, int ng) {
       SET_VECTOR_ELT(dn, 1, cn);
       dimnamesgets(out, dn);
     }
-    if(OBJECT(x) == 0) copyMostAttrib(x, out);
+    if(!isObject(x)) copyMostAttrib(x, out);
     UNPROTECT(nprotect);
   }
 }
 
 void DFcopyAttr(SEXP out, SEXP x, int ng) {
   SHALLOW_DUPLICATE_ATTRIB(out, x);
-  if(OBJECT(x) != 0) { // No attributes for plain lists
+  if(isObject(x)) { // No attributes for plain lists
     if(ng == 0) {
       setAttrib(out, R_RowNamesSymbol, ScalarInteger(1));
     } else {
@@ -153,6 +153,79 @@ SEXP lassign(SEXP x, SEXP s, SEXP rows, SEXP fill) {
   return out;
 }
 
+SEXP gwhich_first(SEXP x, SEXP g, SEXP target) {
+  if(!inherits(g, "GRP")) error("Internal error: g must be an object of class 'GRP'.");
+  const int ng = asInteger(VECTOR_ELT(g, 0)), *pg = INTEGER_RO(VECTOR_ELT(g, 1)), l = length(VECTOR_ELT(g, 1));
+  if(l != length(x)) error("length(x) must match length(g).");
+  if(ng != length(target)) error("length(target) must match number of groups.");
+  if(TYPEOF(x) != TYPEOF(target)) error("x is of type %s whereas target is of type %s.", type2char(TYPEOF(x)), type2char(TYPEOF(target)));
+
+  SEXP res = PROTECT(allocVector(INTSXP, ng));
+  if(ng == 0) {
+    UNPROTECT(1);
+    return res;
+  }
+  memset(INTEGER(res), 0, ng*sizeof(int));
+  int *pres = INTEGER(res)-1;
+
+  switch(TYPEOF(x)) {
+    case INTSXP:
+    case LGLSXP: {
+      const int *px = INTEGER_RO(x), *pt = INTEGER_RO(target)-1;
+      for(int i = 0; i != l; ++i) if(pres[pg[i]] == 0 && px[i] == pt[pg[i]]) pres[pg[i]] = i+1;
+      break;
+    }
+    case REALSXP: {
+      const double *px = REAL_RO(x), *pt = REAL_RO(target)-1;
+      for(int i = 0; i != l; ++i) if(pres[pg[i]] == 0 && px[i] == pt[pg[i]]) pres[pg[i]] = i+1;
+      break;
+    }
+    case STRSXP: {
+      const SEXP *px = STRING_PTR_RO(x), *pt = STRING_PTR_RO(target)-1;
+      for(int i = 0; i != l; ++i) if(pres[pg[i]] == 0 && px[i] == pt[pg[i]]) pres[pg[i]] = i+1;
+      break;
+    }
+    default: error("Unsupported type %s", type2char(TYPEOF(x)));
+  }
+
+  UNPROTECT(1);
+  return res;
+}
+
+SEXP gslice_multi(SEXP g, SEXP o, SEXP Rn, SEXP first)  {
+  if(!inherits(g, "GRP")) error("Internal error: g must be an object of class 'GRP'.");
+  const int n = asInteger(Rn), ng = asInteger(VECTOR_ELT(g, 0)), l = length(VECTOR_ELT(g, 1)),
+    *pg = INTEGER_RO(VECTOR_ELT(g, 1)), *pgs = INTEGER_RO(VECTOR_ELT(g, 2));
+
+  int lvec = 0;
+  #pragma omp simd reduction(+:lvec)
+  for(int i = 0; i < ng; ++i) lvec += n <= pgs[i] ? n : pgs[i];
+
+  SEXP res = PROTECT(allocVector(INTSXP, lvec));
+  int *sizes = (int*)R_Calloc(ng+1, int);
+  int *pres = INTEGER(res);
+
+  if(isNull(o)) {
+    if(asLogical(first)) {
+      for(int i = 0, k = 0; i != l; ++i) if(n > sizes[pg[i]]++) pres[k++] = i+1;
+    } else {
+      for(int i = l, k = lvec; i--; ) if(n > sizes[pg[i]]++) pres[--k] = i+1;
+    }
+  } else {
+    if(length(o) != l) error("length(o) must match length(g)");
+    const int *po = INTEGER(o);
+    if(asLogical(first)) {
+      for(int i = 0, k = 0; i != l; ++i) if(n > sizes[pg[po[i]-1]]++) pres[k++] = po[i];
+    } else {
+      for(int i = l, k = lvec; i--; ) if(n > sizes[pg[po[i]-1]]++) pres[--k] = po[i];
+    }
+  }
+
+  R_Free(sizes);
+  UNPROTECT(1);
+  return res;
+}
+
 // SEXP CasChar(SEXP x) {
 //  return coerceVector(x, STRSXP);
 // }
@@ -169,7 +242,7 @@ SEXP multiassign(SEXP lhs, SEXP rhs, SEXP envir) {
     return R_NilValue;
   }
   if(length(rhs) != n) error("length(lhs) must be equal to length(rhs)");
-  SEXP *plhs = SEXPPTR(lhs);
+  const SEXP *plhs = SEXPPTR_RO(lhs);
   switch(TYPEOF(rhs)) { // installTrChar translates to native encoding, installChar does the same now, but also is available on older systems.
     case REALSXP: {
       double *prhs = REAL(rhs);
@@ -188,7 +261,7 @@ SEXP multiassign(SEXP lhs, SEXP rhs, SEXP envir) {
       break;
     }
     case STRSXP: {
-      SEXP *prhs = SEXPPTR(rhs);
+      const SEXP *prhs = SEXPPTR_RO(rhs);
       for(int i = 0; i < n; ++i) {
         SEXP nam = installChar(plhs[i]);
         defineVar(nam, ScalarString(prhs[i]), envir);
@@ -564,10 +637,6 @@ SEXP fnrowC(SEXP x) {
   if(TYPEOF(dim) != INTSXP) return R_NilValue;
   return ScalarInteger(INTEGER(dim)[0]);
 }
-
-
-#define MYEFL(x) (((SEXPREC_partial *)(x))->sxpinfo.gp)
-#define MYSEFL(x,v)	((((SEXPREC_partial *)(x))->sxpinfo.gp)=(v))
 
 // Taken from: https://github.com/r-lib/rlang/blob/main/src/internal/env.c
 #define CLP_FRAME_LOCK_MASK (1 << 14)

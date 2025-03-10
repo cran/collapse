@@ -22,7 +22,14 @@ switchGRP <- function(x, na.last = TRUE, decreasing = FALSE, starts = FALSE,
   .Call(C_radixsort, na.last, decreasing, starts, group.sizes, sort, z)
 }
 
-group <- function(x, starts = FALSE, group.sizes = FALSE) {
+group <- function(..., starts = FALSE, group.sizes = FALSE) {
+  x <- if(...length() == 1L) ..1 else list(...)
+  g <- .Call(C_group, x, starts, group.sizes)
+  oldClass(g) <- c("qG", "na.included")
+  g
+}
+
+groupv <- function(x, starts = FALSE, group.sizes = FALSE) {
   g <- .Call(C_group, x, starts, group.sizes)
   oldClass(g) <- c("qG", "na.included")
   g
@@ -156,10 +163,10 @@ GRP.default <- function(X, by = NULL, sort = .op[["sort"]], decreasing = FALSE, 
 }
 
 is_GRP <- function(x) inherits(x, "GRP")
-is.GRP <- function(x) {
-  .Deprecated(msg = "'is.GRP' was renamed to 'is_GRP'. It will be removed end of 2023, see help('collapse-renamed').")
-  inherits(x, "GRP")
-}
+# is.GRP <- function(x) {
+#   .Deprecated(msg = "'is.GRP' was renamed to 'is_GRP'. It will be removed end of 2023, see help('collapse-renamed').")
+#   inherits(x, "GRP")
+# }
 
 length.GRP <- function(x) length(x[[2L]])
 
@@ -277,10 +284,10 @@ as_factor_GRP <- function(x, ordered = FALSE, sep = ".") { # , ...
   f
 }
 
-as.factor_GRP <- function(x, ordered = FALSE) {
-  .Deprecated(msg = "'as.factor_GRP' was renamed to 'as_factor_GRP'. It will be removed end of 2023, see help('collapse-renamed').")
-  as_factor_GRP(x, ordered)
-}
+# as.factor_GRP <- function(x, ordered = FALSE) {
+#   .Deprecated(msg = "'as.factor_GRP' was renamed to 'as_factor_GRP'. It will be removed end of 2023, see help('collapse-renamed').")
+#   as_factor_GRP(x, ordered)
+# }
 
 finteraction <- function(..., factor = TRUE, ordered = FALSE, sort = factor && .op[["sort"]], method = "auto", sep = ".") { # does it drop levels ? -> Yes !
   X <- if(...length() == 1L && is.list(..1)) ..1 else list(...)
@@ -495,6 +502,7 @@ print.invisible <- function(x, ...) cat("")
 `[[.GRP_df` <-  function(x, ...) UseMethod("[[", fungroup(x)) # function(x, ..., exact = TRUE) .subset2(x, ..., exact = exact)
 `[<-.GRP_df` <- function(x, ..., value) UseMethod("[<-", fungroup(x))
 `[[<-.GRP_df` <- function(x, ..., value) UseMethod("[[<-", fungroup(x))
+`names<-.GRP_df` <- function(x, value) `oldClass<-`(`names<-`(unclass(x), value), oldClass(x))
 
 # Produce errors...
 # print_GRP_df_core <- function(x) {
@@ -585,10 +593,10 @@ GRP.grouped_df <- function(X, ..., return.groups = TRUE, call = TRUE) {
 }
 
 is_qG <- function(x) is.integer(x) && inherits(x, "qG")
-is.qG <- function(x) {
-  .Deprecated(msg = "'is.qG' was renamed to 'is_qG'. It will be removed end of 2023, see help('collapse-renamed').")
-  inherits(x, "qG")
-}
+# is.qG <- function(x) {
+#   .Deprecated(msg = "'is.qG' was renamed to 'is_qG'. It will be removed end of 2023, see help('collapse-renamed').")
+#   inherits(x, "qG")
+# }
 
 na_rm2 <- function(x, sort) {
   if(sort) return(if(is.na(x[length(x)])) x[-length(x)] else x)
@@ -687,10 +695,10 @@ as_factor_qG <- function(x, ordered = FALSE, na.exclude = TRUE) {
   return(`attributes<-`(x, list(levels = groups, class = clx)))
 }
 
-as.factor_qG <- function(x, ordered = FALSE, na.exclude = TRUE) {
-  .Deprecated(msg = "'as.factor_qG' was renamed to 'as_factor_qG'. It will be removed end of 2023, see help('collapse-renamed').")
-  as_factor_qG(x, ordered, na.exclude)
-}
+# as.factor_qG <- function(x, ordered = FALSE, na.exclude = TRUE) {
+#   .Deprecated(msg = "'as.factor_qG' was renamed to 'as_factor_qG'. It will be removed end of 2023, see help('collapse-renamed').")
+#   as_factor_qG(x, ordered, na.exclude)
+# }
 
 qF <- function(x, ordered = FALSE, na.exclude = TRUE, sort = .op[["sort"]], drop = FALSE,
                keep.attr = TRUE, method = "auto") {
