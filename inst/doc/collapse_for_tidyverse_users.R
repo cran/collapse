@@ -110,7 +110,7 @@ nrow(exports)
 ## -------------------------------------------------------------------------------------------------
 # Computing Balassa's (1965) RCA index: fast and memory efficient
 # settfm() modifies exports and assigns it back to the global environment
-settfm(exports, RCA = fsum(v, list(c, y), TRA = "/") %/=% fsum(v, list(s, y), TRA = "/"))
+settfm(exports, RCA = fsum(v, list(c, y), TRA = "/") %/=% fsum(fsum(v, y, TRA = "/"), list(s, y), TRA = "fill", set = TRUE))
 
 ## -------------------------------------------------------------------------------------------------
 pivot(exports, ids = "c", values = "RCA", names = "s", 
@@ -130,7 +130,7 @@ with(exports_latest, fndistinct(s, c))
 
 ## -------------------------------------------------------------------------------------------------
 exports_latest |>
-    mutate(RCA = fsum(v, c, TRA = "/") %/=% fsum(v, s, TRA = "/")) |>
+    mutate(RCA = fsum(v, c, TRA = "/") %/=% fsum(proportions(v), s, TRA = "fill")) |>
     pivot("c", "RCA", "s", how = "wider", sort = TRUE)
 
 ## ----echo=FALSE---------------------------------------------------------------
