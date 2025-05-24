@@ -1,7 +1,7 @@
 Package: collapse
 Title: Advanced and Fast Data Transformation
-Version: 2.1.1
-Date: 2025-04-14
+Version: 2.1.2
+Date: 2025-05-24
 Authors@R: c(
            person("Sebastian", "Krantz", role = c("aut", "cre"), 
                   email = "sebastian.krantz@graduateinstitute.ch", 
@@ -24,13 +24,13 @@ Description: A large C/C++-based package for advanced data transformation and
     provide efficient low-level vectorizations, OpenMP multithreading, and skip missing 
     values by default. These are integrated with fast grouping and ordering algorithms 
     (also callable from C), and efficient data manipulation functions. The package also 
-    provides a flexible and rigorous approach to time series and panel data in R. 
-    It further includes fast functions for common statistical procedures, detailed 
+    provides a flexible and rigorous approach to time series and panel data in R, fast 
+    functions for data transformation and common statistical procedures, detailed 
     (grouped, weighted) summary statistics, powerful tools to work with nested data, 
     fast data object conversions, functions for memory efficient R programming, and 
-    helpers to effectively deal with variable labels, attributes, and missing data. 
-    It seamlessly supports base R objects/classes as well as 'units', 'integer64', 
-    'xts'/'zoo', 'tibble', 'grouped_df', 'data.table', 'sf', 'pseries'/'pdata.frame'.
+    helpers to effectively deal with variable labels, attributes, and missing data. It 
+    seamlessly supports base R objects/classes as well as 'units', 'integer64', 'xts'/
+    'zoo', 'tibble', 'grouped_df', 'data.table', 'sf', and 'pseries'/'pdata.frame'.
 URL: https://sebkrantz.github.io/collapse/,
         https://github.com/SebKrantz/collapse
 BugReports: https://github.com/SebKrantz/collapse/issues
@@ -45,8 +45,9 @@ Suggests: fastverse, data.table, magrittr, kit, xts, zoo, plm, fixest,
         microbenchmark, testthat, covr, knitr, rmarkdown, withr, bit64
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2025-04-14 14:39:54 UTC; sebastiankrantz
-Author: Sebastian Krantz [aut, cre] (<https://orcid.org/0000-0001-6212-5229>),
+Packaged: 2025-05-24 16:29:33 UTC; sebastiankrantz
+Author: Sebastian Krantz [aut, cre] (ORCID:
+    <https://orcid.org/0000-0001-6212-5229>),
   Matt Dowle [ctb],
   Arun Srinivasan [ctb],
   Morgan Jacob [ctb],
@@ -59,4 +60,4 @@ Author: Sebastian Krantz [aut, cre] (<https://orcid.org/0000-0001-6212-5229>),
   1999-2016 The R Core Team [cph]
 Maintainer: Sebastian Krantz <sebastian.krantz@graduateinstitute.ch>
 Repository: CRAN
-Date/Publication: 2025-04-14 17:10:02 UTC
+Date/Publication: 2025-05-24 22:30:02 UTC

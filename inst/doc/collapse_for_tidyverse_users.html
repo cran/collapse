@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sebastian Krantz" />
 
-<meta name="date" content="2025-04-14" />
+<meta name="date" content="2025-05-24" />
 
 <title>collapse for tidyverse Users</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">collapse for tidyverse Users</h1>
 <h4 class="author">Sebastian Krantz</h4>
-<h4 class="date">2025-04-14</h4>
+<h4 class="date">2025-05-24</h4>
 
 
 <div id="TOC">
@@ -533,7 +533,8 @@ vectorized execution wherever they are used. E.g.</p>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># 2   6 34.24286</span></span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># 3   8 29.60000</span></span></code></pre></div>
 <p>calculates a grouped mean of <code>mpg</code> but adds the overall
-minimum of <code>qsec</code> to the result, whereas</p>
+minimum of <code>qsec</code> to the result, i.e., it is equivalent to
+<code>fmean(mpg, g = cyl) + min(qsec)</code>. On the other hand</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>mtcars <span class="sc">|&gt;</span> <span class="fu">group_by</span>(cyl) <span class="sc">|&gt;</span> <span class="fu">summarise</span>(<span class="at">mpg =</span> <span class="fu">fmean</span>(mpg) <span class="sc">+</span> <span class="fu">fmin</span>(qsec)) <span class="co"># Vectorized</span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#   cyl      mpg</span></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co"># 1   4 43.36364</span></span>
@@ -554,13 +555,13 @@ detailed examples. This <em>eager vectorization</em> approach is
 intentional as it allows users to vectorize complex expressions and fall
 back to base R if this is not desired. <a href="https://andrewghazi.github.io/posts/collapse_is_sick/sick.html">This
 blog post</a> by Andrew Ghazi provides an excellent example of computing
-a p-value test statistic by groups.</p>
-<p>To take full advantage of <em>collapse</em>, it is highly recommended
-to use the <em>Fast Statistical Functions</em> as much as possible. You
-can also set <code>set_collapse(mask = &quot;all&quot;)</code> to replace
-statistical functions in base R like <code>sum</code> and
-<code>mean</code> with the collapse versions (toggling vectorized
-execution in all cases), but this may affect other parts of your code<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+a p-value test statistic by groups. <em>Note</em> that only expressions
+typed out can be vectorized; expressions inside functions such as
+<code>mean_plus_min &lt;- function(x) fmean(x) + fmin(x)</code> are not
+vectorized.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> To take full advantage of
+<em>collapse</em>, it is thus highly recommended to use the <em>Fast
+Statistical Functions</em> as much as possible.</p>
+<!-- To take full advantage of *collapse*, it is highly recommended to use the *Fast Statistical Functions* as much as possible. You can also set `set_collapse(mask = "all")` to replace statistical functions in base R like `sum` and `mean` with the collapse versions (toggling vectorized execution in all cases), but this may affect other parts of your code^[When doing this, make sure to refer to base R functions explicitly using `::` e.g. `base::mean`.]. -->
 </div>
 <div id="writing-efficient-code" class="section level2">
 <h2>Writing Efficient Code</h2>
@@ -795,8 +796,14 @@ lightweight <em>fastverse</em> solution.</p>
 <ol>
 <li id="fn1"><p>Notably, tidyselect, lambda expressions, and many of the
 smaller helper functions are left out.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p>When doing this, make sure to refer to base R functions
-explicitly using <code>::</code> e.g. <code>base::mean</code>.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p><em>collapse</em> can only read what you type,
+e.g. <code>exp &lt;- substitute(fmean(mpg) + min(mpg))</code>, then
+<code>all_funs(exp)</code> gives <code>c(&quot;+&quot;, &quot;fmean&quot;, &quot;min&quot;)</code>,
+and <code>any(all_funs(exp) %in% .FAST_STAT_FUN)</code> returns
+<code>TRUE</code>, signifying to <code>fsummarise()</code> that the
+expression should be executed only once with the grouping object passed
+to the <code>g</code> argument of <code>fmean()</code>, instead of it
+being executed once for every group.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
 
