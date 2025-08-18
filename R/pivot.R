@@ -1,4 +1,4 @@
-
+# TODO: 'to' in wider and recast pivot should be optional (if only one variable is pivoted -> should be able to set to = NULL).
 
 proc_names_longer <- function(x) {
   if(is.null(x)) return(list("variable", "value"))

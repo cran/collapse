@@ -573,10 +573,7 @@ its <a href="https://fastverse.github.io/fastverse/#suggested-extensions">sugges
 packages list</a>. For example if you want to efficiently replace
 multiple items in a vector, <code>kit::vswitch()/nswitch()</code> can be
 pretty magical. Also functions like
-<code>data.table::set()/rowid()</code> etc. are great, e.g., <a href="https://github.com/SebKrantz/collapse/issues/627">recent
-issue</a>: what is the <em>collapse</em> equivalent to a grouped
-<code>dplyr::slice_head(n)</code>? It would be
-<code>fsubset(data, data.table::rowid(id1, id2, ...) &lt;= n)</code>.</p>
+<code>data.table::set()/rowid()</code> etc. are great.</p>
 </div>
 <div id="point-2-think-about-memory-and-optimize" class="section level2">
 <h2>Point 2: Think About Memory and Optimize</h2>
@@ -1000,7 +997,7 @@ frames. Missing values are treated as distinct elements.<a href="#fnref2" class=
 <li id="fn3"><p>See <code>?GRP</code>, in particular the ‘Value’
 section.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
 <li id="fn4"><p>If you do use <code>fgroup_by()</code> in a package use
-it with non-standard evaluation, i.e.,
+it with non-standard evaluation, e.g.,
 <code>fgroup_by(cyl, vs, am)</code>. Don’t do
 <code>ind &lt;- c(&quot;cyl&quot;, &quot;vs&quot;, &quot;am&quot;)</code> and then
 <code>fgroup_by(ind)</code> as the data may contain a column called
