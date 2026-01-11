@@ -452,6 +452,31 @@ SEXP setcopyv(SEXP x, SEXP val, SEXP rep, SEXP Rinvert, SEXP Rset, SEXP Rind1) {
       const SEXP *restrict pr = SEXPPTR_RO(rep);
       setcopyvLOOPLVEC
     }
+    // // TODO: Probably not needed for now. Can set xlist = TRUE
+    // SEXP tmp = set ? x : ans;
+    // if(lr == 1) {
+    //   const SEXP r = VECTOR_ELT(rep, 0);
+    //   if(tv == INTSXP) {
+    //     for(int i = 0; i < lv; ++i) SET_VECTOR_ELT(tmp, pv[i]-1, r);
+    //   } else if(invert == 0) {
+    //     for(int i = 0; i != n; ++i) if(pv[i] > 0) SET_VECTOR_ELT(tmp, i, r);
+    //   } else {
+    //     for(int i = 0; i != n; ++i) if(pv[i] == 0) SET_VECTOR_ELT(tmp, i, r);
+    //   }
+    // } else {
+    //   const SEXP *restrict pr = SEXPPTR_RO(rep);
+    //   if(tv == INTSXP) {
+    //     if(lr == n) {
+    //       for(int i = 0; i < lv; ++i) SET_VECTOR_ELT(tmp, pv[i]-1, pr[pv[i]-1]);
+    //     } else {
+    //       for(int i = 0; i < lv; ++i) SET_VECTOR_ELT(tmp, pv[i]-1, pr[i]);
+    //     }
+    //   } else if(invert == 0) {
+    //     for(int i = 0; i != n; ++i) if(pv[i] > 0) SET_VECTOR_ELT(tmp, i, pr[i]);
+    //   } else {
+    //     for(int i = 0; i != n; ++i) if(pv[i] == 0) SET_VECTOR_ELT(tmp, i, pr[i]);
+    //   }
+    //
     break;
   }
   case RAWSXP:
